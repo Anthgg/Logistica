@@ -279,6 +279,7 @@ def test_rebuild_incremental_vs_full_same_result(pg_session: Session):
         position_id=pos.id,
         delta_quantity=Decimal(20),
         delta_type="INCREASE",
+        ledger_partition_key=part_key,
         ledger_sequence=2,
         applied_status="PENDING",
         created_at=datetime.now(UTC),
