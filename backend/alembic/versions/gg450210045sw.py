@@ -73,6 +73,19 @@ def upgrade() -> None:
         existing_nullable=False,
     )
 
+    # Drop legacy unique index on inventory_position_id to allow staging generations
+    op.drop_index(
+        "ix_inventory_position_balances_inventory_position_id",
+        table_name="inventory_position_balances",
+        if_exists=True,
+    )
+    op.create_index(
+        "ix_inventory_position_balances_inventory_position_id",
+        "inventory_position_balances",
+        ["inventory_position_id"],
+        unique=False,
+    )
+
 
 def downgrade() -> None:
     op.drop_index("ix_ipb_active_projection", table_name="inventory_position_balances")

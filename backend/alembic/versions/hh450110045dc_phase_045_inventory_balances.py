@@ -29,7 +29,7 @@ def upgrade() -> None:
         sa.Column("branch_id", postgresql.UUID(as_uuid=True), nullable=False, index=True),
         sa.Column("warehouse_id", postgresql.UUID(as_uuid=True), nullable=True, index=True),
         sa.Column("warehouse_location_id", postgresql.UUID(as_uuid=True), nullable=True, index=True),
-        sa.Column("inventory_position_id", postgresql.UUID(as_uuid=True), unique=True, nullable=False, index=True),
+        sa.Column("inventory_position_id", postgresql.UUID(as_uuid=True), unique=False, nullable=False, index=True),
         sa.Column("product_id", postgresql.UUID(as_uuid=True), nullable=False, index=True),
         sa.Column("product_version_id", postgresql.UUID(as_uuid=True), nullable=True, index=True),
         sa.Column("base_unit_id", postgresql.UUID(as_uuid=True), nullable=False),
