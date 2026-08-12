@@ -50,7 +50,6 @@ def test_transactional_rollback_db_real(pg_engine):
     pos_id = uuid4()
     prod_id = uuid4()
     unit_id = uuid4()
-    user_id = uuid4()
     partition_key = f"org:{org_id}:wh:default"
 
     # Paso 1: Persistir balance inicial

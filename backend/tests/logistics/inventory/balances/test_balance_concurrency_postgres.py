@@ -77,7 +77,7 @@ def _apply_delta_with_lock(engine, pos_id, delta: Decimal, results: dict, key: s
             row.quantity = row.quantity + delta
             session.commit()
             results[key] = "OK"
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             results[key] = f"ERROR: {exc}"
             session.rollback()
 
@@ -201,7 +201,7 @@ def test_deadlock_prevention_sorted_lock_order(pg_engine_direct):
                         row.quantity = row.quantity + delta_b
                 session.commit()
                 results[name] = "OK"
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 results[name] = f"ERROR: {exc}"
                 session.rollback()
 

@@ -125,7 +125,7 @@ def test_alembic_upgrade_downgrade_cycle_real():
         env["APP_ENV"] = "testing"
         result = subprocess.run(
             ["python", "-m", "alembic", *args],
-            capture_output=True, text=True, env=env, timeout=60,
+            capture_output=True, text=True, env=env, timeout=60, check=False,
         )
         assert result.returncode == 0, (
             f"alembic {' '.join(args)} FAILED:\n"

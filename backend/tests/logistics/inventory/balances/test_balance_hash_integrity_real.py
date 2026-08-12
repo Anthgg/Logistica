@@ -58,24 +58,24 @@ def test_compute_movement_hash_is_deterministic():
     branch_id = uuid4()
     now = datetime(2025, 1, 15, 12, 0, 0, tzinfo=UTC)
 
-    kwargs = dict(
-        ledger_partition_key=f"org:{org_id}:wh:default",
-        ledger_sequence=1001,
-        movement_code="MOV-001-TEST",
-        movement_type="PURCHASE_RECEIPT",
-        movement_family="INBOUND",
-        organization_id=org_id,
-        branch_id=branch_id,
-        source_event_id="evt-001",
-        source_event_version=1,
-        occurred_at=now,
-        posted_at=now,
-        reason_code=None,
-        compensation_for_movement_id=None,
-        previous_movement_hash=None,
-        lines=[{"line_number": 1, "quantity": Decimal(100)}],
-        sources=[{"source_system": "TEST"}],
-    )
+    kwargs = {
+        "ledger_partition_key": f"org:{org_id}:wh:default",
+        "ledger_sequence": 1001,
+        "movement_code": "MOV-001-TEST",
+        "movement_type": "PURCHASE_RECEIPT",
+        "movement_family": "INBOUND",
+        "organization_id": org_id,
+        "branch_id": branch_id,
+        "source_event_id": "evt-001",
+        "source_event_version": 1,
+        "occurred_at": now,
+        "posted_at": now,
+        "reason_code": None,
+        "compensation_for_movement_id": None,
+        "previous_movement_hash": None,
+        "lines": [{"line_number": 1, "quantity": Decimal(100)}],
+        "sources": [{"source_system": "TEST"}],
+    }
 
     hash1 = compute_movement_hash(**kwargs)
     hash2 = compute_movement_hash(**kwargs)
@@ -94,23 +94,23 @@ def test_compute_movement_hash_changes_with_different_sequence():
     branch_id = uuid4()
     now = datetime(2025, 1, 15, 12, 0, 0, tzinfo=UTC)
 
-    base_kwargs = dict(
-        ledger_partition_key=f"org:{org_id}:wh:default",
-        movement_code="MOV-002-TEST",
-        movement_type="PURCHASE_RECEIPT",
-        movement_family="INBOUND",
-        organization_id=org_id,
-        branch_id=branch_id,
-        source_event_id="evt-002",
-        source_event_version=1,
-        occurred_at=now,
-        posted_at=now,
-        reason_code=None,
-        compensation_for_movement_id=None,
-        previous_movement_hash=None,
-        lines=[],
-        sources=[],
-    )
+    base_kwargs = {
+        "ledger_partition_key": f"org:{org_id}:wh:default",
+        "movement_code": "MOV-002-TEST",
+        "movement_type": "PURCHASE_RECEIPT",
+        "movement_family": "INBOUND",
+        "organization_id": org_id,
+        "branch_id": branch_id,
+        "source_event_id": "evt-002",
+        "source_event_version": 1,
+        "occurred_at": now,
+        "posted_at": now,
+        "reason_code": None,
+        "compensation_for_movement_id": None,
+        "previous_movement_hash": None,
+        "lines": [],
+        "sources": [],
+    }
 
     hash_1001 = compute_movement_hash(ledger_sequence=1001, **base_kwargs)
     hash_1002 = compute_movement_hash(ledger_sequence=1002, **base_kwargs)
