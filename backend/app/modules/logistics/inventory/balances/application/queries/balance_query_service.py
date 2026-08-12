@@ -57,6 +57,7 @@ class BalanceQueryService:
                 "quality_state": row.quality_state,
                 "transit_state": row.transit_state,
                 "damage_state": row.damage_state,
+                "expiration_state": row.expiration_state,
             }
             for row in rows
         ]

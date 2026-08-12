@@ -5,6 +5,7 @@ class AvailabilityState(str, Enum):
     AVAILABLE = "AVAILABLE"
     QUARANTINE = "QUARANTINE"
     RESERVED = "RESERVED"
+    BLOCKED = "BLOCKED"
     DAMAGED = "DAMAGED"
     EXPIRED = "EXPIRED"
     IN_TRANSIT = "IN_TRANSIT"

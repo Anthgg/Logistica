@@ -6,12 +6,15 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class BalanceSummaryResponse(BaseModel):
-    """Schema Pydantic v2 para el resumen global de saldos de inventario."""
+    """Schema Pydantic v2 para el resumen global de las 8 métricas de saldos de inventario."""
     physical_on_hand: Decimal = Field(..., description="Stock físico total en almacén")
     available_to_promise: Decimal = Field(..., description="Stock disponible operativo (ATP)")
+    reserved_stock: Decimal = Field(..., description="Stock reservado para compromisos/pedidos")
+    blocked_stock: Decimal = Field(..., description="Stock bloqueado operativamente")
     quarantine_stock: Decimal = Field(..., description="Stock retenido en cuarentena por calidad")
-    blocked_stock: Decimal = Field(..., description="Stock reservado o dañado")
     in_transit_stock: Decimal = Field(..., description="Stock en tránsito entre almacenes/compras")
+    damaged_stock: Decimal = Field(..., description="Stock dañado registrado")
+    expired_stock: Decimal = Field(..., description="Stock vencido por fecha de caducidad")
 
     model_config = ConfigDict(from_attributes=True)
 

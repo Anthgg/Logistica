@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
@@ -18,7 +17,7 @@ from app.modules.logistics.inventory.balances.application.services.rebuild_appli
     BalanceRebuildApplicationService,
 )
 from app.modules.logistics.inventory.balances.infrastructure.persistence.models import (
-    InventoryBalanceDeltaModel,
+    InventoryBalanceRebuildJobModel,
     InventoryPositionBalanceModel,
 )
 from app.modules.logistics.inventory.balances.presentation.schemas.schemas import (
@@ -135,59 +134,12 @@ def trigger_balance_rebuild(
     )
 
     try:
-        query = (
-            select(InventoryPositionBalanceModel)
-            .where(InventoryPositionBalanceModel.organization_id == payload.organization_id)
-            .where(InventoryPositionBalanceModel.is_active_projection.is_(True))
-        )
-        if payload.target_warehouse_id:
-            query = query.where(InventoryPositionBalanceModel.warehouse_id == payload.target_warehouse_id)
-        if payload.target_product_id:
-            query = query.where(InventoryPositionBalanceModel.product_id == payload.target_product_id)
-
-        active_positions = list(db.scalars(query))
-
-        if active_positions:
-            positions_to_rebuild = [
-                {
-                    "inventory_position_id": p.inventory_position_id,
-                    "product_id": p.product_id,
-                    "base_unit_id": p.base_unit_id,
-                    "branch_id": p.branch_id,
-                    "warehouse_id": p.warehouse_id,
-                    "warehouse_location_id": p.warehouse_location_id,
-                    "product_version_id": p.product_version_id,
-                    "initial_quantity": p.quantity,
-                    "dimension_key": p.dimension_key,
-                    "partition_key": p.last_applied_ledger_partition_key,
-                }
-                for p in active_positions
-            ]
-            rebuild_service.prepare_staging_projection(job.id, positions_to_rebuild)
-
-            pos_ids = [p.inventory_position_id for p in active_positions]
-            deltas = list(
-                db.scalars(
-                    select(InventoryBalanceDeltaModel)
-                    .where(InventoryBalanceDeltaModel.organization_id == payload.organization_id)
-                    .where(InventoryBalanceDeltaModel.position_id.in_(pos_ids))
-                    .where(InventoryBalanceDeltaModel.applied_status == "PENDING")
-                )
-            )
-            if deltas:
-                rebuild_service.replay_deltas_into_staging(job.id, deltas)
-
-            rebuild_service.validate_staging(job.id)
-            rebuild_service.execute_atomic_swap(job.id)
-        else:
-            job.status = "COMPLETED"
-            job.completed_at = datetime.now(UTC)
-
+        rebuild_service.execute_rebuild_from_ledger(job.id)
         db.commit()
     except Exception as exc:  # noqa: BLE001
         db.rollback()
         rebuild_service.rollback_rebuild(job.id, str(exc))
         db.commit()
 
-    db.refresh(job)
-    return RebuildJobRead.model_validate(job)
+    job_record = db.get(InventoryBalanceRebuildJobModel, job.id) or job
+    return RebuildJobRead.model_validate(job_record)
