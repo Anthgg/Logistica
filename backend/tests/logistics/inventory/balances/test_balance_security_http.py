@@ -20,6 +20,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.models.session import UserSession
 from app.models.user import User
 
 pytestmark = pytest.mark.security
@@ -480,6 +481,8 @@ def test_step_up_valid_proof_passes_step_up(database):
     from app.database.session import get_db
 
     engine = database.get_bind()
+    User.__table__.create(bind=engine, checkfirst=True)
+    UserSession.__table__.create(bind=engine, checkfirst=True)
     StepUpChallenge.__table__.create(bind=engine, checkfirst=True)
     StepUpProof.__table__.create(bind=engine, checkfirst=True)
 
@@ -487,6 +490,32 @@ def test_step_up_valid_proof_passes_step_up(database):
     perm = "logistics.inventory_ledger.reconcile"
     user_id = uuid4()
     session_id = uuid4()
+
+    # Create parent User and UserSession to satisfy PostgreSQL Foreign Keys
+    user = database.get(User, user_id)
+    if not user:
+        user = User(
+            id=user_id,
+            email=f"stepup_{user_id.hex[:8]}@example.com",
+            full_name="StepUp Test User",
+            password_hash="hash",
+            role="user",
+            is_active=True,
+        )
+        database.add(user)
+        database.flush()
+
+    sess = database.get(UserSession, session_id)
+    if not sess:
+        sess = UserSession(
+            id=session_id,
+            user_id=user_id,
+            token_hash=f"token_{session_id.hex[:8]}",
+            expires_at=datetime.now(UTC) + timedelta(hours=1),
+            ip_address="127.0.0.1",
+        )
+        database.add(sess)
+        database.flush()
 
     principal = _make_principal(
         user_id=user_id,
