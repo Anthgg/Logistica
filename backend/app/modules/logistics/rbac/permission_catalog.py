@@ -601,6 +601,17 @@ PERMISSIONS: list[dict[str, object]] = [
         "risk_level": RiskLevel.LOW,
     },
     {
+        "code": "logistics.inventory.rebuild",
+        "resource": "inventory",
+        "action": "rebuild",
+        "name": "Reconstruir saldos de inventario",
+        "description": "Ejecutar trabajo de reconstrucción de saldos",
+        "category": "inventory",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+        "requires_step_up": True,
+    },
+    {
         "code": "logistics.inventory.movements.read",
         "resource": "inventory",
         "action": "movements.read",

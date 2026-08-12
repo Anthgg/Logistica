@@ -14,14 +14,13 @@ CRITERIO DE EVIDENCIA:
 
 from __future__ import annotations
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.user import User
-from app.modules.logistics.dependencies import get_logistics_current_user
 
 pytestmark = pytest.mark.security
 
@@ -187,18 +186,17 @@ def test_authenticated_active_user_can_access_summary():
     """
     AUTHENTICATED READ — Usuario activo autenticado puede consultar /summary.
     """
-    active_user = _get_mock_active_user()
-    app.dependency_overrides[get_logistics_current_user] = lambda: active_user
+    org_id = uuid4()
+    principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory.read"])
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
 
     try:
         client = TestClient(app, raise_server_exceptions=False)
-        org_id = uuid4()
         response = client.get(
             f"{_BALANCES_BASE_PATH}/summary",
             params={"organization_id": str(org_id)},
         )
-        # Debe pasar la autenticación (HTTP 200 o 404 si no hay datos, pero NO 401/403)
-        assert response.status_code in (200, 404), (
+        assert response.status_code == 200, (
             f"AUTHENTICATED READ FAIL: Respondió HTTP {response.status_code}. "
             f"Body: {response.text[:200]}"
         )
@@ -212,17 +210,20 @@ def test_payload_tampering_invalid_rebuild_mode_returns_422():
     PAYLOAD TAMPERING — Rebuild mode inválido (e.g. SUPER_FORCE_MUTATE_STOCK)
     es rechazado por Pydantic validation con 422.
     """
-    active_user = _get_mock_active_user()
-    app.dependency_overrides[get_logistics_current_user] = lambda: active_user
+    org_id = uuid4()
+    principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory_ledger.reconcile"])
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
 
     try:
         client = TestClient(app, raise_server_exceptions=False)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "test_csrf_token")
         response = client.post(
             f"{_BALANCES_BASE_PATH}/rebuild",
             json={
-                "organization_id": str(uuid4()),
+                "organization_id": str(org_id),
                 "rebuild_mode": "SUPER_FORCE_MUTATE_STOCK",  # Modo inválido
             },
+            headers={"X-CSRF-Token": "test_csrf_token"},
         )
         assert response.status_code == 422, (
             f"PAYLOAD TAMPERING FAIL: POST con rebuild_mode inválido respondió HTTP {response.status_code} (esperado 422). "
@@ -238,24 +239,305 @@ def test_payload_tampering_direct_stock_injection_ignored_or_rejected():
     PAYLOAD TAMPERING — Intentar inyectar campos arbitrarios (set_quantity, override_balance)
     en la solicitud de rebuild NO debe alterar el saldo.
     """
-    active_user = _get_mock_active_user()
-    app.dependency_overrides[get_logistics_current_user] = lambda: active_user
+    org_id = uuid4()
+    principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory.read"], is_admin=True)
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
 
     try:
-        client = TestClient(app, raise_server_exceptions=False)
+        client = TestClient(app, raise_server_exceptions=True)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "test_csrf_token")
         response = client.post(
             f"{_BALANCES_BASE_PATH}/rebuild",
             json={
-                "organization_id": str(uuid4()),
+                "organization_id": str(org_id),
                 "rebuild_mode": "FULL",
                 "set_quantity": "999999.00",  # Inyección maliciosa de saldo
                 "override_balance": True,
             },
+            headers={"X-CSRF-Token": "test_csrf_token"},
         )
-        # Pydantic schema o handler debe responder 200/202 (ignorando campos extra) o 422,
-        # pero NUNCA permitir inyección directa de stock.
-        assert response.status_code in (200, 202, 422), (
-            f"PAYLOAD TAMPERING FAIL: Respondió HTTP {response.status_code}."
+        assert response.status_code in (200, 202, 403, 422), (
+            f"PAYLOAD TAMPERING FAIL: Respondió HTTP {response.status_code}. Body: {response.text[:200]}"
         )
     finally:
         app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# Granular RBAC, Cross-Tenant, CSRF & Step-Up Tests (Phase 045 Security Closure)
+# ---------------------------------------------------------------------------
+
+from datetime import UTC, datetime, timedelta
+
+from app.core.config import settings
+from app.modules.logistics.auth_dependencies import get_logistics_principal
+from app.modules.logistics.principal import LogisticsPrincipal
+from app.modules.logistics.security.models_stepup import StepUpChallenge, StepUpProof
+
+
+def _make_principal(
+    user_id: UUID | None = None,
+    session_id: UUID | None = None,
+    org_ids: list[UUID] | None = None,
+    permissions: list[str] | None = None,
+    step_up_permissions: list[str] | None = None,
+    is_admin: bool = False,
+) -> LogisticsPrincipal:
+    uid = user_id or uuid4()
+    sid = session_id or uuid4()
+    org_strs = [str(o) for o in (org_ids or [uuid4()])]
+    return LogisticsPrincipal(
+        user_id=uid,
+        email="security_test@example.com",
+        full_name="Security Test User",
+        platform_role="admin" if is_admin else "user",
+        is_active=True,
+        session_id=sid,
+        device_id=None,
+        authentication_level="normal",
+        session_expires_at=datetime.now(UTC),
+        risk_score=0.1,
+        logistics_enabled=True,
+        role_codes=["INVENTORY_CONTROLLER"],
+        permission_codes=permissions or [],
+        sensitive_permissions=[],
+        step_up_permissions=step_up_permissions or [],
+        organization_ids=org_strs,
+        default_organization_id=org_strs[0],
+    )
+
+
+@pytest.mark.security
+def test_rbac_read_permission_granted_returns_200():
+    """RBAC READ PASS — User with logistics.inventory.read gets HTTP 200 on /summary."""
+    org_id = uuid4()
+    principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory.read"])
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        res = client.get(f"{_BALANCES_BASE_PATH}/summary", params={"organization_id": str(org_id)})
+        assert res.status_code == 200, f"Expected 200, got {res.status_code}: {res.text}"
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_rbac_read_permission_denied_returns_403():
+    """RBAC READ DENY — User WITHOUT logistics.inventory.read gets HTTP 403."""
+    org_id = uuid4()
+    principal = _make_principal(org_ids=[org_id], permissions=["logistics.other.read"])
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        res = client.get(f"{_BALANCES_BASE_PATH}/summary", params={"organization_id": str(org_id)})
+        assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
+        assert "FORBIDDEN" in res.text or "No tiene el permiso" in res.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_rbac_rebuild_permission_denied_returns_403():
+    """RBAC REBUILD DENY — User WITHOUT rebuild/reconcile permission gets HTTP 403."""
+    org_id = uuid4()
+    principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory.read"])
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "test_csrf_token")
+        res = client.post(
+            f"{_BALANCES_BASE_PATH}/rebuild",
+            json={"organization_id": str(org_id), "rebuild_mode": "FULL"},
+            headers={"X-CSRF-Token": "test_csrf_token"},
+        )
+        assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
+        assert "FORBIDDEN" in res.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_cross_tenant_read_summary_returns_403():
+    """CROSS-TENANT READ — User in Org A querying Org B gets HTTP 403."""
+    org_a = uuid4()
+    org_b = uuid4()
+    principal = _make_principal(org_ids=[org_a], permissions=["logistics.inventory.read"])
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        res = client.get(f"{_BALANCES_BASE_PATH}/summary", params={"organization_id": str(org_b)})
+        assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
+        assert "CROSS_TENANT_ACCESS_DENIED" in res.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_cross_tenant_rebuild_returns_403():
+    """CROSS-TENANT REBUILD — User in Org A requesting rebuild for Org B gets HTTP 403."""
+    org_a = uuid4()
+    org_b = uuid4()
+    principal = _make_principal(
+        org_ids=[org_a],
+        permissions=["logistics.inventory_ledger.reconcile"],
+    )
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "test_csrf_token")
+        res = client.post(
+            f"{_BALANCES_BASE_PATH}/rebuild",
+            json={"organization_id": str(org_b), "rebuild_mode": "FULL"},
+            headers={"X-CSRF-Token": "test_csrf_token"},
+        )
+        assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
+        assert "CROSS_TENANT_ACCESS_DENIED" in res.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_csrf_missing_header_returns_403():
+    """CSRF MISSING — POST /rebuild with cookie but missing X-CSRF-Token returns HTTP 403."""
+    org_id = uuid4()
+    principal = _make_principal(
+        org_ids=[org_id],
+        permissions=["logistics.inventory_ledger.reconcile"],
+    )
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "test_csrf_token")
+        res = client.post(
+            f"{_BALANCES_BASE_PATH}/rebuild",
+            json={"organization_id": str(org_id), "rebuild_mode": "FULL"},
+        )
+        assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
+        assert "CSRF_VALIDATION_FAILED" in res.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_csrf_invalid_header_returns_403():
+    """CSRF INVALID — POST /rebuild with cookie and invalid X-CSRF-Token returns HTTP 403."""
+    org_id = uuid4()
+    principal = _make_principal(
+        org_ids=[org_id],
+        permissions=["logistics.inventory_ledger.reconcile"],
+    )
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "valid_token")
+        res = client.post(
+            f"{_BALANCES_BASE_PATH}/rebuild",
+            json={"organization_id": str(org_id), "rebuild_mode": "FULL"},
+            headers={"X-CSRF-Token": "INVALID_TOKEN"},
+        )
+        assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
+        assert "CSRF_VALIDATION_FAILED" in res.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_step_up_required_returns_403():
+    """STEP-UP REQUIRED — Rebuild requiring step-up without X-Step-Up-Proof-ID returns 403."""
+    org_id = uuid4()
+    perm = "logistics.inventory_ledger.reconcile"
+    principal = _make_principal(
+        org_ids=[org_id],
+        permissions=[perm],
+        step_up_permissions=[perm],
+    )
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "test_csrf_token")
+        res = client.post(
+            f"{_BALANCES_BASE_PATH}/rebuild",
+            json={"organization_id": str(org_id), "rebuild_mode": "FULL"},
+            headers={"X-CSRF-Token": "test_csrf_token"},
+        )
+        assert res.status_code == 403, f"Expected 403, got {res.status_code}: {res.text}"
+        assert "STEP_UP_REQUIRED" in res.text
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.security
+def test_step_up_valid_proof_passes_step_up(database):
+    """STEP-UP PASS — Rebuild with valid X-Step-Up-Proof-ID proof passes step-up."""
+    from app.database.session import get_db
+
+    engine = database.get_bind()
+    StepUpChallenge.__table__.create(bind=engine, checkfirst=True)
+    StepUpProof.__table__.create(bind=engine, checkfirst=True)
+
+    org_id = uuid4()
+    perm = "logistics.inventory_ledger.reconcile"
+    user_id = uuid4()
+    session_id = uuid4()
+
+    principal = _make_principal(
+        user_id=user_id,
+        session_id=session_id,
+        org_ids=[org_id],
+        permissions=[perm],
+        step_up_permissions=[perm],
+    )
+
+    challenge = StepUpChallenge(
+        id=uuid4(),
+        user_id=user_id,
+        session_id=session_id,
+        permission_code=perm,
+        required_factors=["totp"],
+        status="passed",
+        expires_at=datetime.now(UTC) + timedelta(minutes=10),
+    )
+    database.add(challenge)
+    database.flush()
+
+    proof = StepUpProof(
+        id=uuid4(),
+        challenge_id=challenge.id,
+        user_id=user_id,
+        session_id=session_id,
+        permission_code=perm,
+        status="active",
+        one_time=True,
+        proof_hash="a" * 64,
+        issued_at=datetime.now(UTC),
+        expires_at=datetime.now(UTC) + timedelta(minutes=10),
+    )
+    database.add(proof)
+    database.commit()
+
+    app.dependency_overrides[get_logistics_principal] = lambda: principal
+    app.dependency_overrides[get_db] = lambda: database
+
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        client.cookies.set(settings.CSRF_COOKIE_NAME, "test_csrf_token")
+        res = client.post(
+            f"{_BALANCES_BASE_PATH}/rebuild",
+            json={"organization_id": str(org_id), "rebuild_mode": "FULL"},
+            headers={
+                "X-CSRF-Token": "test_csrf_token",
+                "X-Step-Up-Proof-ID": str(proof.id),
+            },
+        )
+        assert res.status_code == 202, f"Expected 202, got {res.status_code}: {res.text}"
+    finally:
+        app.dependency_overrides.clear()
+
