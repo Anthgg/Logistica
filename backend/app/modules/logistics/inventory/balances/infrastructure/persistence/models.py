@@ -24,11 +24,13 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -52,6 +54,15 @@ def _utcnow() -> datetime:
 class InventoryPositionBalanceModel(Base):
     """Saldo atómico materializado por InventoryPosition (Fase 045)."""
     __tablename__ = "inventory_position_balances"
+    __table_args__ = (
+        Index(
+            "uq_ipb_active_position",
+            "organization_id",
+            "inventory_position_id",
+            unique=True,
+            postgresql_where=text("is_active_projection = TRUE"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=_uuid)
     organization_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)

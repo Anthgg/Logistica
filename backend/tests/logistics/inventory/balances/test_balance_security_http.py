@@ -19,6 +19,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from app.database.session import get_db
 from app.main import app
 from app.models.session import UserSession
 from app.models.user import User
@@ -183,13 +184,16 @@ def test_unauthenticated_post_rebuild_is_denied():
 # ---------------------------------------------------------------------------
 
 @pytest.mark.security
-def test_authenticated_active_user_can_access_summary():
+def test_authenticated_active_user_can_access_summary(database):
     """
     AUTHENTICATED READ — Usuario activo autenticado puede consultar /summary.
     """
     org_id = uuid4()
     principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory.read"])
     app.dependency_overrides[get_logistics_principal] = lambda: principal
+    def _get_db():
+        yield database
+    app.dependency_overrides[get_db] = _get_db
 
     try:
         client = TestClient(app, raise_server_exceptions=False)
@@ -235,14 +239,17 @@ def test_payload_tampering_invalid_rebuild_mode_returns_422():
 
 
 @pytest.mark.security
-def test_payload_tampering_direct_stock_injection_ignored_or_rejected():
+def test_payload_tampering_direct_stock_injection_ignored_or_rejected(database):
     """
     PAYLOAD TAMPERING — Intentar inyectar campos arbitrarios (set_quantity, override_balance)
     en la solicitud de rebuild NO debe alterar el saldo.
     """
     org_id = uuid4()
-    principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory.read"], is_admin=True)
+    principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory_ledger.reconcile"], is_admin=True)
     app.dependency_overrides[get_logistics_principal] = lambda: principal
+    def _get_db():
+        yield database
+    app.dependency_overrides[get_db] = _get_db
 
     try:
         client = TestClient(app, raise_server_exceptions=True)
@@ -309,11 +316,14 @@ def _make_principal(
 
 
 @pytest.mark.security
-def test_rbac_read_permission_granted_returns_200():
+def test_rbac_read_permission_granted_returns_200(database):
     """RBAC READ PASS — User with logistics.inventory.read gets HTTP 200 on /summary."""
     org_id = uuid4()
     principal = _make_principal(org_ids=[org_id], permissions=["logistics.inventory.read"])
     app.dependency_overrides[get_logistics_principal] = lambda: principal
+    def _get_db():
+        yield database
+    app.dependency_overrides[get_db] = _get_db
 
     try:
         client = TestClient(app, raise_server_exceptions=False)
