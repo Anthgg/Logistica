@@ -123,7 +123,7 @@ class InventoryBalanceDeltaModel(Base):
     base_unit_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)
 
     movement_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    materialization_key: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    materialization_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
 
     applied_status: Mapped[str] = mapped_column(String(50), nullable=False, default="PENDING", index=True)
     applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

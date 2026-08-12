@@ -75,7 +75,7 @@ def upgrade() -> None:
         sa.Column("delta_quantity", sa.Numeric(38, 18), nullable=False),
         sa.Column("base_unit_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("movement_hash", sa.String(64), nullable=False),
-        sa.Column("materialization_key", sa.String(128), unique=True, nullable=False),
+        sa.Column("materialization_key", sa.String(255), unique=True, nullable=False),
         sa.Column("applied_status", sa.String(50), nullable=False, server_default="PENDING", index=True),
         sa.Column("applied_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("balance_before", sa.Numeric(38, 18), nullable=True),

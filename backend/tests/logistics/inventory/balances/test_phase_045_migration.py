@@ -135,8 +135,8 @@ def test_alembic_upgrade_downgrade_cycle_real():
         return result
 
     try:
-        # Paso 1: Upgrade hasta baseline 044
-        run_alembic("upgrade", "gl440610044rb")
+        # Paso 1: Downgrade a baseline 044
+        run_alembic("downgrade", "gl440610044rb")
         tables_after_044 = _get_existing_tables(engine)
 
         # Ninguna tabla de 045 debe existir todavía
@@ -145,14 +145,14 @@ def test_alembic_upgrade_downgrade_cycle_real():
                 f"MIGRATION FAIL: Tabla {table} (Fase 045) existe antes del upgrade 045"
             )
 
-        # Paso 2: Upgrade a Fase 045
-        run_alembic("upgrade", "hh450110045dc")
+        # Paso 2: Upgrade a Fase 045 Head (gg450210045sw)
+        run_alembic("upgrade", "gg450210045sw")
         tables_after_045 = _get_existing_tables(engine)
 
         # Todas las tablas de 045 deben existir
         for table in PHASE_045_TABLES:
             assert table in tables_after_045, (
-                f"MIGRATION FAIL: Tabla {table} no fue creada por hh450110045dc. "
+                f"MIGRATION FAIL: Tabla {table} no fue creada por la migración. "
                 f"Tablas existentes: {[t for t in tables_after_045 if 'inventory' in t]}"
             )
 
@@ -168,7 +168,7 @@ def test_alembic_upgrade_downgrade_cycle_real():
             )
 
         # Paso 4: Segundo upgrade (idempotencia de migraciones)
-        run_alembic("upgrade", "hh450110045dc")
+        run_alembic("upgrade", "gg450210045sw")
         tables_final = _get_existing_tables(engine)
 
         for table in PHASE_045_TABLES:

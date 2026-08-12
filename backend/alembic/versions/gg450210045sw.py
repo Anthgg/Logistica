@@ -64,6 +64,15 @@ def upgrade() -> None:
         ["organization_id", "is_active_projection"],
     )
 
+    # Expand materialization_key from String(128) to String(255) to support long keys
+    op.alter_column(
+        "inventory_balance_deltas",
+        "materialization_key",
+        type_=sa.String(255),
+        existing_type=sa.String(128),
+        existing_nullable=False,
+    )
+
 
 def downgrade() -> None:
     op.drop_index("ix_ipb_active_projection", table_name="inventory_position_balances")
