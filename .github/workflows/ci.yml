@@ -95,9 +95,9 @@ jobs:
           CURRENT=$(python -m alembic current 2>&1)
           echo "Alembic current: $CURRENT"
           # The head must be the Phase 045 revision
-          if ! echo "$CURRENT" | grep -q "gg450210045sw\|hh450110045dc"; then
+          if ! echo "$CURRENT" | grep -q "gh450310045pu\|gg450210045sw\|hh450110045dc"; then
             echo "FAIL: Alembic current does not show expected Phase 045 head."
-            echo "Expected: gg450210045sw (or hh450110045dc if no new migration)"
+            echo "Expected: gh450310045pu (or gg450210045sw / hh450110045dc)"
             echo "Got: $CURRENT"
             exit 1
           fi
