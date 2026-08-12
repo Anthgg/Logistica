@@ -1,4 +1,15 @@
+"""
+test_formulas.py — Tests UNITARIOS de fórmulas de saldos (Fase 045)
+
+Clasificación: UNIT_TEST
+- Sin DB, sin infraestructura real
+- Validan la lógica de cálculo de Physical, ATP, Quarantine
+"""
+import pytest
 from decimal import Decimal
+
+pytestmark = pytest.mark.unit
+
 from app.modules.logistics.inventory.balances.domain.services.formula_service import (
     InventoryBalanceFormulaService,
 )

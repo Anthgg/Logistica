@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feat/phase-045-inventory-balances ]
   pull_request:
     branches: [ main, develop ]
 
@@ -30,17 +30,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
           cache: 'pip'
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-          pip install ruff mypy pytest pytest-asyncio httpx
+          pip install ruff mypy pytest pytest-asyncio httpx psycopg[binary]
 
       - name: Run Linter (Ruff)
         run: |
@@ -52,10 +52,89 @@ jobs:
           cd backend
           mypy app --ignore-missing-imports || true
 
-      - name: Run Unit & Integration Tests
+      - name: Run Alembic Migrations (PostgreSQL TEST)
         env:
           APP_ENV: testing
           DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          COOKIE_SECURE: false
+        run: |
+          cd backend
+          python -m alembic upgrade head
+
+      - name: Run Unit Tests (sin PostgreSQL requerido)
+        env:
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          COOKIE_SECURE: false
+        run: |
+          cd backend
+          pytest -m "not ml and not postgres and not concurrency and not migration" --tb=short -v
+
+      - name: Run PostgreSQL Integration Tests (Fase 045)
+        env:
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          COOKIE_SECURE: false
+        run: |
+          cd backend
+          pytest -m "postgres" --tb=short -v
+          # FAIL HARD: si tests PostgreSQL fallan, el workflow falla (no || true)
+
+      - name: Run Concurrency Tests (Fase 045)
+        env:
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          COOKIE_SECURE: false
+        run: |
+          cd backend
+          pytest -m "concurrency" --tb=short -v
+          # FAIL HARD: no || true
+
+      - name: Run Migration Cycle Tests (Fase 045)
+        env:
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          COOKIE_SECURE: false
+        run: |
+          cd backend
+          pytest -m "migration" --tb=short -v
+
+      - name: Run Security HTTP Tests
+        env:
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          COOKIE_SECURE: false
+        run: |
+          cd backend
+          pytest -m "security" --tb=short -v
+
+      - name: Run Full Phase 045 Suite
+        env:
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          COOKIE_SECURE: false
+        run: |
+          cd backend
+          pytest tests/logistics/inventory/balances -vv --tb=short
+
+      - name: Run Full Backend Suite (not ml)
+        env:
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
           SECRET_KEY: test-only-secret-key-must-be-min-16-chars
           COOKIE_SECURE: false
         run: |
@@ -66,10 +145,19 @@ jobs:
         env:
           APP_ENV: testing
           DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
           SECRET_KEY: test-only-secret-key-must-be-min-16-chars
         run: |
           cd backend
-          python -c "from app.main import app; print('OpenAPI paths:', len(app.openapi()['paths']))"
+          python -c "
+          from app.main import app
+          schema = app.openapi()
+          paths = list(schema['paths'].keys())
+          balance_paths = [p for p in paths if '/api/logistics/inventory/balances' in p]
+          print('BALANCES_PATHS:', balance_paths)
+          print('OpenAPI total paths:', len(paths))
+          assert len(balance_paths) > 0, 'No se encontraron rutas de balances en OpenAPI'
+          "
 
   docker-build:
     name: Build & Validate Docker Image

@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.modules.logistics.dependencies import get_logistics_current_user
+from app.models.user import User
 from app.modules.logistics.inventory.balances.domain.services.availability_provider import (
     InventoryBalanceAvailabilityProvider,
 )
@@ -30,6 +32,7 @@ def get_balance_summary(
     warehouse_id: UUID | None = Query(None, description="ID del almacén opcional"),
     product_id: UUID | None = Query(None, description="ID del producto opcional"),
     db: Session = Depends(get_db),
+    _current_user: User = Depends(get_logistics_current_user),
 ) -> BalanceSummaryResponse:
     """Retorna el resumen consolidado de métricas (Physical, ATP, Quarantine, Blocked, In Transit)."""
     # En un entorno real se realiza la consulta a la BD
@@ -61,6 +64,7 @@ def get_balance_summary(
 def get_position_balance(
     position_id: UUID,
     db: Session = Depends(get_db),
+    _current_user: User = Depends(get_logistics_current_user),
 ) -> PositionBalanceRead:
     """Retorna el saldo materializado atómico proyectado para una posición específica."""
     raise HTTPException(
@@ -78,6 +82,7 @@ def get_position_balance(
 def trigger_balance_rebuild(
     payload: RebuildJobCreate,
     db: Session = Depends(get_db),
+    _current_user: User = Depends(get_logistics_current_user),
 ) -> RebuildJobRead:
     """Inicia un trabajo asíncrono de replay del ledger MOV para reconstruir la proyección de saldos."""
     import uuid

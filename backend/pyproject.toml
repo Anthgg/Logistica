@@ -9,6 +9,16 @@ testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
 addopts = "-ra"
+markers = [
+    "unit: Tests unitarios puros — sin DB ni infraestructura real",
+    "integration: Tests de integración general",
+    "postgres: Tests de integración real contra PostgreSQL (requiere TEST_DATABASE_URL apuntando a PostgreSQL)",
+    "concurrency: Tests de concurrencia real con múltiples threads/sessions",
+    "http: Tests HTTP contra FastAPI real via TestClient",
+    "security: Tests de seguridad: RBAC, CSRF, step-up, cross-tenant",
+    "migration: Tests de ciclo Alembic real (upgrade/downgrade/inspect)",
+    "ml: Tests que requieren modelos de ML cargados (lentos)",
+]
 
 [tool.ruff]
 line-length = 100
