@@ -50,7 +50,7 @@ def _create_position(
     expiration_state: str = "NOT_APPLICABLE",
 ) -> InventoryPositionModel:
     pos_id = uuid4()
-    dim_key = f"{availability_state}:{quality_state}:{transit_state}:{damage_state}:{expiration_state}:{pos_id}"
+    dim_key = f"{availability_state}:{quality_state}:{transit_state}:{damage_state}:{expiration_state}"[:64]
     pos = InventoryPositionModel(
         id=pos_id,
         organization_id=org_id,
@@ -118,6 +118,8 @@ def _create_movement(
         base_unit_id=uuid4(),
         destination_position_id=dest_pos_id,
         source_position_id=src_pos_id,
+        source_external_boundary_kind="VENDOR" if dest_pos_id and not src_pos_id else None,
+        destination_external_boundary_kind="CUSTOMER" if src_pos_id and not dest_pos_id else None,
         quantity_direction="INCREASE" if dest_pos_id else "DECREASE",
         content_hash=f"line_hash_{sequence}",
         created_at=datetime.now(UTC),
@@ -153,7 +155,7 @@ def test_rebuild_corrupted_g1_from_f044_ledger(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("999.000000000000000000"), # Corrupted G1!
-        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{pos.id}",
+        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
@@ -300,7 +302,7 @@ def test_eight_balance_metrics_summary(pg_session: Session):
             transit_state=trans,
             damage_state=dam,
             expiration_state=exp,
-            dimension_key=f"{avail}:{qual}:{trans}:{dam}:{exp}:{pos_id}",
+            dimension_key=f"{avail}:{qual}:{trans}:{dam}:{exp}"[:64],
             is_active_projection=True,
             data_quality_status="PROJECTION_CURRENT",
         )
@@ -353,7 +355,7 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
         transit_state="NOT_IN_TRANSIT",
         damage_state="NORMAL",
         expiration_state="NOT_APPLICABLE",
-        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{shared_pos_id}",
+        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
         status="ACTIVE",
         created_at=datetime.now(UTC),
     )
@@ -370,7 +372,7 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("100.000000000000000000"),
-        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{shared_pos_id}",
+        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
@@ -386,7 +388,7 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("500.000000000000000000"),
-        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{shared_pos_id}",
+        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
@@ -446,7 +448,7 @@ def test_rebuild_hash_failure_preserves_g1(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("50.000000000000000000"),
-        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{pos.id}",
+        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
