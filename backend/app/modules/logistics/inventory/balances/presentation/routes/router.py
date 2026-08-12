@@ -16,7 +16,7 @@ from app.modules.logistics.inventory.balances.presentation.schemas.schemas impor
     RebuildJobRead,
 )
 
-router = APIRouter(prefix="/inventory/balances", tags=["Inventory Balances (Phase 045)"])
+router = APIRouter(prefix="/balances", tags=["Inventory Balances (Phase 045)"])
 availability_provider = InventoryBalanceAvailabilityProvider()
 
 
