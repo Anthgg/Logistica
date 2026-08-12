@@ -153,6 +153,7 @@ def test_rebuild_corrupted_g1_from_f044_ledger(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("999.000000000000000000"), # Corrupted G1!
+        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{pos.id}",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
@@ -369,6 +370,7 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("100.000000000000000000"),
+        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{shared_pos_id}",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
@@ -384,6 +386,7 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("500.000000000000000000"),
+        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{shared_pos_id}",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
@@ -443,6 +446,7 @@ def test_rebuild_hash_failure_preserves_g1(pg_session: Session):
         product_id=prod_id,
         base_unit_id=prod_id,
         quantity=Decimal("50.000000000000000000"),
+        dimension_key=f"AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE:{pos.id}",
         is_active_projection=True,
         data_quality_status="PROJECTION_CURRENT",
     )
