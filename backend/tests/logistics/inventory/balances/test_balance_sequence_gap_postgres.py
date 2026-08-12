@@ -54,6 +54,7 @@ def _consume_deltas_ordered(session: Session, org_id, partition_key: str, pos_id
     for delta in pending_deltas:
         if delta.ledger_sequence != last_seq + 1:
             # GAP DETECTED — detener consumer, marcar cursor
+            cursor.last_applied_sequence = last_seq
             cursor.status = "GAP_DETECTED"
             session.commit()
             return
