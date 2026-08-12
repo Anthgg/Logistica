@@ -36,6 +36,10 @@ from app.modules.logistics.inventory.ledger.infrastructure.persistence.models im
 
 pytestmark = [pytest.mark.postgres, pytest.mark.integration]
 
+# Default partition key used when creating bare balance rows in tests
+_DEFAULT_PARTITION = "TEST:DEFAULT"
+_DEFAULT_DIM_KEY = "AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE"
+
 
 def _create_position(
     db: Session,
@@ -106,6 +110,8 @@ def _create_movement(
         created_at=datetime.now(UTC),
     )
     db.add(mov)
+    # Flush movement FIRST so FK constraint is satisfied before inserting line
+    db.flush()
 
     line = InventoryMovementLineModel(
         id=uuid4(),
@@ -118,6 +124,8 @@ def _create_movement(
         base_unit_id=uuid4(),
         destination_position_id=dest_pos_id,
         source_position_id=src_pos_id,
+        # Satisfy ck_inventory_movement_line_source_boundary:
+        # At least one of source/destination (internal position OR external boundary) must be set per direction.
         source_external_boundary_kind="VENDOR" if dest_pos_id and not src_pos_id else None,
         destination_external_boundary_kind="CUSTOMER" if src_pos_id and not dest_pos_id else None,
         quantity_direction="INCREASE" if dest_pos_id else "DECREASE",
@@ -127,6 +135,45 @@ def _create_movement(
     db.add(line)
     db.flush()
     return mov
+
+
+def _make_balance(
+    org_id: UUID,
+    branch_id: UUID,
+    wh_id: UUID,
+    pos_id: UUID,
+    prod_id: UUID,
+    quantity: Decimal,
+    partition_key: str = _DEFAULT_PARTITION,
+    dim_key: str = _DEFAULT_DIM_KEY,
+    avail: str = "AVAILABLE",
+    qual: str = "APPROVED",
+    trans: str = "NOT_IN_TRANSIT",
+    dam: str = "NORMAL",
+    exp: str = "NOT_APPLICABLE",
+    is_active: bool = True,
+) -> InventoryPositionBalanceModel:
+    """Helper that always sets all NOT NULL fields on InventoryPositionBalanceModel."""
+    return InventoryPositionBalanceModel(
+        id=uuid4(),
+        organization_id=org_id,
+        branch_id=branch_id,
+        warehouse_id=wh_id,
+        inventory_position_id=pos_id,
+        product_id=prod_id,
+        base_unit_id=prod_id,
+        quantity=quantity,
+        availability_state=avail,
+        quality_state=qual,
+        transit_state=trans,
+        damage_state=dam,
+        expiration_state=exp,
+        dimension_key=dim_key[:64],
+        last_applied_ledger_partition_key=partition_key,
+        last_applied_ledger_sequence=0,
+        is_active_projection=is_active,
+        data_quality_status="PROJECTION_CURRENT",
+    )
 
 
 @pytest.mark.postgres
@@ -143,22 +190,14 @@ def test_rebuild_corrupted_g1_from_f044_ledger(pg_session: Session):
 
     # F044 Ledger movements: +100, -20 => 80
     m1 = _create_movement(pg_session, org_id, branch_id, part_key, 1, dest_pos_id=pos.id, base_qty=Decimal(100))
-    _create_movement(pg_session, org_id, branch_id, part_key, 2, src_pos_id=pos.id, base_qty=Decimal(20), prev_hash=m1.movement_hash)
+    _create_movement(
+        pg_session, org_id, branch_id, part_key, 2,
+        src_pos_id=pos.id, base_qty=Decimal(20),
+        prev_hash=m1.movement_hash,
+    )
 
     # Corrupt G1 manually in SQL to 999
-    corrupted_g1 = InventoryPositionBalanceModel(
-        id=uuid4(),
-        organization_id=org_id,
-        branch_id=branch_id,
-        warehouse_id=wh_id,
-        inventory_position_id=pos.id,
-        product_id=prod_id,
-        base_unit_id=prod_id,
-        quantity=Decimal("999.000000000000000000"), # Corrupted G1!
-        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
-        is_active_projection=True,
-        data_quality_status="PROJECTION_CURRENT",
-    )
+    corrupted_g1 = _make_balance(org_id, branch_id, wh_id, pos.id, prod_id, Decimal(999), partition_key=part_key)
     pg_session.add(corrupted_g1)
     pg_session.commit()
 
@@ -274,37 +313,25 @@ def test_eight_balance_metrics_summary(pg_session: Session):
     org_id = uuid4()
     wh_id = uuid4()
     prod_id = uuid4()
+    branch_id = uuid4()
 
-    # Create 8 positions with distinct states and quantities
+    # Create 7 balance rows with distinct states and quantities
     metrics_spec = [
-        ("AVAILABLE", "APPROVED", "NOT_IN_TRANSIT", "NORMAL", "NOT_APPLICABLE", Decimal("10.000000000000000000")),
-        ("RESERVED", "APPROVED", "NOT_IN_TRANSIT", "NORMAL", "NOT_APPLICABLE", Decimal("20.000000000000000000")),
-        ("BLOCKED", "APPROVED", "NOT_IN_TRANSIT", "NORMAL", "NOT_APPLICABLE", Decimal("30.000000000000000000")),
-        ("QUARANTINE", "QUARANTINED", "NOT_IN_TRANSIT", "NORMAL", "NOT_APPLICABLE", Decimal("40.000000000000000000")),
-        ("IN_TRANSIT", "APPROVED", "IN_TRANSIT_INBOUND", "NORMAL", "NOT_APPLICABLE", Decimal("50.000000000000000000")),
-        ("DAMAGED", "APPROVED", "NOT_IN_TRANSIT", "DAMAGED", "NOT_APPLICABLE", Decimal("60.000000000000000000")),
-        ("EXPIRED", "APPROVED", "NOT_IN_TRANSIT", "NORMAL", "EXPIRED", Decimal("70.000000000000000000")),
+        ("AVAILABLE",  "APPROVED",    "NOT_IN_TRANSIT",    "NORMAL",  "NOT_APPLICABLE", Decimal(10)),
+        ("RESERVED",   "APPROVED",    "NOT_IN_TRANSIT",    "NORMAL",  "NOT_APPLICABLE", Decimal(20)),
+        ("BLOCKED",    "APPROVED",    "NOT_IN_TRANSIT",    "NORMAL",  "NOT_APPLICABLE", Decimal(30)),
+        ("QUARANTINE", "QUARANTINED", "NOT_IN_TRANSIT",    "NORMAL",  "NOT_APPLICABLE", Decimal(40)),
+        ("IN_TRANSIT", "APPROVED",    "IN_TRANSIT_INBOUND","NORMAL",  "NOT_APPLICABLE", Decimal(50)),
+        ("DAMAGED",    "APPROVED",    "NOT_IN_TRANSIT",    "DAMAGED", "NOT_APPLICABLE", Decimal(60)),
+        ("EXPIRED",    "APPROVED",    "NOT_IN_TRANSIT",    "NORMAL",  "EXPIRED",        Decimal(70)),
     ]
 
     for avail, qual, trans, dam, exp, qty in metrics_spec:
         pos_id = uuid4()
-        b = InventoryPositionBalanceModel(
-            id=uuid4(),
-            organization_id=org_id,
-            branch_id=uuid4(),
-            warehouse_id=wh_id,
-            inventory_position_id=pos_id,
-            product_id=prod_id,
-            base_unit_id=prod_id,
-            quantity=qty,
-            availability_state=avail,
-            quality_state=qual,
-            transit_state=trans,
-            damage_state=dam,
-            expiration_state=exp,
-            dimension_key=f"{avail}:{qual}:{trans}:{dam}:{exp}"[:64],
-            is_active_projection=True,
-            data_quality_status="PROJECTION_CURRENT",
+        dim_key = f"{avail}:{qual}:{trans}:{dam}:{exp}"[:64]
+        b = _make_balance(
+            org_id, branch_id, wh_id, pos_id, prod_id, qty,
+            dim_key=dim_key, avail=avail, qual=qual, trans=trans, dam=dam, exp=exp,
         )
         pg_session.add(b)
 
@@ -313,9 +340,9 @@ def test_eight_balance_metrics_summary(pg_session: Session):
     query_service = BalanceQueryService()
     summary = query_service.get_active_balances_summary(pg_session, org_id)
 
-    # 1. Physical on hand: 10 + 20 + 30 + 40 + 60 + 70 = 230 (excludes in_transit 50)
+    # 1. Physical on hand: excludes IN_TRANSIT => 10+20+30+40+60+70 = 230
     assert summary["physical_on_hand"] == Decimal("230.000000000000000000")
-    # 2. Available to promise: AVAILABLE = 10
+    # 2. Available to promise: AVAILABLE only = 10
     assert summary["available_to_promise"] == Decimal("10.000000000000000000")
     # 3. Reserved stock (SEPARATE): 20
     assert summary["reserved_stock"] == Decimal("20.000000000000000000")
@@ -355,43 +382,20 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
         transit_state="NOT_IN_TRANSIT",
         damage_state="NORMAL",
         expiration_state="NOT_APPLICABLE",
-        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
+        dimension_key=_DEFAULT_DIM_KEY,
         status="ACTIVE",
         created_at=datetime.now(UTC),
     )
     pg_session.add(pos_a)
+    pg_session.flush()
     _create_movement(pg_session, org_a, branch_id, part_a, 1, dest_pos_id=shared_pos_id, base_qty=Decimal(100))
 
     # Active G1 for Org A = 100
-    g1_a = InventoryPositionBalanceModel(
-        id=uuid4(),
-        organization_id=org_a,
-        branch_id=branch_id,
-        warehouse_id=wh_id,
-        inventory_position_id=shared_pos_id,
-        product_id=prod_id,
-        base_unit_id=prod_id,
-        quantity=Decimal("100.000000000000000000"),
-        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
-        is_active_projection=True,
-        data_quality_status="PROJECTION_CURRENT",
-    )
+    g1_a = _make_balance(org_a, branch_id, wh_id, shared_pos_id, prod_id, Decimal(100), partition_key=part_a)
     pg_session.add(g1_a)
 
-    # Active G1 for Org B with SAME position UUID = 500
-    g1_b = InventoryPositionBalanceModel(
-        id=uuid4(),
-        organization_id=org_b,
-        branch_id=branch_id,
-        warehouse_id=wh_id,
-        inventory_position_id=shared_pos_id,
-        product_id=prod_id,
-        base_unit_id=prod_id,
-        quantity=Decimal("500.000000000000000000"),
-        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
-        is_active_projection=True,
-        data_quality_status="PROJECTION_CURRENT",
-    )
+    # Active G1 for Org B with SAME position UUID = 500 (different org, same pos_id)
+    g1_b = _make_balance(org_b, branch_id, wh_id, shared_pos_id, prod_id, Decimal(500), partition_key=f"org:{org_b}:default")
     pg_session.add(g1_b)
     pg_session.commit()
 
@@ -406,7 +410,7 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
     rebuild_service.execute_rebuild_from_ledger(job.id)
     pg_session.commit()
 
-    # Verify Org A active balance updated
+    # Verify Org A active balance updated from ledger (100)
     bal_a = pg_session.scalars(
         select(InventoryPositionBalanceModel)
         .where(InventoryPositionBalanceModel.organization_id == org_a)
@@ -416,7 +420,7 @@ def test_tenant_safe_atomic_swap_same_position_uuid(pg_session: Session):
     assert bal_a is not None
     assert bal_a.quantity == Decimal("100.000000000000000000")
 
-    # Verify Org B active balance remains EXACTLY 500 (unaffected)
+    # Verify Org B active balance remains EXACTLY 500 (unaffected by Org A rebuild)
     bal_b = pg_session.scalars(
         select(InventoryPositionBalanceModel)
         .where(InventoryPositionBalanceModel.organization_id == org_b)
@@ -439,22 +443,10 @@ def test_rebuild_hash_failure_preserves_g1(pg_session: Session):
     pos = _create_position(pg_session, org_id, branch_id, wh_id, prod_id)
 
     # Initial active G1 balance = 50
-    g1 = InventoryPositionBalanceModel(
-        id=uuid4(),
-        organization_id=org_id,
-        branch_id=branch_id,
-        warehouse_id=wh_id,
-        inventory_position_id=pos.id,
-        product_id=prod_id,
-        base_unit_id=prod_id,
-        quantity=Decimal("50.000000000000000000"),
-        dimension_key="AVAILABLE:APPROVED:NOT_IN_TRANSIT:NORMAL:NOT_APPLICABLE",
-        is_active_projection=True,
-        data_quality_status="PROJECTION_CURRENT",
-    )
+    g1 = _make_balance(org_id, branch_id, wh_id, pos.id, prod_id, Decimal(50), partition_key=part_key)
     pg_session.add(g1)
 
-    # Create movement with mismatched previous hash
+    # Create movement with mismatched previous hash (deliberately corrupted chain)
     _create_movement(
         pg_session,
         org_id,
