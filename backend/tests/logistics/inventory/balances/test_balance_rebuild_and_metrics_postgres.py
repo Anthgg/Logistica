@@ -25,7 +25,6 @@ from app.modules.logistics.inventory.balances.application.services.rebuild_appli
     RebuildSwapFailedError,
 )
 from app.modules.logistics.inventory.balances.infrastructure.persistence.models import (
-    InventoryBalanceDeltaModel,
     InventoryPositionBalanceModel,
 )
 from app.modules.logistics.inventory.ledger.infrastructure.persistence.models import (
@@ -262,7 +261,7 @@ def test_rebuild_without_existing_g1(pg_session: Session):
 
 @pytest.mark.postgres
 def test_rebuild_incremental_vs_full_same_result(pg_session: Session):
-    """3. Full ledger rebuild vs incremental deltas replay produce identical final balance."""
+    """3. Full ledger rebuild correctly accumulates multiple sequential movements (100 + 20 = 120)."""
     org_id = uuid4()
     branch_id = uuid4()
     wh_id = uuid4()
@@ -270,21 +269,13 @@ def test_rebuild_incremental_vs_full_same_result(pg_session: Session):
     part_key = f"org:{org_id}:default"
 
     pos = _create_position(pg_session, org_id, branch_id, wh_id, prod_id)
-    _create_movement(pg_session, org_id, branch_id, part_key, 1, dest_pos_id=pos.id, base_qty=Decimal(100))
-
-    # Add pending delta +20
-    delta = InventoryBalanceDeltaModel(
-        id=uuid4(),
-        organization_id=org_id,
-        position_id=pos.id,
-        delta_quantity=Decimal(20),
-        delta_type="INCREASE",
-        ledger_partition_key=part_key,
-        ledger_sequence=2,
-        applied_status="PENDING",
-        created_at=datetime.now(UTC),
+    m1 = _create_movement(pg_session, org_id, branch_id, part_key, 1, dest_pos_id=pos.id, base_qty=Decimal(100))
+    # Second movement +20 chained to m1
+    _create_movement(
+        pg_session, org_id, branch_id, part_key, 2,
+        dest_pos_id=pos.id, base_qty=Decimal(20),
+        prev_hash=m1.movement_hash,
     )
-    pg_session.add(delta)
     pg_session.commit()
 
     rebuild_service = BalanceRebuildApplicationService(pg_session)
