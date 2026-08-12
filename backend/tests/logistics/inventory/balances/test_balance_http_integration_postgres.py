@@ -274,8 +274,9 @@ def test_post_rebuild_persists_real_job_and_executes_atomic_swap(pg_session: Ses
         org = Organization(
             id=org_id,
             code=f"ORG_{org_id.hex[:6]}",
-            legal_name="Rebuild Test Org",
-            is_active=True,
+            name="Rebuild Test Org",
+            country_code="PE",
+            status="active",
         )
         pg_session.add(org)
 
