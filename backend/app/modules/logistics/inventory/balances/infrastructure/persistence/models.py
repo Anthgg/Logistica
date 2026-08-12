@@ -65,11 +65,11 @@ class InventoryPositionBalanceModel(Base):
 
     quantity: Mapped[Decimal] = mapped_column(Numeric(38, 18), nullable=False, default=Decimal("0.000000000000000000"), index=True)
 
-    availability_state: Mapped[str] = mapped_column(String(50), nullable=False, default="AVAILABLE", index=True)
-    quality_state: Mapped[str] = mapped_column(String(50), nullable=False, default="APPROVED", index=True)
+    availability_state: Mapped[str] = mapped_column(String(50), nullable=False, default="UNKNOWN", index=True)
+    quality_state: Mapped[str] = mapped_column(String(50), nullable=False, default="UNKNOWN", index=True)
     transit_state: Mapped[str] = mapped_column(String(50), nullable=False, default="NOT_IN_TRANSIT", index=True)
     damage_state: Mapped[str] = mapped_column(String(50), nullable=False, default="NORMAL", index=True)
-    expiration_state: Mapped[str] = mapped_column(String(50), nullable=False, default="FRESH", index=True)
+    expiration_state: Mapped[str] = mapped_column(String(50), nullable=False, default="NOT_APPLICABLE", index=True)
 
     ownership_type: Mapped[str] = mapped_column(String(50), nullable=False, default="OWNED")
     owner_business_partner_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
