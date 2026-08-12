@@ -5,8 +5,9 @@ Clasificación: UNIT_TEST
 - Sin DB, sin infraestructura real
 - Validan la lógica de cálculo de Physical, ATP, Quarantine
 """
-import pytest
 from decimal import Decimal
+
+import pytest
 
 pytestmark = pytest.mark.unit
 

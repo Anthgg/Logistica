@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-from typing import List
 
 import pytest
 from sqlalchemy import create_engine, inspect
@@ -79,7 +78,7 @@ _TEST_DB_URL = os.environ.get("TEST_DATABASE_URL", "")
 _POSTGRES_AVAILABLE = _TEST_DB_URL.startswith("postgresql")
 
 
-def _get_existing_tables(engine) -> List[str]:
+def _get_existing_tables(engine) -> list[str]:
     """Retorna las tablas existentes en la DB consultando PostgreSQL directamente."""
     inspector = inspect(engine)
     return inspector.get_table_names()

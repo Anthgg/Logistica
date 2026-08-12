@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint-and-test:
-    name: Lint, Test & Validate
+    name: Lint, Test & Validate Phase 045
     runs-on: ubuntu-latest
 
     services:
@@ -21,10 +21,20 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d continuous_auth_test"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
+          --health-start-period 20s
+
+    env:
+      APP_ENV: testing
+      CI: true
+      DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+      TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
+      SECRET_KEY: test-only-secret-key-must-be-min-32-chars-long
+      COOKIE_SECURE: false
+      SQLITE_FALLBACK_BLOCKED: true
 
     steps:
       - name: Checkout Code
@@ -42,122 +52,215 @@ jobs:
           pip install -r backend/requirements.txt
           pip install ruff mypy pytest pytest-asyncio httpx psycopg[binary]
 
-      - name: Run Linter (Ruff)
+      # -----------------------------------------------------------------------
+      # GUARD: verificar que TEST_DATABASE_URL es PostgreSQL (no SQLite)
+      # -----------------------------------------------------------------------
+      - name: Guard — Verify PostgreSQL DATABASE_URL
         run: |
-          cd backend
-          ruff check .
+          if [[ "$TEST_DATABASE_URL" != postgresql* ]]; then
+            echo "FAIL: TEST_DATABASE_URL no apunta a PostgreSQL."
+            echo "TEST_DATABASE_URL=$TEST_DATABASE_URL"
+            echo "Los tests de integracion requieren PostgreSQL real."
+            exit 1
+          fi
+          echo "PASS: TEST_DATABASE_URL es PostgreSQL: ${TEST_DATABASE_URL:0:50}..."
 
-      - name: Run Type Checker (MyPy)
+      # -----------------------------------------------------------------------
+      # GUARD: verificar que PostgreSQL está up antes de Alembic
+      # -----------------------------------------------------------------------
+      - name: Guard — Wait for PostgreSQL Ready
         run: |
-          cd backend
-          mypy app --ignore-missing-imports || true
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres -d continuous_auth_test; then
+              echo "PostgreSQL is ready."
+              break
+            fi
+            echo "Waiting for PostgreSQL... attempt $i/30"
+            sleep 2
+          done
+          pg_isready -h localhost -p 5432 -U postgres -d continuous_auth_test || exit 1
 
-      - name: Run Alembic Migrations (PostgreSQL TEST)
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
+      # -----------------------------------------------------------------------
+      # ALEMBIC: Migrations BEFORE tests
+      # -----------------------------------------------------------------------
+      - name: Run Alembic Upgrade to Head
+        working-directory: backend
         run: |
-          cd backend
           python -m alembic upgrade head
+          echo "Alembic upgrade head: DONE"
 
-      - name: Run Unit Tests (sin PostgreSQL requerido)
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
+      - name: Validate Alembic Current Head
+        working-directory: backend
         run: |
-          cd backend
-          pytest -m "not ml and not postgres and not concurrency and not migration" --tb=short -v
+          CURRENT=$(python -m alembic current 2>&1)
+          echo "Alembic current: $CURRENT"
+          # The head must be the Phase 045 revision
+          if ! echo "$CURRENT" | grep -q "gg450210045sw\|hh450110045dc"; then
+            echo "FAIL: Alembic current does not show expected Phase 045 head."
+            echo "Expected: gg450210045sw (or hh450110045dc if no new migration)"
+            echo "Got: $CURRENT"
+            exit 1
+          fi
+          echo "PASS: Alembic current is at Phase 045 head."
 
-      - name: Run PostgreSQL Integration Tests (Fase 045)
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
+      # -----------------------------------------------------------------------
+      # LINT
+      # -----------------------------------------------------------------------
+      - name: Run Linter (Ruff)
+        working-directory: backend
         run: |
-          cd backend
-          pytest -m "postgres" --tb=short -v
-          # FAIL HARD: si tests PostgreSQL fallan, el workflow falla (no || true)
+          ruff check app tests --output-format=github
 
-      - name: Run Concurrency Tests (Fase 045)
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
+      # -----------------------------------------------------------------------
+      # UNIT & HTTP TESTS (no PostgreSQL dependency)
+      # -----------------------------------------------------------------------
+      - name: Run Unit Tests
+        working-directory: backend
         run: |
-          cd backend
-          pytest -m "concurrency" --tb=short -v
-          # FAIL HARD: no || true
+          pytest -m "unit" --tb=short -v
+          echo "Unit tests: DONE"
 
-      - name: Run Migration Cycle Tests (Fase 045)
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
+      - name: Run Security/HTTP Tests
+        working-directory: backend
         run: |
-          cd backend
-          pytest -m "migration" --tb=short -v
-
-      - name: Run Security HTTP Tests
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
-        run: |
-          cd backend
           pytest -m "security" --tb=short -v
+          echo "Security tests: DONE"
 
-      - name: Run Full Phase 045 Suite
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
+      # -----------------------------------------------------------------------
+      # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
+      # -----------------------------------------------------------------------
+      - name: Run PostgreSQL Integration Tests
+        working-directory: backend
         run: |
-          cd backend
-          pytest tests/logistics/inventory/balances -vv --tb=short
+          pytest -m "postgres" --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_postgres.log
+          cat /tmp/pytest_postgres.log
 
-      - name: Run Full Backend Suite (not ml)
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
-          COOKIE_SECURE: false
-        run: |
-          cd backend
-          pytest -m "not ml" --tb=short
+          # Anti-skip check: en CI, SKIP de tests postgres = ERROR
+          SKIPPED=$(grep -c "SKIPPED\|SKIP" /tmp/pytest_postgres.log || true)
+          PASSED=$(grep -c "PASSED" /tmp/pytest_postgres.log || true)
+          FAILED=$(grep -c "FAILED" /tmp/pytest_postgres.log || true)
+          echo "PostgreSQL Tests — PASSED: $PASSED | FAILED: $FAILED | SKIPPED: $SKIPPED"
 
-      - name: Verify OpenAPI Schema Generation
-        env:
-          APP_ENV: testing
-          DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          TEST_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/continuous_auth_test
-          SECRET_KEY: test-only-secret-key-must-be-min-16-chars
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: Tests @pytest.mark.postgres fueron SKIPPED en CI."
+            echo "SKIP=0 es requerido en CI. Revisar conftest.py y TEST_DATABASE_URL."
+            exit 1
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: Tests @pytest.mark.postgres fallaron."
+            exit 1
+          fi
+          echo "PASS: Todos los tests PostgreSQL pasaron sin SKIP."
+
+      - name: Run Concurrency Tests
+        working-directory: backend
         run: |
-          cd backend
+          pytest -m "concurrency" --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_concurrency.log
+          cat /tmp/pytest_concurrency.log
+
+          SKIPPED=$(grep -c "SKIPPED\|SKIP" /tmp/pytest_concurrency.log || true)
+          PASSED=$(grep -c "PASSED" /tmp/pytest_concurrency.log || true)
+          FAILED=$(grep -c "FAILED" /tmp/pytest_concurrency.log || true)
+          echo "Concurrency Tests — PASSED: $PASSED | FAILED: $FAILED | SKIPPED: $SKIPPED"
+
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: Tests @pytest.mark.concurrency fueron SKIPPED en CI."
+            exit 1
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: Tests @pytest.mark.concurrency fallaron."
+            exit 1
+          fi
+          echo "PASS: Todos los tests de concurrencia pasaron sin SKIP."
+
+      - name: Run Migration Tests
+        working-directory: backend
+        run: |
+          pytest -m "migration" --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_migration.log
+          cat /tmp/pytest_migration.log
+
+          SKIPPED=$(grep -c "SKIPPED\|SKIP" /tmp/pytest_migration.log || true)
+          PASSED=$(grep -c "PASSED" /tmp/pytest_migration.log || true)
+          FAILED=$(grep -c "FAILED" /tmp/pytest_migration.log || true)
+          echo "Migration Tests — PASSED: $PASSED | FAILED: $FAILED | SKIPPED: $SKIPPED"
+
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: Tests @pytest.mark.migration fueron SKIPPED en CI."
+            exit 1
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: Tests @pytest.mark.migration fallaron."
+            exit 1
+          fi
+          echo "PASS: Todos los tests de migracion pasaron sin SKIP."
+
+      # -----------------------------------------------------------------------
+      # FULL PHASE 045 SUITE
+      # -----------------------------------------------------------------------
+      - name: Run Full Phase 045 Test Suite
+        working-directory: backend
+        run: |
+          pytest tests/logistics/inventory/balances -vv --tb=short -p no:cacheprovider
+
+      # -----------------------------------------------------------------------
+      # FULL BACKEND SUITE (not ml)
+      # -----------------------------------------------------------------------
+      - name: Run Full Backend Suite
+        working-directory: backend
+        run: |
+          pytest -m "not ml" --tb=short -p no:cacheprovider 2>&1 | tee /tmp/pytest_full.log
+          cat /tmp/pytest_full.log
+
+          # Report
+          TOTAL=$(grep -oP '\d+(?= passed)' /tmp/pytest_full.log | tail -1 || echo "0")
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_full.log | tail -1 || echo "0")
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_full.log | tail -1 || echo "0")
+          echo "==================================="
+          echo "BACKEND SUITE SUMMARY"
+          echo "PASSED : $TOTAL"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: Backend suite tiene tests fallidos."
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # OPENAPI / IMPORT SMOKE
+      # -----------------------------------------------------------------------
+      - name: Verify OpenAPI Schema and Import
+        working-directory: backend
+        run: |
           python -c "
+          import os
+          os.environ.setdefault('APP_ENV', 'testing')
           from app.main import app
           schema = app.openapi()
           paths = list(schema['paths'].keys())
-          balance_paths = [p for p in paths if '/api/logistics/inventory/balances' in p]
-          print('BALANCES_PATHS:', balance_paths)
-          print('OpenAPI total paths:', len(paths))
-          assert len(balance_paths) > 0, 'No se encontraron rutas de balances en OpenAPI'
+          base = '/api/logistics/inventory/balances'
+          balance_paths = [p for p in paths if base in p]
+          v1_paths = [p for p in paths if '/api/v1' in p]
+          print(f'BALANCES_PATHS ({len(balance_paths)}): {balance_paths}')
+          print(f'API_V1_PATHS (must be 0): {v1_paths}')
+          assert len(balance_paths) > 0, f'No balance paths found in OpenAPI. All paths: {paths}'
+          assert len(v1_paths) == 0, f'Found /api/v1 paths — should not exist: {v1_paths}'
+          print('PASS: OpenAPI schema is correct.')
           "
+
+      # -----------------------------------------------------------------------
+      # ALEMBIC HEADS / CURRENT (final check)
+      # -----------------------------------------------------------------------
+      - name: Final Alembic Validation
+        working-directory: backend
+        run: |
+          echo "=== alembic heads ==="
+          python -m alembic heads
+          echo "=== alembic current ==="
+          python -m alembic current
+          echo "=== alembic history --indicate-current ==="
+          python -m alembic history --indicate-current | head -10
 
   docker-build:
     name: Build & Validate Docker Image

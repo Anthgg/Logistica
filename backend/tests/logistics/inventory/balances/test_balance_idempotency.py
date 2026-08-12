@@ -1,5 +1,7 @@
 from decimal import Decimal
+
 import pytest
+
 from app.modules.logistics.inventory.balances.infrastructure.projections.balance_projection_service import (
     BalanceProjectionService,
 )

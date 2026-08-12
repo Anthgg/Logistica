@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
 
 from app.modules.logistics.inventory.balances.domain.policies.negative_stock_policy import (
@@ -23,8 +23,8 @@ class BalanceProjectionService:
     def apply_delta(
         self,
         current_balance: Decimal,
-        delta: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        delta: dict[str, Any],
+    ) -> dict[str, Any]:
         """Aplica un delta de movimiento (INCREASE o DECREASE) al saldo acumulado."""
         delta_type = str(delta.get("delta_type", "INCREASE")).upper()
         

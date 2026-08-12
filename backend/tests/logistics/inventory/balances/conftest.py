@@ -8,8 +8,6 @@ con @pytest.mark.postgres se saltarán con SKIP explicativo.
 from __future__ import annotations
 
 import os
-from decimal import Decimal
-from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
@@ -18,28 +16,30 @@ from sqlalchemy.orm import Session
 # Guard: si no hay URL postgres real → skip automático en cada test postgres
 _TEST_DB_URL = os.environ.get("TEST_DATABASE_URL", "")
 _POSTGRES_AVAILABLE = _TEST_DB_URL.startswith("postgresql")
+_CI_MODE = os.environ.get("CI", "").lower() in ("true", "1", "yes")
 
-_SKIP_POSTGRES = pytest.mark.skipif(
-    not _POSTGRES_AVAILABLE,
-    reason=(
-        "BLOCKED_POSTGRES_UNAVAILABLE: TEST_DATABASE_URL no apunta a PostgreSQL. "
-        "Configura TEST_DATABASE_URL=postgresql+psycopg://user:pass@host:5432/dbname "
-        "para ejecutar tests de integración real."
-    ),
-)
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _require_postgres():
-    """Saltar el test si no hay PostgreSQL disponible."""
+    """
+    Guard para tests que requieren PostgreSQL real.
+
+    - Si CI=true y no hay PostgreSQL → pytest.fail() (no skip — SKIP en CI = ERROR)
+    - Si CI=false y no hay PostgreSQL → pytest.skip() con mensaje informativo
+    """
     if not _POSTGRES_AVAILABLE:
-        pytest.skip(
+        msg = (
             "BLOCKED_POSTGRES_UNAVAILABLE: TEST_DATABASE_URL no apunta a PostgreSQL. "
-            "Este test requiere engine y Session reales contra PostgreSQL."
+            f"TEST_DATABASE_URL={_TEST_DB_URL!r}. "
+            "Configura TEST_DATABASE_URL=postgresql+psycopg://user:pass@host:5432/dbname."
         )
+        if _CI_MODE:
+            pytest.fail(
+                f"CI_ANTI_SKIP_VIOLATION: {msg} "
+                "En CI (CI=true), los tests @pytest.mark.postgres NO pueden ser skipped. "
+                "Revisar configuración del workflow de GitHub Actions."
+            )
+        else:
+            pytest.skip(msg)
 
 
 # ---------------------------------------------------------------------------
@@ -74,7 +74,6 @@ def pg_engine():
     )
 
     import app.models.registry  # noqa: F401 — registrar todos los ORM models
-
     from app.database.base import Base
 
     engine = create_engine(url, pool_pre_ping=True)

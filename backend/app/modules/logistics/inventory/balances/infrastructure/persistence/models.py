@@ -16,7 +16,7 @@ Contains the 11 authorized tables for inventory position balances:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -41,7 +41,7 @@ def _uuid() -> UUID:
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +58,11 @@ class InventoryPositionBalanceModel(Base):
     branch_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)
     warehouse_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True, index=True)
     warehouse_location_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True, index=True)
-    inventory_position_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), unique=True, nullable=False, index=True)
+    inventory_position_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)
+    rebuild_job_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("inventory_balance_rebuild_jobs.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    is_active_projection: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
     product_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False, index=True)
     product_version_id: Mapped[UUID | None] = mapped_column(PG_UUID(as_uuid=True), nullable=True, index=True)
     base_unit_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=False)

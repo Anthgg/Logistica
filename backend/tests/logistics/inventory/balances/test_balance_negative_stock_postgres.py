@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 import pytest
 
 from app.modules.logistics.inventory.balances.domain.policies.negative_stock_policy import (

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 
 class ReconciliationService:
@@ -7,9 +7,9 @@ class ReconciliationService:
 
     def reconcile(
         self,
-        projected_balances: Dict[str, Decimal],
-        replayed_balances: Dict[str, Decimal],
-    ) -> List[Dict[str, Any]]:
+        projected_balances: dict[str, Decimal],
+        replayed_balances: dict[str, Decimal],
+    ) -> list[dict[str, Any]]:
         """Compara posición por posición la proyección actual contra el cálculo replay del ledger MOV."""
         differences = []
         all_positions = set(projected_balances.keys()) | set(replayed_balances.keys())

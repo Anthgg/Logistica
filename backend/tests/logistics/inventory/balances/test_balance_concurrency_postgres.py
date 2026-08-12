@@ -205,8 +205,8 @@ def test_deadlock_prevention_sorted_lock_order(pg_engine_direct):
                 results[name] = f"ERROR: {exc}"
                 session.rollback()
 
-    t1 = threading.Thread(target=worker, args=("T1", Decimal("-10"), Decimal("-20")), daemon=True)
-    t2 = threading.Thread(target=worker, args=("T2", Decimal("-5"), Decimal("-15")), daemon=True)
+    t1 = threading.Thread(target=worker, args=("T1", Decimal(-10), Decimal(-20)), daemon=True)
+    t2 = threading.Thread(target=worker, args=("T2", Decimal(-5), Decimal(-15)), daemon=True)
 
     t1.start()
     t2.start()

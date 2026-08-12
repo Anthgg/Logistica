@@ -1,13 +1,13 @@
+from datetime import UTC
 from decimal import Decimal
-from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
-from app.modules.logistics.dependencies import get_logistics_current_user
 from app.models.user import User
+from app.modules.logistics.dependencies import get_logistics_current_user
 from app.modules.logistics.inventory.balances.domain.services.availability_provider import (
     InventoryBalanceAvailabilityProvider,
 )
@@ -86,7 +86,7 @@ def trigger_balance_rebuild(
 ) -> RebuildJobRead:
     """Inicia un trabajo asíncrono de replay del ledger MOV para reconstruir la proyección de saldos."""
     import uuid
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     return RebuildJobRead(
         id=uuid.uuid4(),
@@ -96,5 +96,5 @@ def trigger_balance_rebuild(
         positions_processed=0,
         movements_replayed=0,
         differences_count=0,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )

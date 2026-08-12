@@ -44,10 +44,20 @@ class PositionBalanceRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+from enum import Enum
+
+
+class RebuildMode(str, Enum):
+    FULL = "FULL"
+    TOTAL = "TOTAL"
+    PARTIAL_WAREHOUSE = "PARTIAL_WAREHOUSE"
+    PARTIAL_PRODUCT = "PARTIAL_PRODUCT"
+
+
 class RebuildJobCreate(BaseModel):
     """Schema Pydantic v2 para la solicitud de rebuild de saldos."""
     organization_id: UUID
-    rebuild_mode: str = Field("TOTAL", description="TOTAL, PARTIAL_WAREHOUSE, PARTIAL_PRODUCT")
+    rebuild_mode: RebuildMode = Field(RebuildMode.FULL, description="FULL, TOTAL, PARTIAL_WAREHOUSE, PARTIAL_PRODUCT")
     target_warehouse_id: UUID | None = None
     target_product_id: UUID | None = None
     as_of_sequence: int | None = None

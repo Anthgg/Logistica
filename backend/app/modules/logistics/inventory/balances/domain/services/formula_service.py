@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 from app.modules.logistics.inventory.balances.domain.value_objects.states import (
     AvailabilityState,
@@ -13,7 +13,7 @@ class InventoryBalanceFormulaService:
     """Motor de cálculo de métricas de saldos de inventario para Casos A, B, C, D, E."""
 
     @staticmethod
-    def calculate_physical_on_hand(position_balances: List[Dict[str, Any]]) -> Decimal:
+    def calculate_physical_on_hand(position_balances: list[dict[str, Any]]) -> Decimal:
         """Caso A: Physical Stock on Hand.
         Suma de saldos presentes físicamente en el almacén (excluyendo únicamente mercadería en tránsito).
         """
@@ -25,7 +25,7 @@ class InventoryBalanceFormulaService:
         return total
 
     @staticmethod
-    def calculate_available_to_promise(position_balances: List[Dict[str, Any]]) -> Decimal:
+    def calculate_available_to_promise(position_balances: list[dict[str, Any]]) -> Decimal:
         """Caso B: Available to Promise (ATP) Operativo.
         Stock físico apto para venta/despacho:
         - Availability = AVAILABLE
@@ -50,7 +50,7 @@ class InventoryBalanceFormulaService:
         return total
 
     @staticmethod
-    def calculate_quarantine_stock(position_balances: List[Dict[str, Any]]) -> Decimal:
+    def calculate_quarantine_stock(position_balances: list[dict[str, Any]]) -> Decimal:
         """Caso C: Stock en Cuarentena.
         Suma de saldos retenidos por control de calidad.
         """
@@ -63,7 +63,7 @@ class InventoryBalanceFormulaService:
         return total
 
     @staticmethod
-    def calculate_blocked_stock(position_balances: List[Dict[str, Any]]) -> Decimal:
+    def calculate_blocked_stock(position_balances: list[dict[str, Any]]) -> Decimal:
         """Caso D: Stock Bloqueado / Reservado / Dañado.
         Suma de saldos retenidos o dañados que no están disponibles para promesa.
         """
@@ -76,7 +76,7 @@ class InventoryBalanceFormulaService:
         return total
 
     @staticmethod
-    def calculate_in_transit_stock(position_balances: List[Dict[str, Any]]) -> Decimal:
+    def calculate_in_transit_stock(position_balances: list[dict[str, Any]]) -> Decimal:
         """Caso E: Stock en Tránsito.
         Suma de saldos en tránsito entre almacenes o compras en curso.
         """

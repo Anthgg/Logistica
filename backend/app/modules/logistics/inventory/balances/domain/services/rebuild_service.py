@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 
 class RebuildService:
@@ -10,10 +10,10 @@ class RebuildService:
     """
 
     def replay_movements_and_calculate(
-        self, movement_lines: List[Dict[str, Any]]
-    ) -> Dict[str, Decimal]:
+        self, movement_lines: list[dict[str, Any]]
+    ) -> dict[str, Decimal]:
         """Calcula el saldo acumulado procesando secuencialmente cada línea del ledger MOV en orden ascendente."""
-        balances: Dict[str, Decimal] = {}
+        balances: dict[str, Decimal] = {}
         for line in movement_lines:
             position_id = str(line["position_id"])
             qty = Decimal(str(line["quantity"]))

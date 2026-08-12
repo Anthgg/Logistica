@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from app.modules.logistics.inventory.balances.domain.services.rebuild_service import (
     RebuildService,
 )

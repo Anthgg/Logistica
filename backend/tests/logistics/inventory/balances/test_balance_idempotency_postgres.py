@@ -11,12 +11,11 @@ CRITERIO DE EVIDENCIA:
 
 from __future__ import annotations
 
-import os
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine, func, text
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
