@@ -267,41 +267,31 @@ def test_integrity_service_detects_hash_mismatch_db(pg_engine):
     org_id = uuid4()
     branch_id = uuid4()
     partition_key = f"org:{org_id}:wh:default"
-    now = datetime.now(UTC)
+    # Insertar dos movimientos encadenados (1001 y 1002)
+    hash_1001 = "11" * 32
+    hash_1002 = "22" * 32
 
-    # Calcular hash válido usando el servicio real
-    valid_hash = compute_movement_hash(
-        ledger_partition_key=partition_key,
-        ledger_sequence=1001,
-        movement_code="MOV-HASH-MISMATCH-TEST",
-        movement_type="PURCHASE_RECEIPT",
-        movement_family="INBOUND",
-        organization_id=org_id,
-        branch_id=branch_id,
-        source_event_id=f"evt-hash-mismatch-{org_id}",
-        source_event_version=1,
-        occurred_at=now,
-        posted_at=now,
-        reason_code=None,
-        compensation_for_movement_id=None,
-        previous_movement_hash=None,
-        lines=[],
-        sources=[],
-    )
-
-    # Insertar movimiento con hash válido
     with Session(pg_engine) as session_setup:
-        mov = _create_movement(
+        mov1 = _create_movement(
             session_setup,
             org_id=org_id,
             branch_id=branch_id,
             partition_key=partition_key,
             sequence=1001,
-            movement_hash=valid_hash,
+            movement_hash=hash_1001,
             previous_movement_hash=None,
         )
+        _create_movement(
+            session_setup,
+            org_id=org_id,
+            branch_id=branch_id,
+            partition_key=partition_key,
+            sequence=1002,
+            movement_hash=hash_1002,
+            previous_movement_hash=hash_1001,
+        )
         session_setup.commit()
-        mov_id = mov.id
+        mov1_id = mov1.id
 
     # Verificar que sin corrupción → OK
     with Session(pg_engine) as session_verify_valid:
@@ -314,15 +304,15 @@ def test_integrity_service_detects_hash_mismatch_db(pg_engine):
         f"PRE-CORRUPTION: Se esperaba OK, obtenido: {result_valid['verification_status']}"
     )
 
-    # Corromper movement_hash en DB directamente
+    # Corromper movement_hash del movimiento 1001 en DB directamente
     with Session(pg_engine) as session_corrupt:
         session_corrupt.execute(
             text("UPDATE inventory_movements SET movement_hash = :fake_hash WHERE id = :id"),
-            {"fake_hash": "aabbccddeeff" * 5 + "1234", "id": str(mov_id)},
+            {"fake_hash": "aabbccddeeff" * 5 + "1234", "id": str(mov1_id)},
         )
         session_corrupt.commit()
 
-    # Ejecutar integrity service — debe detectar HASH_MISMATCH
+    # Ejecutar integrity service — debe detectar HASH_MISMATCH en 1002
     with Session(pg_engine) as session_check:
         svc = InventoryLedgerIntegrityService(session_check)
         result = svc.verify_partition(
@@ -393,9 +383,7 @@ def test_integrity_service_detects_gap_in_sequence_db(pg_engine):
                 previous_movement_hash=prev_hash,
                 movement_code=f"MOV-GAP-{seq}",
             )
-            # solo encadenamos 1001→1002 (el gap 1003 no existe)
-            if seq == 1002:
-                prev_hash = h  # 1004 tendrá previous_hash de 1002, lo que causará mismatch después del gap
+            prev_hash = h
         session_setup.commit()
 
     with Session(pg_engine) as session_check:
