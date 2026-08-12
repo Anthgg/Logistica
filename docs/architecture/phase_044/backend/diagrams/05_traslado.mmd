@@ -1,0 +1,7 @@
+sequenceDiagram
+    participant S as Source Position
+    participant D as Destination Position
+    participant Mv as MoveMent (TRANSFER)
+    S->>S: base_quantity -= qty
+    D->>D: base_quantity += qty
+    Mv->>Mv: source = S, destination = D

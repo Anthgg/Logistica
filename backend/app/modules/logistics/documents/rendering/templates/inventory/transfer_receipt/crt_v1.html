@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CONSTANCIA DE RECEPCIÓN DE TRANSFERENCIA (CRT)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inventory/shared/inventory.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <div class="doc-org">{{ cmd.organization_name }} — {{ cmd.branch_name }}</div>
+    <div class="doc-title">CONSTANCIA DE RECEPCIÓN DE TRANSFERENCIA</div>
+    <div class="doc-meta">
+        <span>Código: {{ cmd.document_code or 'CRT-PREVIEW' }}</span>
+        <span>Versión: {{ cmd.template_version }}</span>
+        <span>Fecha: {{ now.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+    </div>
+</div>
+
+<div style="margin-bottom:8px;">
+    {% set result = cmd.document_data.get('receiving_result', 'PREVIEW') %}
+    {% if result == 'COMPLETE' %}
+    <span class="status-badge status-approved">{{ result }}</span>
+    {% elif result == 'REJECTED' %}
+    <span class="status-badge status-rejected">{{ result }}</span>
+    {% elif result == 'DIFFERENCE_DETECTED' %}
+    <span class="status-badge status-pending">{{ result }}</span>
+    {% else %}
+    <span class="status-badge status-preview">{{ result }}</span>
+    {% endif %}
+</div>
+
+<!-- Ruta -->
+<div class="transfer-route">
+    <div class="transfer-warehouse">
+        <div style="font-size:7pt; color:#555;">ORIGEN</div>
+        <div><strong>{{ cmd.document_data.get('source_warehouse_name', '—') }}</strong></div>
+    </div>
+    <div class="transfer-arrow">→</div>
+    <div class="transfer-warehouse">
+        <div style="font-size:7pt; color:#555;">DESTINO (RECEPTOR)</div>
+        <div><strong>{{ cmd.document_data.get('destination_warehouse_name', '—') }}</strong></div>
+    </div>
+</div>
+
+<!-- Información -->
+<div class="inv-box">
+    <div class="inv-title">Información de la Recepción</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Referencia TRA:</strong> {{ cmd.document_data.get('transfer_reference', '—') }}</td>
+            <td><strong>Fecha despacho:</strong> {{ cmd.document_data.get('dispatched_date', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Fecha llegada:</strong> {{ cmd.document_data.get('arrival_date', '—') }}</td>
+            <td><strong>Inicio recepción:</strong> {{ cmd.document_data.get('reception_start', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Fin recepción:</strong> {{ cmd.document_data.get('reception_end', '—') }}</td>
+            <td><strong>Receptor:</strong> {{ cmd.document_data.get('received_by', '—') }}</td>
+        </tr>
+        {% if cmd.document_data.get('vehicle_plate') %}
+        <tr>
+            <td><strong>Vehículo:</strong> {{ cmd.document_data['vehicle_plate'] }}</td>
+            {% if cmd.document_data.get('seal_number') %}
+            <td><strong>Precinto:</strong> {{ cmd.document_data['seal_number'] }}</td>
+            {% endif %}
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<!-- Comparación de productos -->
+<div class="inv-box">
+    <div class="inv-title">Comparación de Productos Despachados vs Recibidos</div>
+    <table class="inv-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>SKU / Descripción</th>
+                <th>Despachado</th>
+                <th>Recibido</th>
+                <th>Aceptado</th>
+                <th>Observado</th>
+                <th>Rechazado</th>
+                <th>Faltante</th>
+                <th>Sobrante</th>
+                <th>Unidad</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set items = cmd.document_data.get('comparison_items', []) %}
+        {% if items %}
+            {% for item in items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {% if item.get('sku') %}<strong>{{ item['sku'] }}</strong><br>{% endif %}
+                    {{ item.get('description', '—') }}
+                </td>
+                <td class="qty-expected">{{ item.get('dispatched_quantity', '0.00') }}</td>
+                <td class="qty-counted">{{ item.get('received_quantity', '0.00') }}</td>
+                <td class="qty-diff-pos">{{ item.get('accepted_quantity', '0.00') }}</td>
+                <td class="qty-zero">{{ item.get('observed_quantity', '0.00') }}</td>
+                <td class="qty-diff-neg">{{ item.get('rejected_quantity', '0.00') }}</td>
+                <td>
+                    {% set shortage = item.get('shortage_quantity', '0') | string %}
+                    {% if shortage != '0' and shortage != '0.00' %}
+                    <span class="qty-diff-neg">{{ shortage }}</span>
+                    {% else %}<span class="qty-zero">—</span>{% endif %}
+                </td>
+                <td>
+                    {% set overage = item.get('overage_quantity', '0') | string %}
+                    {% if overage != '0' and overage != '0.00' %}
+                    <span class="qty-diff-pos">+{{ overage }}</span>
+                    {% else %}<span class="qty-zero">—</span>{% endif %}
+                </td>
+                <td>{{ item.get('unit', 'UND') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="10" style="text-align:center; color:#7f8c8d;">Sin líneas</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if cmd.document_data.get('differences_summary') %}
+<div class="inv-box" style="background:#fef5e7; border-color:#e67e22;">
+    <div class="inv-title" style="color:#b9640a;">Resumen de Diferencias</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['differences_summary'] }}</div>
+</div>
+{% endif %}
+
+{% if cmd.document_data.get('pending_action') %}
+<div class="inv-box">
+    <div class="inv-title">Acción Pendiente</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['pending_action'] }}</div>
+</div>
+{% endif %}
+
+{% if cmd.document_data.get('evidence_references') %}
+<div class="inv-box">
+    <div class="inv-title">Evidencias de Daños</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['evidence_references'] | join(', ') if cmd.document_data['evidence_references'] is iterable and cmd.document_data['evidence_references'] is not string else cmd.document_data['evidence_references'] }}</div>
+</div>
+{% endif %}
+
+<div class="inv-box" style="background:#fef9e7; border-color:#f39c12;">
+    <div style="font-size:8pt; color:#8e6718;">
+        <strong>PENDING_PHASE_050</strong> — Vista previa. La recepción operativa real y el cierre de transferencia se implementarán en la Fase 050. Este documento no modifica stock.
+    </div>
+</div>
+
+<!-- Firmas -->
+<table class="approval-chain" style="margin-top:12px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Receptor Destino</div>
+            <div style="font-size:8pt; color:#555;">{{ cmd.document_data.get('received_by', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Supervisor Destino</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Representante Origen</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top:8px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">QR de demostración — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    CRT v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_050
+</div>
+</body>
+</html>

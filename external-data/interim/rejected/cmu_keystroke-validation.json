@@ -1,0 +1,10 @@
+{
+  "dataset_id": "cmu_keystroke",
+  "valid": false,
+  "file_count": 0,
+  "total_bytes": 0,
+  "issues": [
+    "raw_directory_empty"
+  ],
+  "fingerprint": {}
+}

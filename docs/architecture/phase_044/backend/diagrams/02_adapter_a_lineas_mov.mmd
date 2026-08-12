@@ -1,0 +1,7 @@
+flowchart LR
+    Src[Source Event] --> Reg[Source Registry]
+    Reg --> Adapter[Phase 042/043 Adapter]
+    Adapter --> Prep[PreparedMovement]
+    Prep --> Lines[Lines + Sources]
+    Prep --> Posting[PostingService]
+    Posting --> Dao[Append-only Movement]

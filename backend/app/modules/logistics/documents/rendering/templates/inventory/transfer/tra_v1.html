@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ORDEN DE TRANSFERENCIA (TRA)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inventory/shared/inventory.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <div class="doc-org">{{ cmd.organization_name }} — {{ cmd.branch_name }}</div>
+    <div class="doc-title">ORDEN DE TRANSFERENCIA</div>
+    <div class="doc-meta">
+        <span>Código: {{ cmd.document_code or 'TRA-PREVIEW' }}</span>
+        <span>Versión: {{ cmd.template_version }}</span>
+        <span>Fecha: {{ now.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+    </div>
+</div>
+
+<div style="margin-bottom:8px;">
+    <span class="status-badge status-{{ cmd.document_data.get('status','preview') | lower }}">
+        {{ cmd.document_data.get('status', 'PREVIEW') }}
+    </span>
+    {% if cmd.document_data.get('priority') %}
+    <span class="status-badge" style="background:#e67e22;">PRIORIDAD: {{ cmd.document_data['priority'] }}</span>
+    {% endif %}
+</div>
+
+<!-- Ruta de transferencia -->
+<div class="transfer-route">
+    <div class="transfer-warehouse">
+        <div style="font-size:7pt; color:#555;">ALMACÉN ORIGEN</div>
+        <div><strong>{{ cmd.document_data.get('source_warehouse_name', '—') }}</strong></div>
+        <div style="font-size:7pt;">{{ cmd.document_data.get('source_branch_name', '—') }}</div>
+    </div>
+    <div class="transfer-arrow">→</div>
+    <div class="transfer-warehouse">
+        <div style="font-size:7pt; color:#555;">ALMACÉN DESTINO</div>
+        <div><strong>{{ cmd.document_data.get('destination_warehouse_name', '—') }}</strong></div>
+        <div style="font-size:7pt;">{{ cmd.document_data.get('destination_branch_name', '—') }}</div>
+    </div>
+</div>
+
+<!-- Información de la transferencia -->
+<div class="inv-box">
+    <div class="inv-title">Información de la Transferencia</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Solicitante:</strong> {{ cmd.document_data.get('requested_by', '—') }}</td>
+            <td><strong>Fecha solicitada:</strong> {{ cmd.document_data.get('requested_at', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Fecha planificada:</strong> {{ cmd.document_data.get('planned_date', '—') }}</td>
+            <td><strong>Aprobador:</strong> {{ cmd.document_data.get('approver', '—') }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Motivo:</strong> {{ cmd.document_data.get('reason', '—') }}</td>
+        </tr>
+        {% if cmd.document_data.get('carrier_name') %}
+        <tr>
+            <td><strong>Transportista:</strong> {{ cmd.document_data['carrier_name'] }}</td>
+            {% if cmd.document_data.get('vehicle_plate') %}
+            <td><strong>Vehículo:</strong> {{ cmd.document_data['vehicle_plate'] }}</td>
+            {% endif %}
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<!-- Líneas de productos -->
+<div class="inv-box">
+    <div class="inv-title">Productos a Transferir</div>
+    <table class="inv-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>SKU / Descripción</th>
+                <th>Lote</th>
+                <th>U.Log.</th>
+                <th>Cant. Solicitada</th>
+                <th>Unidad</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set items = cmd.document_data.get('items', []) %}
+        {% if items %}
+            {% for item in items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {% if item.get('sku') %}<strong>{{ item['sku'] }}</strong><br>{% endif %}
+                    {{ item.get('description', '—') }}
+                </td>
+                <td>{{ item.get('lot_number', '—') }}</td>
+                <td>{{ item.get('logistic_unit', '—') }}</td>
+                <td class="qty-expected">{{ item.get('requested_quantity', '0.00') }}</td>
+                <td>{{ item.get('unit', 'UND') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="6" style="text-align:center; color:#7f8c8d;">Sin líneas de productos</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<div class="inv-box" style="background:#fef9e7; border-color:#f39c12;">
+    <div style="font-size:8pt; color:#8e6718;">
+        <strong>PENDING_PHASE_049</strong> — Vista previa. La transferencia operativa real (reserva, despacho, tránsito, recepción) se implementará en la Fase 049. Este documento no reserva ni modifica stock.
+    </div>
+</div>
+
+{% if cmd.document_data.get('observations') %}
+<div class="inv-box">
+    <div class="inv-title">Observaciones</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<!-- Firmas -->
+<table class="approval-chain" style="margin-top:12px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Solicitante</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Aprobador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Despachador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top:8px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">QR de demostración — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    TRA v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_049
+</div>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"project":"Proyecto T1","phase":"Fase 006","catalog_version":"1.0.0","permissions":110,"roles":16,"tables":3,"migration":"af2daf23238c","endpoints":5,"tests":{"total":61,"passed":61,"failed":0},"pending":["Step-up Fase 009","Proteger endpoints existentes con require_logistics_permission","Cache de permisos"],"frontend_modified":false,"phase_007_started":false}

@@ -1,0 +1,17 @@
+protocol_version: pilot-protocol-v0.1.0
+dataset_version: pilot-v0.1.0
+random_seed: 42
+allowed_quality_statuses:
+  - accepted
+training_splits:
+  - train
+  - validation
+forbidden_split: test
+models_root: ../models
+reports_root: ../data/reports/training
+registry_path: ../models/registry/model_registry.json
+experiments_path: ../models/registry/experiments.parquet
+frozen_test_manifest: ../data/manifests/frozen_test_manifest.parquet
+frozen_test_checksum: ../data/manifests/frozen_test_manifest.sha256
+frozen_test_metadata: ../data/manifests/frozen_test_metadata.json
+deterministic_operations: true

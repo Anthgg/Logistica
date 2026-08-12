@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CONSTANCIA DE PARADA</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "transport/shared/transport.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">CONSTANCIA DE PARADA</div>
+                <div class="doc-code">{{ cmd.document_code or "PAR-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Registro de Parada en Ruta</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Viaje Relacionado:</td>
+        <td><strong>{{ cmd.document_data.get('trip_reference', '') }}</strong></td>
+        <td class="info-label">Parada Ref.:</td>
+        <td>{{ cmd.document_data.get('route_stop_reference', '') }} (Secuencia: {{ cmd.document_data.get('sequence', 1) }})</td>
+    </tr>
+    <tr>
+        <td class="info-label">Tipo de Parada:</td>
+        <td>{{ cmd.document_data.get('stop_type', '') }}</td>
+        <td class="info-label">Resultado:</td>
+        <td>
+            {% set res = cmd.document_data.get('result', '') %}
+            {% if res == 'COMPLETED' %}
+            <strong class="result-pass">COMPLETADA</strong>
+            {% elif res == 'PARTIALLY_COMPLETED' %}
+            <strong class="result-observed">COMPLETADA PARCIAL</strong>
+            {% elif res == 'ARRIVED' %}
+            <strong class="result-pass">LLEGADA REGISTRADA</strong>
+            {% else %}
+            <strong class="result-fail">{{ res }}</strong>
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td class="info-label">Dirección:</td>
+        <td colspan="3">{{ cmd.document_data.get('address', '') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Tiempos y Permanencia</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Hora Planificada:</td>
+        <td>{{ cmd.document_data.get('planned_arrival_at', '-') }}</td>
+        <td class="info-label">Tiempo Espera:</td>
+        <td>{{ (cmd.document_data.get('waiting_seconds') or 0) // 60 }} min</td>
+    </tr>
+    <tr>
+        <td class="info-label">Llegada Real:</td>
+        <td><strong>{{ cmd.document_data.get('real_arrival_at', '-') }}</strong></td>
+        <td class="info-label">Tiempo de Servicio:</td>
+        <td>{{ (cmd.document_data.get('service_seconds') or 0) // 60 }} min</td>
+    </tr>
+    <tr>
+        <td class="info-label">Salida Real:</td>
+        <td><strong>{{ cmd.document_data.get('real_departure_at', '-') }}</strong></td>
+        <td class="info-label">Tiempo Total Parada:</td>
+        <td>
+            {% set w = cmd.document_data.get('waiting_seconds') or 0 %}
+            {% set s = cmd.document_data.get('service_seconds') or 0 %}
+            <strong>{{ (w + s) // 60 }} min</strong>
+        </td>
+    </tr>
+</table>
+
+<div class="section-title">Evidencia de Localización (GPS)</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Coordenadas Registradas:</td>
+        <td>Lat: {{ cmd.document_data.get('coordinates', {}).get('latitude', '-') }} | Lon: {{ cmd.document_data.get('coordinates', {}).get('longitude', '-') }}</td>
+        <td class="info-label">Precisión GPS:</td>
+        <td>{{ cmd.document_data.get('coordinates', {}).get('accuracy_meters', '-') }} metros</td>
+    </tr>
+    <tr>
+        <td class="info-label">Fuente de Captura:</td>
+        <td>{{ cmd.document_data.get('coordinates', {}).get('source', '') }}</td>
+        <td class="info-label">Estado de Verificación:</td>
+        <td><strong>{{ cmd.document_data.get('coordinates', {}).get('verification_state', '') }}</strong></td>
+    </tr>
+</table>
+
+{% if cmd.document_data.get('reason_if_failed_or_skipped') %}
+<div class="alert-danger" style="margin-top: 10px;">
+    <strong>Motivo de Falla/Omitido:</strong> {{ cmd.document_data.get('reason_if_failed_or_skipped') }}
+</div>
+{% endif %}
+
+<table class="footer-layout-table">
+    <tr>
+        <td class="footer-qr-cell">
+            {% if qr_b64 %}
+            <img class="qr-code-img" src="{{ qr_b64 }}" alt="Código QR de Documento" />
+            <div class="qr-code-lbl">Verificación de Vista Previa</div>
+            {% endif %}
+        </td>
+        <td class="footer-signatures-cell">
+            <div class="signature-line-container">
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Conductor Asignado</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Responsable de Recepción / Cliente</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="page-footer">
+    <hr/>
+    <table style="width: 100%; font-size: 8pt; color: #7f8c8d;">
+        <tr>
+            <td>T1 LOGÍSTICA - CONSTANCIA DE PARADA (PAR-v1.0.0)</td>
+            <td style="text-align: right;">Página 1 de 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

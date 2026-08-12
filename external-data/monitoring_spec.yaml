@@ -1,0 +1,31 @@
+schema_version: 1
+automatic_retraining: false
+allowed_aggregates:
+  - score_distribution
+  - reverification_count
+  - reported_false_alert_count
+  - camera_failure_count
+  - degraded_mode_activation_count
+  - latency_distribution_ms
+  - model_version
+  - dataset_version
+  - aggregate_feature_drift
+forbidden_payloads:
+  - raw_images
+  - raw_video
+  - raw_keyboard_events
+  - keys
+  - characters
+  - text
+  - passwords
+  - raw_html
+  - css_selectors
+  - window_names
+retraining_workflow:
+  - create_version
+  - review_consent
+  - prepare_dataset
+  - split_train_validation_test
+  - evaluate
+  - approve_model
+  - controlled_deployment

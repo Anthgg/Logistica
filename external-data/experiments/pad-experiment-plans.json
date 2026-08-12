@@ -1,0 +1,191 @@
+{
+  "family": "pad",
+  "plans": [
+    {
+      "experiment_id": "PAD-A-public-generalization",
+      "family": "pad",
+      "training": [
+        {
+          "dataset": "celeba_spoof",
+          "split": "train"
+        }
+      ],
+      "fine_tuning": [],
+      "validation": [
+        {
+          "dataset": "replay_attack",
+          "split": "validation"
+        }
+      ],
+      "test": [
+        {
+          "dataset": "oulu_npu",
+          "split": "test"
+        }
+      ],
+      "calibration_source": "validation",
+      "selection_source": "validation",
+      "protocol_notes": [
+        "Respeta los splits oficiales.",
+        "El umbral no se recalibra con OULU-NPU test."
+      ],
+      "consumes_frozen_own_test": false
+    },
+    {
+      "experiment_id": "PAD-B-own-only",
+      "family": "pad",
+      "training": [
+        {
+          "dataset": "own_pad",
+          "split": "train"
+        }
+      ],
+      "fine_tuning": [],
+      "validation": [
+        {
+          "dataset": "own_pad",
+          "split": "validation"
+        }
+      ],
+      "test": [
+        {
+          "dataset": "own_pad",
+          "split": "test"
+        }
+      ],
+      "calibration_source": "validation",
+      "selection_source": "validation",
+      "protocol_notes": [
+        "Test propio congelado: una sola evaluación aprobada."
+      ],
+      "consumes_frozen_own_test": true
+    },
+    {
+      "experiment_id": "PAD-C-public-own-finetune",
+      "family": "pad",
+      "training": [
+        {
+          "dataset": "celeba_spoof",
+          "split": "train"
+        },
+        {
+          "dataset": "replay_attack",
+          "split": "train"
+        }
+      ],
+      "fine_tuning": [
+        {
+          "dataset": "own_pad",
+          "split": "train"
+        }
+      ],
+      "validation": [
+        {
+          "dataset": "own_pad",
+          "split": "validation"
+        }
+      ],
+      "test": [
+        {
+          "dataset": "own_pad",
+          "split": "test"
+        }
+      ],
+      "calibration_source": "validation",
+      "selection_source": "validation",
+      "protocol_notes": [
+        "Fine-tuning solo con train propio.",
+        "Candidato principal; test propio congelado requiere aprobación."
+      ],
+      "consumes_frozen_own_test": true
+    },
+    {
+      "experiment_id": "PAD-D-replay-to-oulu",
+      "family": "pad",
+      "training": [
+        {
+          "dataset": "replay_attack",
+          "split": "train"
+        }
+      ],
+      "fine_tuning": [],
+      "validation": [
+        {
+          "dataset": "replay_attack",
+          "split": "validation"
+        }
+      ],
+      "test": [
+        {
+          "dataset": "oulu_npu",
+          "split": "test"
+        }
+      ],
+      "calibration_source": "validation",
+      "selection_source": "validation",
+      "protocol_notes": [
+        "Sin recalibración sobre OULU-NPU test."
+      ],
+      "consumes_frozen_own_test": false
+    },
+    {
+      "experiment_id": "PAD-D-oulu-to-replay",
+      "family": "pad",
+      "training": [
+        {
+          "dataset": "oulu_npu",
+          "split": "train"
+        }
+      ],
+      "fine_tuning": [],
+      "validation": [
+        {
+          "dataset": "oulu_npu",
+          "split": "validation"
+        }
+      ],
+      "test": [
+        {
+          "dataset": "replay_attack",
+          "split": "test"
+        }
+      ],
+      "calibration_source": "validation",
+      "selection_source": "validation",
+      "protocol_notes": [
+        "Sin recalibración sobre Replay-Attack test."
+      ],
+      "consumes_frozen_own_test": false
+    },
+    {
+      "experiment_id": "PAD-D-celeba-to-replay",
+      "family": "pad",
+      "training": [
+        {
+          "dataset": "celeba_spoof",
+          "split": "train"
+        }
+      ],
+      "fine_tuning": [],
+      "validation": [
+        {
+          "dataset": "celeba_spoof",
+          "split": "validation"
+        }
+      ],
+      "test": [
+        {
+          "dataset": "replay_attack",
+          "split": "test"
+        }
+      ],
+      "calibration_source": "validation",
+      "selection_source": "validation",
+      "protocol_notes": [
+        "Sin recalibración sobre Replay-Attack test."
+      ],
+      "consumes_frozen_own_test": false
+    }
+  ],
+  "status": "planned"
+}

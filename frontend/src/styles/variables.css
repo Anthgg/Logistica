@@ -1,0 +1,3 @@
+/* variables.css — ya no se usa para tokens de diseño. */
+/* Todos los tokens están en tailwind.config.js */
+/* Se mantiene el archivo para no romper el import en main.tsx */

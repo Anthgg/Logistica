@@ -1,0 +1,46 @@
+{
+  "family": "behavioral",
+  "plans": [
+    {
+      "experiment_id": "CONDUCTUAL-A-CMU",
+      "dataset": "cmu_keystroke",
+      "modality": "keyboard",
+      "protocol_notes": "texto fijo",
+      "selection_source": "validation",
+      "test_used_for_calibration": false
+    },
+    {
+      "experiment_id": "CONDUCTUAL-B-AALTO",
+      "dataset": "aalto_keystrokes",
+      "modality": "keyboard",
+      "protocol_notes": "texto libre; teclas eliminadas",
+      "selection_source": "validation",
+      "test_used_for_calibration": false
+    },
+    {
+      "experiment_id": "CONDUCTUAL-C-BALABIT",
+      "dataset": "balabit_mouse",
+      "modality": "mouse",
+      "protocol_notes": "sesiones de escritorio remoto",
+      "selection_source": "validation",
+      "test_used_for_calibration": false
+    },
+    {
+      "experiment_id": "CONDUCTUAL-D-KMT",
+      "dataset": "behaviour_biometrics",
+      "modality": "keyboard_mouse",
+      "protocol_notes": "formulario con datos ficticios",
+      "selection_source": "validation",
+      "test_used_for_calibration": false
+    },
+    {
+      "experiment_id": "CONDUCTUAL-E-OWN",
+      "dataset": "own_behavioral",
+      "modality": "keyboard_mouse",
+      "protocol_notes": "un autoencoder por participante; único candidato directo",
+      "selection_source": "validation",
+      "test_used_for_calibration": false
+    }
+  ],
+  "status": "planned"
+}

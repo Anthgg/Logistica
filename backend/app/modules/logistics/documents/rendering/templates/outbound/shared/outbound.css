@@ -1,0 +1,147 @@
+/* ============================================================
+   Outbound CSS Stylesheet — Phase 018
+   Familia: OUTBOUND (PED, ODS, PICK, PACK)
+   ============================================================ */
+
+/* --- Table Styles for Outbound Items --- */
+.outbound-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin-bottom: 12px;
+}
+
+.outbound-table th {
+    background-color: #1a3a5c;
+    color: #ffffff;
+    padding: 5px 6px;
+    text-align: left;
+    font-weight: bold;
+    border: 1px solid #1a3a5c;
+}
+
+.outbound-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #dee2e6;
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.outbound-table tr:nth-child(even) td {
+    background-color: #f8f9fa;
+}
+
+/* --- Box Containers --- */
+.outbound-box {
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #1e40af;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    background-color: #f8fafc;
+    border-radius: 2px;
+}
+
+.outbound-box-title {
+    font-size: 9.5pt;
+    font-weight: bold;
+    color: #1e40af;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 3px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Picking Route & Sequence --- */
+.picking-seq-badge {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 8pt;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.picking-location {
+    font-weight: bold;
+    color: #0f172a;
+    font-family: monospace;
+    font-size: 9pt;
+}
+
+/* --- Exceptions --- */
+.picking-exception-row td {
+    background-color: #fff1f2 !important;
+    border-left: 3px solid #e11d48 !important;
+}
+
+.exception-badge {
+    background-color: #e11d48;
+    color: #ffffff;
+    font-size: 7.5pt;
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 2px;
+    display: inline-block;
+    text-transform: uppercase;
+}
+
+/* --- Packing Hierarchy --- */
+.pack-hierarchy-tree {
+    font-family: monospace;
+    font-size: 8pt;
+    line-height: 1.4;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 8px;
+    border-radius: 3px;
+}
+
+.pack-node-level-0 {
+    font-weight: bold;
+    color: #1e3a8a;
+    margin-top: 4px;
+}
+
+.pack-node-level-1 {
+    color: #0f766e;
+    margin-left: 15px;
+}
+
+.pack-node-level-2 {
+    color: #475569;
+    margin-left: 30px;
+}
+
+/* --- Scanning Status --- */
+.scan-status {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 7.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.scan-not-started { background-color: #e2e8f0; color: #475569; }
+.scan-scanned { background-color: #dbeafe; color: #1e40af; }
+.scan-completed { background-color: #dcfce7; color: #15803d; }
+.scan-exception { background-color: #ffe4e6; color: #b91c1c; }
+
+/* --- Sensitivity & Masking --- */
+.sensitive-mask {
+    background-color: #0f172a;
+    color: #0f172a;
+    padding: 0 3px;
+    border-radius: 2px;
+    user-select: none;
+}
+
+.gated-field-notice {
+    font-size: 7.5pt;
+    color: #dc2626;
+    font-style: italic;
+}

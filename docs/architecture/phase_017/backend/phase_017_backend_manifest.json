@@ -1,0 +1,33 @@
+{
+  "phase": "017",
+  "domain": "logistics",
+  "subdomain": "inventory_rendering",
+  "files": [
+    "01_auditoria_documentos_inventario.md",
+    "02_arquitectura_plantillas_inventario.md",
+    "03_EUB_etiqueta_ubicacion.md",
+    "04_PUT_orden_ubicacion.md",
+    "05_MOV_movimiento_almacen.md",
+    "06_AJI_acta_ajuste_inventario.md",
+    "07_CNT_acta_conteo_fisico.md",
+    "08_ADI_acta_diferencia_inventario.md",
+    "09_TRA_orden_transferencia.md",
+    "10_CRT_constancia_recepcion_transferencia.md",
+    "11_componentes_reutilizables.md",
+    "12_paquete_documental_inventario.md",
+    "13_seguridad_privacidad_sensibilidad.md",
+    "14_cantidades_validators.md",
+    "15_versionado_catalogo.md",
+    "16_endpoints.md",
+    "17_permisos_step_up.md",
+    "18_auditoria.md",
+    "19_migracion_seed.md",
+    "20_pruebas.md",
+    "21_integracion_futura_ubicaciones.md",
+    "22_integracion_futura_movimiento_ajuste.md",
+    "23_integracion_futura_conteo_transferencias.md",
+    "24_decisiones_pendientes.md",
+    "README.md",
+    "README.md"
+  ]
+}

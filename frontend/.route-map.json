@@ -1,0 +1,1355 @@
+[
+ {
+  "path": "/login",
+  "guards": []
+ },
+ {
+  "path": "/register",
+  "guards": []
+ },
+ {
+  "path": "/dashboard",
+  "guards": []
+ },
+ {
+  "path": "/clients",
+  "guards": []
+ },
+ {
+  "path": "/shipments",
+  "guards": []
+ },
+ {
+  "path": "/shipments/:shipmentId",
+  "guards": []
+ },
+ {
+  "path": "/warehouses",
+  "guards": [
+   "warehouses.read"
+  ]
+ },
+ {
+  "path": "/inventory",
+  "guards": []
+ },
+ {
+  "path": "/routes",
+  "guards": []
+ },
+ {
+  "path": "/routes/:routeId",
+  "guards": []
+ },
+ {
+  "path": "/incidents",
+  "guards": []
+ },
+ {
+  "path": "/reports",
+  "guards": [
+   "literal:viewReports"
+  ]
+ },
+ {
+  "path": "/research",
+  "guards": []
+ },
+ {
+  "path": "/research/participants",
+  "guards": []
+ },
+ {
+  "path": "/research/sessions",
+  "guards": []
+ },
+ {
+  "path": "/research/sessions/:sessionId",
+  "guards": []
+ },
+ {
+  "path": "/profile",
+  "guards": []
+ },
+ {
+  "path": "/sessions",
+  "guards": []
+ },
+ {
+  "path": "/security/continuous-auth",
+  "guards": []
+ },
+ {
+  "path": "/admin/continuous-auth/evaluations",
+  "guards": []
+ },
+ {
+  "path": "/admin/continuous-auth/evaluations/:evaluationId",
+  "guards": []
+ },
+ {
+  "path": "/admin/models/status",
+  "guards": []
+ },
+ {
+  "path": "/change-password",
+  "guards": []
+ },
+ {
+  "path": "/security",
+  "guards": []
+ },
+ {
+  "path": "/logistics",
+  "guards": []
+ },
+ {
+  "path": "/logistics/warehouses",
+  "guards": [
+   "warehouses.read"
+  ]
+ },
+ {
+  "path": "/logistics/settings/warehouses",
+  "guards": [
+   "warehouses.read"
+  ]
+ },
+ {
+  "path": "/logistics/settings/warehouses/:warehouseId",
+  "guards": [
+   "warehouses.read"
+  ]
+ },
+ {
+  "path": "/logistics/organizations",
+  "guards": [
+   "organizations.read"
+  ]
+ },
+ {
+  "path": "/logistics/branches",
+  "guards": [
+   "branches.read"
+  ]
+ },
+ {
+  "path": "/logistics/roles",
+  "guards": [
+   "roles.read"
+  ]
+ },
+ {
+  "path": "/logistics/role-assignments",
+  "guards": [
+   "roleAssignments.read"
+  ]
+ },
+ {
+  "path": "/logistics/documents",
+  "guards": [
+   "documents.read"
+  ]
+ },
+ {
+  "path": "/logistics/company-profile",
+  "guards": [
+   "companySettings.read"
+  ]
+ },
+ {
+  "path": "/logistics/products",
+  "guards": [
+   "catalog.read"
+  ]
+ },
+ {
+  "path": "/logistics/products/:productId",
+  "guards": [
+   "catalog.read"
+  ]
+ },
+ {
+  "path": "/logistics/units",
+  "guards": [
+   "units.read"
+  ]
+ },
+ {
+  "path": "/logistics/unit-conversions",
+  "guards": [
+   "units.read"
+  ]
+ },
+ {
+  "path": "/logistics/unit-conversions/simulator",
+  "guards": [
+   "units.read"
+  ]
+ },
+ {
+  "path": "/logistics/business-partners",
+  "guards": [
+   "partners.read"
+  ]
+ },
+ {
+  "path": "/logistics/suppliers",
+  "guards": [
+   "partners.read"
+  ]
+ },
+ {
+  "path": "/logistics/customers",
+  "guards": [
+   "partners.read"
+  ]
+ },
+ {
+  "path": "/logistics/carriers",
+  "guards": [
+   "partners.read"
+  ]
+ },
+ {
+  "path": "/logistics/business-partners/:partnerId",
+  "guards": [
+   "partners.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchase-orders",
+  "guards": [
+   "purchaseOrders.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchase-orders/:purchaseOrderId",
+  "guards": [
+   "purchaseOrders.read"
+  ]
+ },
+ {
+  "path": "/logistics/ruc",
+  "guards": [
+   "rucIntegration.read"
+  ]
+ },
+ {
+  "path": "/logistics/ruc/lookup",
+  "guards": [
+   "rucIntegration.read"
+  ]
+ },
+ {
+  "path": "/logistics/ruc/datasets",
+  "guards": [
+   "rucIntegration.read"
+  ]
+ },
+ {
+  "path": "/logistics/ruc/imports",
+  "guards": [
+   "rucIntegration.read"
+  ]
+ },
+ {
+  "path": "/logistics/ruc/assisted-verifications",
+  "guards": [
+   "rucIntegration.read"
+  ]
+ },
+ {
+  "path": "/logistics/integrations/vehicle-verifications",
+  "guards": [
+   "vehicleVerifications.read"
+  ]
+ },
+ {
+  "path": "/logistics/integrations/vehicle-verifications/sources",
+  "guards": [
+   "vehicleVerifications.read"
+  ]
+ },
+ {
+  "path": "/logistics/integrations/vehicle-verifications/conflicts",
+  "guards": [
+   "vehicleVerifications.read"
+  ]
+ },
+ {
+  "path": "/logistics/integrations/vehicle-verifications/review-tasks",
+  "guards": [
+   "vehicleVerifications.read"
+  ]
+ },
+ {
+  "path": "/logistics/integrations/vehicle-verifications/requirements",
+  "guards": [
+   "vehicleVerifications.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicles",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicles/new",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicles/:vehicleId",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicles/:vehicleId/edit",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicles/:vehicleId/documents",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicles/:vehicleId/versions",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicles/:vehicleId/history",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicle-makes",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/vehicle-models",
+  "guards": [
+   "vehicles.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions/new",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions/:requisitionId",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions/:requisitionId/edit",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions/:requisitionId/revisions",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions/:requisitionId/history",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions/mine",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/requisitions/review",
+  "guards": [
+   "purchaseRequisitions.read"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/evaluations",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/evaluations/new",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/evaluations/:evaluationId",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/evaluations/:evaluationId/decision",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/evaluation-templates",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/evaluation-templates/:templateId",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/evaluation-rubrics",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/quotations/:roundId",
+  "guards": [
+   "supplierEvaluations.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/generate",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/edit",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/revisions",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/schedules",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/dispatch",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/document",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/history",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/amendments",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/approval",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/approval-chain",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/purchase-orders/:purchaseOrderId/approval-seal",
+  "guards": [
+   "purchaseOrdersV2.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/docks",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/docks/board",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/docks/queue",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/docks/queue/:entryId",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/dock-assignment-plans/:planId",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/docks/calendar",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/docks/:dockId",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/dock-assignments/:assignmentId",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/dock-assignments/:assignmentId/history",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/dock-assignments/:assignmentId/metrics",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/unloading/:operationId",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/unloading/:operationId/history",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/unloading/:operationId/metrics",
+  "guards": [
+   "inboundDocks.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/new",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/:caseId",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/:caseId/edit",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/:caseId/review",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/:caseId/approval",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/:caseId/document",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/:caseId/history",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/reception-differences/:caseId/integrity",
+  "guards": [
+   "receptionDifferences.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/new",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/:planId",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/:planId/versions/new",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/:planId/versions/:versionId",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/:planId/versions/:versionId/edit",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/:planId/versions/:versionId/preview",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/:planId/versions/:versionId/compare",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plans/:planId/history",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/tolerances",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/sampling-plans",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/quality/plan-resolution",
+  "guards": [
+   "qualityInspectionPlans.read"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/movements",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/movements/:movementId",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/kardex",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/prepared-events",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/partitions",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/partitions/:partitionId",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/checkpoints",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/reconciliation",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/ledger/exports",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/products",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/products/:productId",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/warehouses",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/warehouses/:warehouseId",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/locations",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/locations/:locationId",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/positions",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/positions/:positionId",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/list",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/formulas",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/freshness",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/reconciliation",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/rebuilds",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/checkpoints",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/history",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/negatives",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/alerts",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/inventory/stock/exports",
+  "guards": [
+   "inventoryLedger.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/orders",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/orders/new",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/orders/:orderId",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/orders/:orderId/edit",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/orders/:orderId/plan",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/orders/:orderId/history",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/orders/:orderId/integrity",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/tasks",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/tasks/:taskId",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/exceptions",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/exceptions/:exceptionId",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/capacity",
+  "guards": [
+   "putaway.view"
+  ]
+ },
+ {
+  "path": "/logistics/putaway/mobile",
+  "guards": [
+   "putaway.mobileAccess"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/cases",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/new",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId/inspection",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId/decision",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId/release",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId/rejection",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId/document",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId/history",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine/:caseId/integrity",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/inspections",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/inspections/:inspectionId",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/quarantine-zones",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/quality/availability",
+  "guards": [
+   "quarantine.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/docks/settings",
+  "guards": [
+   "inboundDocks.manageDocks"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/gate-control",
+  "guards": [
+   "gateControl.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/gate-control/queue",
+  "guards": [
+   "gateControl.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/gate-control/check-ins/new",
+  "guards": [
+   "gateControl.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/gate-control/check-ins/:checkInId",
+  "guards": [
+   "gateControl.view"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/gate-control/gates",
+  "guards": [
+   "gateControl.manageGates"
+  ]
+ },
+ {
+  "path": "/logistics/inbound/gate-control/policies",
+  "guards": [
+   "gateControl.managePolicies"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approvals",
+  "guards": [
+   "procurementApprovals.view",
+   "purchaseOrdersV2.approveTransitional"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approvals/inbox",
+  "guards": [
+   "procurementApprovals.view",
+   "purchaseOrdersV2.approveTransitional"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approvals/created-by-me",
+  "guards": [
+   "procurementApprovals.view",
+   "purchaseOrdersV2.approveTransitional"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approvals/:requestId",
+  "guards": [
+   "procurementApprovals.view",
+   "purchaseOrdersV2.approveTransitional"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approvals/:requestId/history",
+  "guards": [
+   "procurementApprovals.view",
+   "purchaseOrdersV2.approveTransitional"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approvals/:requestId/integrity",
+  "guards": [
+   "procurementApprovals.view",
+   "purchaseOrdersV2.approveTransitional"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approval-policies",
+  "guards": [
+   "procurementApprovals.policiesRead",
+   "procurementApprovals.policiesCreate",
+   "procurementApprovals.policiesUpdate",
+   "procurementApprovals.policiesActivate"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approval-policies/new",
+  "guards": [
+   "procurementApprovals.policiesRead",
+   "procurementApprovals.policiesCreate",
+   "procurementApprovals.policiesUpdate",
+   "procurementApprovals.policiesActivate"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approval-policies/:policyId",
+  "guards": [
+   "procurementApprovals.policiesRead",
+   "procurementApprovals.policiesCreate",
+   "procurementApprovals.policiesUpdate",
+   "procurementApprovals.policiesActivate"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approval-policies/:policyId/versions",
+  "guards": [
+   "procurementApprovals.policiesRead",
+   "procurementApprovals.policiesCreate",
+   "procurementApprovals.policiesUpdate",
+   "procurementApprovals.policiesActivate"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approval-policy-versions/:versionId",
+  "guards": [
+   "procurementApprovals.policiesRead",
+   "procurementApprovals.policiesCreate",
+   "procurementApprovals.policiesUpdate",
+   "procurementApprovals.policiesActivate"
+  ]
+ },
+ {
+  "path": "/logistics/purchasing/approval-delegations",
+  "guards": [
+   "procurementApprovals.manageDelegations"
+  ]
+ },
+ {
+  "path": "/logistics/catalog/cost-centers",
+  "guards": [
+   "costCenters.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers/new",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers/:driverId",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers/:driverId/edit",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers/:driverId/licenses",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers/:driverId/documents",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers/:driverId/versions",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/drivers/:driverId/history",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/driver-license-categories",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/alerts/drivers",
+  "guards": [
+   "drivers.read"
+  ]
+ },
+ {
+  "path": "/logistics/files",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/files/upload",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/files/:fileId",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/files/:fileId/versions",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/files/:fileId/evidence",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/files/:fileId/access",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/files/:fileId/history",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/evidence",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/file-deletion-requests",
+  "guards": [
+   "files.read"
+  ]
+ },
+ {
+  "path": "/logistics/audit-events",
+  "guards": [
+   "audit.read"
+  ]
+ },
+ {
+  "path": "/logistics/permissions",
+  "guards": [
+   "permissions.read"
+  ]
+ },
+ {
+  "path": "/logistics/unavailable",
+  "guards": []
+ },
+ {
+  "path": "/unauthorized",
+  "guards": []
+ },
+ {
+  "path": "/",
+  "guards": []
+ },
+ {
+  "path": "*",
+  "guards": []
+ }
+]

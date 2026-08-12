@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-07-26T08:21:12.444444+00:00",
+  "datasets": {
+    "oulu_npu": {
+      "status": "agreement_required",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/oulu_npu"
+    },
+    "replay_attack": {
+      "status": "agreement_required",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/replay_attack"
+    },
+    "replay_mobile": {
+      "status": "agreement_required",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/replay_mobile"
+    },
+    "celeba_spoof": {
+      "status": "agreement_required",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/celeba_spoof"
+    },
+    "siw": {
+      "status": "agreement_required",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/siw"
+    },
+    "siw_mv2": {
+      "status": "agreement_required",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/siw_mv2"
+    },
+    "casia_surf_cefa": {
+      "status": "agreement_required",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/casia_surf_cefa"
+    },
+    "cmu_keystroke": {
+      "status": "pending_review",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/cmu_keystroke"
+    },
+    "aalto_keystrokes": {
+      "status": "pending_review",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/aalto_keystrokes"
+    },
+    "balabit_mouse": {
+      "status": "pending_review",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/balabit_mouse"
+    },
+    "behaviour_biometrics": {
+      "status": "pending_review",
+      "downloaded_at": null,
+      "checksum": null,
+      "storage_path": "external-data/raw/behaviour_biometrics"
+    }
+  }
+}

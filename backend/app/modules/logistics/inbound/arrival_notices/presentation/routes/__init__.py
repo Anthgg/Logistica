@@ -1,0 +1,1 @@
+"""Arrival notice HTTP routes."""

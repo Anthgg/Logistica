@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant Prev as Previous MOV
+    participant New as New MOV
+    Prev->>New: previous_movement_hash
+    New->>New: compute_movement_hash(...)
+    New->>New: movement_hash

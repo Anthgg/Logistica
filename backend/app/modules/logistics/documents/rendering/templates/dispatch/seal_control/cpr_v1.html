@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CONTROL DE PRECINTO (CPR)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "dispatch/shared/dispatch.css" %}
+        {% include "outbound/shared/outbound.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">CONTROL DE PRECINTO</div>
+                <div class="doc-code">{{ cmd.document_code or 'CPR-PREVIEW' }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_data.get('seal_status','preview') | lower }}">
+                        {{ cmd.document_data.get('seal_status', 'PREVIEW') }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información de Control del Precinto</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Ref. Despacho:</td>
+        <td>{{ cmd.document_data.get('dispatch_reference', '—') }}</td>
+        <td class="info-label">Puerta / Acceso Carga:</td>
+        <td>{{ cmd.document_data.get('gate_code', '—') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Fecha Colocación:</td>
+        <td>{{ cmd.document_data.get('applied_at', '—') }}</td>
+        <td class="info-label">Colocado Por:</td>
+        <td>{{ cmd.document_data.get('applied_by', '—') }}</td>
+    </tr>
+</table>
+
+<!-- Vehículo -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Vehículo de Carga Relacionado (PENDING_PHASE_027)</div>
+    <table style="width: 100%; font-size: 8.5pt;">
+        <tr>
+            <td style="font-weight: bold; width: 25%;">Placa:</td>
+            <td><strong>{{ cmd.document_data.get('vehicle_snapshot', {}).get('plate', '—') }}</strong></td>
+            <td style="font-weight: bold; width: 25%;">Tipo Vehículo:</td>
+            <td>{{ cmd.document_data.get('vehicle_snapshot', {}).get('vehicle_type', '—') }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Comparación de Precinto (Esperado vs Observado) -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Verificación de Precinto</div>
+    <table style="width: 100%; font-size: 9pt;">
+        <tr>
+            <td style="font-weight: bold; width: 30%;">Precinto Esperado:</td>
+            <td><span style="font-size: 11pt; color: #475569;">{{ cmd.document_data.get('expected_seal_number', '—') }}</span></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Precinto Observado / Aplicado:</td>
+            <td><strong style="font-size: 12pt; color: #1e3a8a;">{{ cmd.document_data.get('observed_seal_number', '—') }}</strong></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Estado del Precinto:</td>
+            <td>
+                {% set status_val = cmd.document_data.get('seal_status', 'PENDING') %}
+                <span class="seal-status-badge seal-{{ status_val | lower }}">{{ status_val }}</span>
+            </td>
+        </tr>
+        {% if cmd.document_data.get('reason_if_replaced_or_broken') %}
+        <tr>
+            <td style="font-weight: bold; color: #b91c1c;">Motivo de Discrepancia / Cambio:</td>
+            <td style="color: #b91c1c;"><strong>{{ cmd.document_data['reason_if_replaced_or_broken'] }}</strong></td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<!-- Historial de Precinto (SealEventSnapshot) -->
+{% set history = cmd.document_data.get('seal_events', []) %}
+{% if history %}
+<div class="outbound-box">
+    <div class="outbound-box-title">Historial de Eventos del Precinto (SealEventSnapshot)</div>
+    <table class="seal-history-table">
+        <thead>
+            <tr>
+                <th>Evento</th>
+                <th>Número Precinto</th>
+                <th>Previo</th>
+                <th>Fecha/Hora</th>
+                <th>Actor</th>
+                <th>Estado</th>
+                <th>Motivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in history %}
+            <tr>
+                <td><strong>{{ event.get('event_type') }}</strong></td>
+                <td>{{ event.get('seal_number', '—') }}</td>
+                <td>{{ event.get('previous_seal_number', '—') }}</td>
+                <td>{{ event.get('occurred_at', '—') }}</td>
+                <td>{{ event.get('actor', '—') }}</td>
+                <td><span class="seal-status-badge seal-{{ event.get('status', 'PENDING') | lower }}" style="font-size: 6.5pt; padding: 1px 4px;">{{ event.get('status') }}</span></td>
+                <td style="font-size: 7.5pt; color: #555;">{{ event.get('reason', '—') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="outbound-box" style="background-color: #fef9e7; border-left-color: #d97706;">
+    <div style="font-size: 8pt; color: #854d0e;">
+        <strong>PENDING_PHASE_058</strong> — Vista previa de Control de Precinto.
+        Este reporte es una propuesta técnica (CPR).
+        El registro operativo y validación en muelle de precintos se implementará en la Fase 058.
+    </div>
+</div>
+
+<!-- Firmas de Verificación -->
+<table class="approval-chain" style="margin-top: 15px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Colocado por</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('applied_by', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Verificado por</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('verified_by', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top: 10px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">VISTA PREVIA — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    CPR v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_058
+</div>
+</body>
+</html>

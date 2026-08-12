@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PACKING LIST (PACK)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "outbound/shared/outbound.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">PACKING LIST</div>
+                <div class="doc-code">{{ cmd.document_code or 'PACK-PREVIEW' }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_data.get('packing_status','preview') | lower }}">
+                        {{ cmd.document_data.get('packing_status', 'PREVIEW') }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información de Embalaje y Consolidación</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Ref. Orden Salida (ODS):</td>
+        <td>{{ cmd.document_data.get('outbound_order_reference', '—') }}</td>
+        <td class="info-label">Almacén:</td>
+        <td>{{ cmd.document_data.get('warehouse', '—') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Destino:</td>
+        <td>{{ cmd.document_data.get('destination', {}).get('name', '—') }}</td>
+        <td class="info-label">Empacador Responsable:</td>
+        <td><strong>{{ cmd.document_data.get('packed_by', '—') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Fecha Inicio:</td>
+        <td>{{ cmd.document_data.get('started_at', '—') }}</td>
+        <td class="info-label">Fecha Fin:</td>
+        <td>{{ cmd.document_data.get('ended_at', '—') }}</td>
+    </tr>
+</table>
+
+<!-- Jerarquía de Embalaje Visual -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Jerarquía de Carga Consolidad (PackageHierarchyValidator)</div>
+    <div class="pack-hierarchy-tree">
+        {% set units = cmd.document_data.get('packing_units', []) %}
+        {% if units %}
+            {% for unit in units %}
+                {% if not unit.get('parent_unit_code') %}
+                    <!-- Pallet o contenedor padre -->
+                    <div class="pack-node-level-0">
+                        📦 [{{ unit.get('logistic_unit_type', 'PALLET') }}] Código: {{ unit.get('logistic_unit_code', '—') }}
+                        {% if unit.get('gross_weight') %} (Peso bruto: {{ unit['gross_weight'].get('value') }} {{ unit['gross_weight'].get('unit') }}){% endif %}
+                        {% if unit.get('internal_seal') %} | Precinto interno: {{ unit['internal_seal'] }}{% endif %}
+                    </div>
+                    
+                    <!-- Buscar hijos -->
+                    {% for child in units %}
+                        {% if child.get('parent_unit_code') == unit.get('logistic_unit_code') %}
+                            <div class="pack-node-level-1">
+                                └── 📦 [{{ child.get('logistic_unit_type', 'BOX') }}] Código: {{ child.get('logistic_unit_code', '—') }}
+                                {% if child.get('dimensions') %} ({{ child['dimensions'].get('length') }}x{{ child['dimensions'].get('width') }}x{{ child['dimensions'].get('height') }} {{ child['dimensions'].get('unit') }}){% endif %}
+                            </div>
+                            
+                            <!-- Contenido del hijo -->
+                            {% for item in child.get('items', []) %}
+                                <div class="pack-node-level-2">
+                                    ├── SKU: {{ item.get('sku', '—') }} | {{ item.get('description', '—') }} | Cant: <strong>{{ item.get('quantity') }}</strong> {{ item.get('unit') }}
+                                    {% if item.get('lot_number') %} (Lote: {{ item['lot_number'] }}){% endif %}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Contenido directo del padre si tiene -->
+                    {% for item in unit.get('items', []) %}
+                        <div class="pack-node-level-1">
+                            ├── SKU: {{ item.get('sku', '—') }} | {{ item.get('description', '—') }} | Cant: <strong>{{ item.get('quantity') }}</strong> {{ item.get('unit') }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div style="color: #64748b; font-style: italic;">Sin jerarquía registrada.</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section-title">Detalle Técnico de Unidades Logísticas (PENDING_PHASE_046)</div>
+<table class="outbound-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 25%;">Código Unidad</th>
+            <th style="width: 15%;">Tipo</th>
+            <th style="width: 25%;">Dimensiones (LxWxH)</th>
+            <th style="text-align: right; width: 15%;">Peso Neto</th>
+            <th style="text-align: right; width: 15%;">Peso Bruto</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if units %}
+            {% for unit in units %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ unit.get('logistic_unit_code', '—') }}</strong></td>
+                <td>{{ unit.get('logistic_unit_type', '—') }}</td>
+                <td>
+                    {% if unit.get('dimensions') %}
+                        {{ unit['dimensions'].get('length') }} x {{ unit['dimensions'].get('width') }} x {{ unit['dimensions'].get('height') }} {{ unit['dimensions'].get('unit') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td style="text-align: right;">
+                    {% if unit.get('net_weight') %}
+                        {{ unit['net_weight'].get('value') }} {{ unit['net_weight'].get('unit') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td style="text-align: right; font-weight: bold;">
+                    {% if unit.get('gross_weight') %}
+                        {{ unit['gross_weight'].get('value') }} {{ unit['gross_weight'].get('unit') }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="6" style="text-align: center; color: #64748b;">No hay unidades logísticas registradas.</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+<div class="outbound-box" style="background-color: #fef9e7; border-left-color: #d97706;">
+    <div style="font-size: 8pt; color: #854d0e;">
+        <strong>PENDING_PHASE_054</strong> — Vista previa de Packing List.
+        No se crean pallets ni cajas reales en base de datos.
+        La consolidación operativa e impresión térmica de etiquetas se implementará en la Fase 054.
+    </div>
+</div>
+
+<!-- Firmas -->
+<table class="approval-chain" style="margin-top: 15px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Preparado por (Packing)</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('packed_by', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Verificado por (Control)</div>
+            <div style="font-size: 8pt; margin-top: 3px;">—</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top: 10px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">VISTA PREVIA — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    PACK v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_054
+</div>
+</body>
+</html>

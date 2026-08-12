@@ -1,0 +1,14 @@
+# 09 — Estados Documentales Permitidos por Tipo
+
+## Lista de Estados Globales
+* `DRAFT`, `READY`, `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `ISSUED`, `DELIVERED`, `PARTIALLY_COMPLETED`, `COMPLETED`, `REPRINTED`, `CANCELLED`, `EXPIRED`, `REPLACED`, `ARCHIVED`.
+
+## Mapeo por Familia y Tipo
+
+| Tipo | Estados Permitidos (`allowed_statuses`) |
+| :--- | :--- |
+| **REQ** | `DRAFT`, `PENDING_APPROVAL`, `APPROVED`, `REJECTED`, `ISSUED`, `CANCELLED` |
+| **OC** | `DRAFT`, `PENDING_APPROVAL`, `APPROVED`, `ISSUED`, `PARTIALLY_COMPLETED`, `COMPLETED`, `CANCELLED` |
+| **AREC** | `DRAFT`, `ISSUED`, `COMPLETED`, `CANCELLED` |
+| **POD** | `DRAFT`, `ISSUED`, `DELIVERED`, `COMPLETED`, `CANCELLED` |
+| **AJI** | `DRAFT`, `PENDING_APPROVAL`, `APPROVED`, `ISSUED`, `CANCELLED` |

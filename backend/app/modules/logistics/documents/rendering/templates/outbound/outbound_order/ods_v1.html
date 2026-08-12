@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ORDEN DE SALIDA (ODS)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "outbound/shared/outbound.css" %}
+        {% include "dispatch/shared/dispatch.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">ORDEN DE SALIDA</div>
+                <div class="doc-code">{{ cmd.document_code or 'ODS-PREVIEW' }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_data.get('document_status','preview') | lower }}">
+                        {{ cmd.document_data.get('document_status', 'PREVIEW') }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información de Autorización de Salida</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Ref. Pedido Salida (PED):</td>
+        <td>{{ cmd.document_data.get('request_reference', '—') }}</td>
+        <td class="info-label">Fecha Autorización:</td>
+        <td>{{ cmd.document_data.get('authorized_at', now.strftime('%Y-%m-%d %H:%M UTC')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Almacén Despacho:</td>
+        <td>{{ cmd.document_data.get('warehouse', '—') }}</td>
+        <td class="info-label">Autorizado Por:</td>
+        <td><strong>{{ cmd.document_data.get('authorized_by', '—') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Prioridad:</td>
+        <td>
+            <span class="status-badge" style="background-color: {% if cmd.document_data.get('priority') == 'URGENT' %}#e11d48{% else %}#3b82f6{% endif %}; color: white;">
+                {{ cmd.document_data.get('priority', 'NORMAL') }}
+            </span>
+        </td>
+        <td class="info-label">Estado Liberación:</td>
+        <td>
+            <span class="status-badge" style="background-color: #475569; color: white;">
+                {{ cmd.document_data.get('release_status', 'NOT_EVALUATED') }}
+            </span>
+        </td>
+    </tr>
+</table>
+
+<!-- Destino y Destinatario -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Destino y Contacto de Entrega</div>
+    <table style="width: 100%; font-size: 8.5pt;">
+        <tr>
+            <td style="font-weight: bold; width: 18%;">Destinatario:</td>
+            <td style="width: 32%;">
+                {% if cmd.document_data.get('destination') %}
+                    {{ cmd.document_data['destination'].get('name', '—') }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+            <td style="font-weight: bold; width: 18%;">Tipo Destino:</td>
+            <td style="width: 32%;">
+                {{ cmd.document_data.get('destination', {}).get('destination_type', '—') }}
+            </td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Dirección:</td>
+            <td colspan="3">
+                {% if cmd.document_data.get('destination') %}
+                    {{ cmd.document_data['destination'].get('address', '—') }}
+                    {% if cmd.document_data['destination'].get('district') %}
+                        , {{ cmd.document_data['destination']['district'] }}
+                    {% endif %}
+                    {% if cmd.document_data['destination'].get('country') %}
+                        ({{ cmd.document_data['destination']['country'] }})
+                    {% endif %}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+        {% if cmd.document_data.get('destination') and cmd.document_data['destination'].get('contact_name') %}
+        <tr>
+            <td style="font-weight: bold;">Contacto:</td>
+            <td>{{ cmd.document_data['destination']['contact_name'] }}</td>
+            <td style="font-weight: bold;">Telf. Contacto:</td>
+            <td>{{ cmd.document_data['destination'].get('contact_phone', '—') }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<div class="section-title">Productos Autorizados para Salida</div>
+<table class="outbound-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 15%;">SKU</th>
+            <th style="width: 40%;">Descripción</th>
+            <th style="width: 10%;">Lote</th>
+            <th style="width: 15%; text-align: right;">Cant. Autorizada</th>
+            <th style="width: 15%;">Unidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set items = cmd.document_data.get('items', []) %}
+        {% if items %}
+            {% for item in items %}
+            <tr>
+                <td>{{ item.get('line_number', loop.index) }}</td>
+                <td>{{ item.get('product_snapshot', {}).get('sku', '—') }}</td>
+                <td>
+                    <strong>{{ item.get('product_snapshot', {}).get('description', '—') }}</strong>
+                    {% if item.get('serial_numbers') %}
+                    <br><span style="font-size: 7.5pt; color: #475569;">Series: {{ item['serial_numbers'] | join(', ') }}</span>
+                    {% endif %}
+                    {% if item.get('logistic_unit_codes') %}
+                    <br><span style="font-size: 7.5pt; color: #475569;">Unidad Logística: {{ item['logistic_unit_codes'] | join(', ') }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ item.get('lot_number', '—') }}</td>
+                <td style="text-align: right;" class="qty-expected">{{ item.get('approved_quantity', '0.00') }}</td>
+                <td>{{ item.get('unit', 'UND') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="6" style="text-align: center; color: #64748b;">No hay productos autorizados en esta orden.</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+<!-- Step-Up referencial (Fase 057) -->
+{% if cmd.document_data.get('step_up_status') %}
+<div class="outbound-box" style="background-color: #fdf2f8; border-left-color: #db2777;">
+    <div class="outbound-box-title" style="color: #be185d;">Estado de Validación Reforzada (Step-Up - PENDING_PHASE_057)</div>
+    <table style="width: 100%; font-size: 8pt; color: #9d174d;">
+        <tr>
+            <td style="font-weight: bold; width: 25%;">Estado Step-Up:</td>
+            <td>{{ cmd.document_data.get('step_up_status') }}</td>
+            <td style="font-weight: bold; width: 25%;">Política Aplicada:</td>
+            <td>{{ cmd.document_data.get('policy_reference', '—') }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Completado el:</td>
+            <td>{{ cmd.document_data.get('completed_at', '—') }}</td>
+            <td style="font-weight: bold;">Resultado General:</td>
+            <td><strong>{{ cmd.document_data.get('result', '—') }}</strong></td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+<div class="outbound-box" style="background-color: #fef9e7; border-left-color: #d97706;">
+    <div style="font-size: 8pt; color: #854d0e;">
+        <strong>PENDING_PHASE_052 / PENDING_PHASE_056</strong> — Vista previa de Orden de Salida.
+        Este reporte no ejecuta la liberación física de la mercadería ni disminuye saldos lógicos.
+        La liberación transaccional y el step-up operativo se implementarán en las fases 056 y 057.
+    </div>
+</div>
+
+<!-- Responsables y Firmas -->
+<table class="approval-chain" style="margin-top: 15px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Autorizado por</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('authorized_by', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Planificador de Salida</div>
+            <div style="font-size: 8pt; margin-top: 3px;">
+                {% if cmd.document_data.get('responsible_users') %}
+                    {{ cmd.document_data['responsible_users'] | join(', ') if cmd.document_data['responsible_users'] is iterable and cmd.document_data['responsible_users'] is not string else cmd.document_data['responsible_users'] }}
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top: 10px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">VISTA PREVIA — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    ODS v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_052
+</div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>HOJA DE RUTA</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "transport/shared/transport.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">HOJA DE RUTA (HR)</div>
+                <div class="doc-code">{{ cmd.document_code or "HR-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+{% if cmd.document_data.get('is_demo_data') %}
+<div class="alert-warning" style="text-align: center; font-weight: bold;">
+    ⚠️ DATOS DEMOSTRATIVOS - RUTA NO CALCULADA OFICIALMENTE (PENDIENTE DE PROVEEDOR DE RUTAS REALES)
+</div>
+{% endif %}
+
+<div class="section-title">Datos del Plan de Ruta</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Plan de Ruta Ref.:</td>
+        <td><strong>{{ cmd.document_data.get('route_plan_reference', '') }}</strong></td>
+        <td class="info-label">Versión del Plan:</td>
+        <td>{{ cmd.document_data.get('route_version', '1.0.0') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Proveedor de Ruta:</td>
+        <td>{{ cmd.document_data.get('provider', 'DEMO') }}</td>
+        <td class="info-label">Fecha de Cálculo:</td>
+        <td>{{ cmd.document_data.get('calculated_at', 'No Calculada') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Estado de Cálculo:</td>
+        <td><strong style="color: #d35400;">{{ cmd.document_data.get('calculation_status', '') }}</strong></td>
+        <td class="info-label">Perfil de Vehículo:</td>
+        <td>{{ cmd.document_data.get('vehicle_profile', 'DEFAULT') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Resumen de Trayecto</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Punto de Partida:</td>
+        <td>{{ cmd.document_data.get('origin', '') }}</td>
+        <td class="info-label">Distancia Estimada:</td>
+        <td><strong>{{ cmd.document_data.get('total_distance_meters', '0') }} metros</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Punto de Destino:</td>
+        <td>{{ cmd.document_data.get('destination', '') }}</td>
+        <td class="info-label">Duración Estimada:</td>
+        <td><strong>{{ cmd.document_data.get('total_duration_seconds', 0) // 60 }} minutos</strong></td>
+    </tr>
+</table>
+
+<div class="section-title">Secuencia de Itinerario y Ventanas de Entrega</div>
+<table class="transport-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">Sec.</th>
+            <th style="width: 25%;">Nombre Parada</th>
+            <th style="width: 40%;">Dirección</th>
+            <th style="width: 15%;">Ventana Horaria</th>
+            <th style="width: 15%;">Acciones Requeridas</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stop in cmd.document_data.get('stops', []) %}
+        <tr>
+            <td style="text-align: center;">{{ stop.sequence }}</td>
+            <td><strong>{{ stop.name }}</strong> ({{ stop.stop_type }})</td>
+            <td>{{ stop.address }}</td>
+            <td>{{ stop.delivery_window_start or '-' }} - {{ stop.delivery_window_end or '-' }}</td>
+            <td>{{ stop.required_actions | join(', ') if stop.required_actions else 'Ninguna' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if cmd.document_data.get('restrictions') %}
+<div class="section-title">Restricciones de Ruta</div>
+<ul>
+    {% for rest in cmd.document_data.get('restrictions', []) %}
+    <li>{{ rest }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<table class="footer-layout-table">
+    <tr>
+        <td class="footer-qr-cell">
+            {% if qr_b64 %}
+            <img class="qr-code-img" src="{{ qr_b64 }}" alt="Código QR de Documento" />
+            <div class="qr-code-lbl">Verificación de Vista Previa</div>
+            {% endif %}
+        </td>
+        <td class="footer-signatures-cell">
+            <div class="signature-line-container">
+                <div class="signature-line-box" style="width: 100%;">
+                    <div class="signature-line-label">Responsable de Planificación de Rutas</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="page-footer">
+    <hr/>
+    <table style="width: 100%; font-size: 8pt; color: #7f8c8d;">
+        <tr>
+            <td>T1 LOGÍSTICA - HOJA DE RUTA (HR-v1.0.0)</td>
+            <td style="text-align: right;">Página 1 de 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

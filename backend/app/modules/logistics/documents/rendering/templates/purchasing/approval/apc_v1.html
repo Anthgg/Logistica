@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>APROBACIÓN DE COMPRA</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "purchasing/shared/purchasing.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">APROBACIÓN DE COMPRA</div>
+                <div class="doc-code">{{ cmd.document_code or "APC-PROTOTIPO-001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos del Dictamen de Aprobación</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Proceso Referenciado:</td>
+        <td>{{ cmd.document_data.get('related_purchase_reference', 'OC-2026-000001 / REQ-001') }}</td>
+        <td class="info-label">Fecha Decisión:</td>
+        <td>{{ cmd.document_data.get('approval_date', now.strftime('%Y-%m-%d %H:%M UTC')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Decisión Dictaminada:</td>
+        <td><strong style="color: #27ae60;">{{ cmd.document_data.get('decision', 'APROBADO') }}</strong></td>
+        <td class="info-label">Monto Aprobado:</td>
+        <td><strong>{{ cmd.document_data.get('currency', 'PEN') }} {{ cmd.document_data.get('amount', '0.00') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Aprobador Autorizado:</td>
+        <td>{{ cmd.document_data.get('approver', cmd.requested_by or 'Gerente de Finanzas') }}</td>
+        <td class="info-label">Nivel Aprobación:</td>
+        <td>{{ cmd.document_data.get('approval_level', 'NIVEL_2_GERENCIAL') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Motivo y Observaciones del Dictamen</div>
+<div style="font-size: 9pt; padding: 6px; background-color: #f9f9f9; border-left: 4px solid #003366; margin-bottom: 15px;">
+    {{ cmd.document_data.get('reason', 'Aprobación presupuestal y operativa conforme al flujo de control interno.') }}
+</div>
+
+<div class="section-title">Verificación de Seguridad Integrada</div>
+<div style="font-size: 8pt; color: #555555; margin-bottom: 20px;">
+    Autenticación continua y step-up verification aplicados satisfactoriamente para la sesión del aprobador en conformidad con las políticas de control del backend.
+</div>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Documento APC generado en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

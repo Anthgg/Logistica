@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant Stage as Stage (INBOUND_STAGING)
+    participant Storage as Storage Location
+    participant Mv as MoveMent (PUTAWAY_COMPLETED)
+    Stage->>Storage: base_quantity swap
+    Mv->>Mv: source = Stage, destination = Storage

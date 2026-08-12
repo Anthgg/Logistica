@@ -1,0 +1,7 @@
+sequenceDiagram
+    participant Q as KardexQuery
+    participant DB as Database
+    Q->>DB: filter + paginate
+    DB-->>Q: rows
+    Q->>Q: project signed_quantity_display
+    Q-->>Q: KardexResponse

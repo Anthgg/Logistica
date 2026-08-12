@@ -1,0 +1,35 @@
+import { useNavigate, useParams } from 'react-router-dom'
+import { PageHeader } from '../../../components/common/PageHeader'
+import { Button } from '../../../components/common/Button'
+import { Alert } from '../../../components/common/Alert'
+import { LoadingSkeleton } from '../../../components/common/LoadingSkeleton'
+import { LogisticsIcon } from '../../../components/common/LogisticsIcon'
+import { useLogisticsPermissions } from '../../logistics-permissions/hooks/useLogisticsPermissions'
+import { LOGISTICS_PERMISSIONS } from '../../logistics-permissions/logistics-permissions-map'
+import { useMutation, useQuery } from '../../inbound-docks/hooks/useQuery'
+import { getErrorMessage } from '../../../utils/errors'
+import { PutawayPhaseNav } from '../components/PutawayPhaseNav'
+import { putawayTasksApi } from '../api/putawayTasksApi'
+import type { PutawayTaskApi } from '../types/putaway-api'
+
+interface TaskDestinationApi { id: string; location_id: string; sequence_number: number; recommended_quantity: string | number; unit_id: string; status: string }
+
+export function PutawayTaskDetailPage() {
+  const navigate = useNavigate()
+  const { taskId = '' } = useParams()
+  const { hasPermission } = useLogisticsPermissions()
+  const canView = hasPermission(LOGISTICS_PERMISSIONS.putaway.viewTasks)
+  const canStart = hasPermission(LOGISTICS_PERMISSIONS.putaway.startTask)
+  const canComplete = hasPermission(LOGISTICS_PERMISSIONS.putaway.completeTask)
+  const task = useQuery<PutawayTaskApi>(['putaway', 'task', taskId], `/logistics/putaway/tasks/${taskId}`, undefined, { enabled: canView && Boolean(taskId) })
+  const destinations = useQuery<TaskDestinationApi[]>(['putaway', 'task', taskId, 'destinations'], `/logistics/putaway/tasks/${taskId}/destinations`, undefined, { enabled: canView && Boolean(taskId) })
+  const exceptions = useQuery<Array<Record<string, unknown>>>(['putaway', 'task', taskId, 'exceptions'], `/logistics/putaway/tasks/${taskId}/exceptions`, undefined, { enabled: canView && Boolean(taskId) })
+  const start = useMutation<void, PutawayTaskApi>(() => putawayTasksApi.startTask({ task_id: taskId }) as Promise<PutawayTaskApi>, { onSuccess: (result) => task.setData(result) })
+  const complete = useMutation<void, PutawayTaskApi>(() => putawayTasksApi.completeTask({ task_id: taskId }) as Promise<PutawayTaskApi>, { onSuccess: (result) => task.setData(result) })
+
+  if (!canView) return <div className="space-y-4"><PageHeader title="Detalle de tarea" /><Alert variant="error">No tienes permisos para ver esta tarea.</Alert></div>
+  const loading = task.isLoading || destinations.isLoading || exceptions.isLoading
+  const error = task.error || destinations.error || exceptions.error
+
+  return <div className="space-y-6 pb-10"><PageHeader eyebrow="Fase 043 · Tarea" title={task.data?.task_number ?? 'Detalle de tarea de ubicación'} description={task.data ? `${task.data.scan_policy.replaceAll('_', ' ')} · Prioridad ${task.data.priority}` : 'Cargando tarea operativa.'} actions={<Button variant="secondary" onClick={() => navigate('/logistics/putaway/tasks')}>Volver</Button>} /><PutawayPhaseNav />{loading && <LoadingSkeleton rows={7} />}{error && <Alert variant="error">{getErrorMessage(error)}</Alert>}{task.data && <><section className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-sm md:p-8"><div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"><div><span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-sky-300">{task.data.status.replaceAll('_', ' ')}</span><h2 className="mt-4 text-2xl font-bold">Mover {task.data.remaining_quantity} unidades pendientes</h2><p className="mt-2 font-mono text-xs text-slate-400">Producto {task.data.expected_product_id}</p></div><div className="flex flex-wrap gap-2">{canStart && ['CREATED', 'READY', 'ASSIGNED'].includes(task.data.status) && <Button onClick={() => start.mutate(undefined)} isLoading={start.isPending} loadingLabel="Iniciando…">Iniciar tarea</Button>}{canComplete && ['IN_PROGRESS', 'PARTIALLY_COMPLETED', 'QUANTITY_CONFIRMATION_REQUIRED'].includes(task.data.status) && <Button onClick={() => complete.mutate(undefined)} isLoading={complete.isPending} loadingLabel="Completando…">Completar tarea</Button>}</div></div></section>{(start.error || complete.error) && <Alert variant="error">{start.error || complete.error}</Alert>}<section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[['Cantidad requerida', task.data.required_quantity], ['Cantidad ubicada', task.data.placed_quantity], ['Cantidad restante', task.data.remaining_quantity], ['Excepciones', exceptions.data?.length ?? task.data.exception_count]].map(([label, value]) => <div key={String(label)} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm text-slate-500">{label}</p><p className="mt-2 text-2xl font-bold text-slate-950">{value}</p></div>)}</section><section className="grid gap-6 lg:grid-cols-2"><div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-3"><LogisticsIcon name="location" size={21} className="text-blue-700" aria-hidden="true" /><h2 className="text-lg font-bold text-slate-950">Destinos recomendados</h2></div>{destinations.data && destinations.data.length ? <div className="mt-5 space-y-3">{destinations.data.map((destination) => <div key={destination.id} className="rounded-2xl bg-slate-50 p-4"><div className="flex justify-between gap-3"><span className="font-semibold text-slate-900">Opción #{destination.sequence_number}</span><span className="text-xs font-bold text-blue-700">{destination.status}</span></div><p className="mt-2 truncate font-mono text-xs text-slate-500">{destination.location_id}</p><p className="mt-2 text-sm text-slate-700">Cantidad {destination.recommended_quantity}</p></div>)}</div> : <p className="mt-5 text-sm text-slate-500">Aún no existen destinos recomendados.</p>}</div><div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-3"><LogisticsIcon name="user" size={21} className="text-violet-700" aria-hidden="true" /><h2 className="text-lg font-bold text-slate-950">Asignación y origen</h2></div><dl className="mt-5 space-y-4 text-sm"><div className="flex justify-between gap-4"><dt className="text-slate-500">Asignación</dt><dd className="font-semibold text-slate-900">{task.data.assignment_status}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Usuario</dt><dd className="truncate font-mono text-xs text-slate-900">{task.data.assigned_user_id ?? 'Sin asignar'}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Staging</dt><dd className="truncate font-mono text-xs text-slate-900">{task.data.source_stage_location_id ?? 'No informado'}</dd></div><div className="flex justify-between gap-4"><dt className="text-slate-500">Destino seleccionado</dt><dd className="truncate font-mono text-xs text-slate-900">{task.data.selected_location_id ?? 'Pendiente'}</dd></div></dl></div></section></>}</div>
+}

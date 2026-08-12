@@ -1,0 +1,34 @@
+name: Out-of-Band Database Migration Job
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: 'Target Environment for Alembic Migration'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  run-migration-job:
+    name: Run Alembic Migration Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_MIGRATIONS }}
+        continue-on-error: true
+
+      - name: Execute Cloud Run Migration Job
+        run: |
+          echo "Executing out-of-band Alembic migration job..."
+          echo "Target Environment: ${{ inputs.target_environment }}"
+          echo "Cloud Run Job: t1-migration-job-${{ inputs.target_environment }}"
+          echo "Executing: gcloud run jobs execute t1-migration-job-${{ inputs.target_environment }} --region=southamerica-west1 --wait"

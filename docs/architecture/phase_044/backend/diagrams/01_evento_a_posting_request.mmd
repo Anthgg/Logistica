@@ -1,0 +1,16 @@
+sequenceDiagram
+    participant Src as Source Adapter
+    participant Req as PostingRequest
+    participant Idem as Idempotency
+    participant Val as Validation
+    Src->>Req: create_posting_request
+    Req->>Idem: lookup (org, source_event)
+    Idem-->>Req: existing or None
+    alt existing and same hash
+        Req-->>Src: 201 existing
+    else existing and different hash
+        Req-->>Src: 409 IDEMPOTENCY_CONFLICT
+    else new
+        Req->>Req: persist (RECEIVED)
+        Req-->>Src: 201 created
+    end

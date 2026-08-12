@@ -1,0 +1,58 @@
+{
+  "phase": "026",
+  "title": "Integrar Consulta de RUC (Backend)",
+  "subdomain": "logistics/ruc",
+  "status": "COMPLETED",
+  "migration": {
+    "revision_id": "q280110026dc",
+    "down_revision": "p270110025dc",
+    "tables_created": [
+      "ruc_data_sources",
+      "ruc_dataset_versions",
+      "ruc_import_jobs",
+      "ruc_registry_entries",
+      "ruc_registry_annex_addresses",
+      "ruc_assisted_verifications",
+      "business_partner_ruc_verifications",
+      "ruc_data_conflicts"
+    ]
+  },
+  "components": {
+    "domain": [
+      "app.modules.logistics.ruc.domain.value_objects.enums",
+      "app.modules.logistics.ruc.domain.errors.exceptions",
+      "app.modules.logistics.ruc.domain.services.policies"
+    ],
+    "application": [
+      "app.modules.logistics.ruc.application.services.lookup_service.RucLookupService",
+      "app.modules.logistics.ruc.application.services.import_service.RucRegistryImportService",
+      "app.modules.logistics.ruc.application.services.verification_service.RucAssistedVerificationService",
+      "app.modules.logistics.ruc.application.services.verification_service.BusinessPartnerRucIntegrationService"
+    ],
+    "infrastructure": [
+      "app.modules.logistics.ruc.infrastructure.cache.ruc_cache.RucLookupCache",
+      "app.modules.logistics.ruc.infrastructure.importers.safe_downloader.SafeZipDownloader",
+      "app.modules.logistics.ruc.infrastructure.importers.safe_downloader.SafeZipExtractor",
+      "app.modules.logistics.ruc.infrastructure.parsers.ruc_parser.RucRegistryParser",
+      "app.modules.logistics.ruc.infrastructure.providers.ruc_provider.FakeRucProvider",
+      "app.modules.logistics.ruc.infrastructure.jobs.run_ruc_import_job"
+    ],
+    "presentation": [
+      "app.modules.logistics.ruc.presentation.routes.router",
+      "app.modules.logistics.ruc.presentation.schemas.dto"
+    ]
+  },
+  "test_suite": {
+    "file": "tests/test_logistics_phase026.py",
+    "total_test_classes": 8,
+    "total_test_cases": 22
+  },
+  "security": {
+    "prohibit_web_scraping": true,
+    "prohibit_captcha_solving": true,
+    "step_up_auth_required_actions": [
+      "logistics.ruc_datasets.activate",
+      "logistics.ruc_datasets.rollback"
+    ]
+  }
+}

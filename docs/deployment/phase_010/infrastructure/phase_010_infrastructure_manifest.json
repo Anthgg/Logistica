@@ -1,0 +1,37 @@
+{
+  "phase": "010",
+  "name": "Preparar infraestructura y despliegue repetible",
+  "domain": "infrastructure",
+  "status": "COMPLETED",
+  "gcp_project": "gen-lang-client-0356667380",
+  "gcp_region": "southamerica-west1",
+  "services": {
+    "api_staging": "proyecto-t1-api-staging",
+    "api_production": "autenticacion-continua-api",
+    "web_staging": "proyecto-t1-web-staging",
+    "web_production": "proyecto-t1-web-production"
+  },
+  "artifact_registry": "proyecto-t1-images",
+  "secret_manager_secrets": [
+    "DATABASE_URL",
+    "SECRET_KEY",
+    "CSRF_SECRET"
+  ],
+  "storage_buckets": {
+    "staging": "proyecto-t1-documents-staging",
+    "production": "proyecto-t1-documents-production"
+  },
+  "iam_service_accounts": [
+    "t1-api-staging-sa",
+    "t1-api-production-sa",
+    "t1-migration-sa"
+  ],
+  "ci_cd": {
+    "ci_workflow": ".github/workflows/ci.yml",
+    "staging_deploy": ".github/workflows/staging-deploy.yml",
+    "production_deploy": ".github/workflows/production-deploy.yml",
+    "migration_job": ".github/workflows/database-migration.yml"
+  },
+  "production_deployed": false,
+  "functional_code_modified": false
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ cmd.document_title }} - {{ cmd.document_code or 'PREVIEW' }}</title>
+    <style>
+        {% include "shared/print.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text or cmd.preview_mode %}
+<div class="watermark">
+    {{ cmd.watermark_text or "VISTA PREVIA INSTITUCIONAL — SIN VALOR LEGAL" }}
+</div>
+{% endif %}
+
+<!-- 1. Header Table -->
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-logo-col">
+                <div class="brand-badge">ANDESLOG</div>
+                <div class="brand-sub">OPERACIONES LOGÍSTICAS</div>
+            </td>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ (cmd.header_data or {}).get('legal_name') or cmd.organization_name or 'LOGÍSTICA INTEGRAL ANDINA S.A.C.' }}</div>
+                <div class="header-org-details">
+                    <strong>{{ (cmd.header_data or {}).get('trade_name', 'AndesLog Operaciones') }}</strong> | RUC: {{ (cmd.header_data or {}).get('ruc', '20601234567') }}<br>
+                    Dir: {{ (cmd.header_data or {}).get('fiscal_address', 'Av. Industrial 456, Parque Industrial Lurín, Lima') }}<br>
+                    Sede: {{ (cmd.header_data or {}).get('branch_name') or cmd.branch_name or 'Sede Principal' }} | Email: {{ (cmd.header_data or {}).get('email', 'operaciones@andeslog.pe') }} | Tel: {{ (cmd.header_data or {}).get('phone', '(01) 710-8800') }}
+                </div>
+            </td>
+            <td class="header-doc-box">
+                <div class="sunat-ruc">R.U.C. N° {{ (cmd.header_data or {}).get('ruc', '20601234567') }}</div>
+                <div class="doc-title">{{ meta.get('short_title', cmd.document_title) }}</div>
+                <div class="doc-code">{{ cmd.document_code or ('PREV-' ~ cmd.document_type_code ~ '-2026-000142') }}</div>
+                <div class="status-badge-container">
+                    <span class="status-badge status-preview">VISTA PREVIA INSTITUCIONAL</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- 2. Metadata Grid -->
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Fecha y Hora de Emisión:</td>
+        <td class="info-value">{{ (cmd.document_data or {}).get('date') or (cmd.document_data or {}).get('emission_date') or now.strftime('%d/%m/%Y %H:%M UTC') }}</td>
+        <td class="info-label">Sede Operativa / Almacén:</td>
+        <td class="info-value">{{ (cmd.header_data or {}).get('branch_name') or cmd.branch_name or 'Sede Central Lurín' }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Responsable / Solicitante:</td>
+        <td class="info-value">{{ (cmd.signature_data or {}).get('signer_name', 'CARLOS ALBERTO MENDOZA') }} ({{ (cmd.signature_data or {}).get('signer_role', 'Representante Legal') }})</td>
+        <td class="info-label">{{ meta.get('counterparty_label', 'Contraparte / Tercero') }}:</td>
+        <td class="info-value">{{ (cmd.document_data or {}).get('counterparty_name') or (cmd.document_data or {}).get('supplier_name') or meta.get('default_counterparty', 'DISTRIBUIDORA LOGÍSTICA S.A.C.') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">{{ meta.get('reference_label', 'N° Referencia / Guía') }}:</td>
+        <td class="info-value">{{ (cmd.document_data or {}).get('reference') or meta.get('default_reference', 'REF-2026-0001') }}</td>
+        <td class="info-label">{{ meta.get('transport_label', 'Muelle / Transporte') }}:</td>
+        <td class="info-value">{{ (cmd.document_data or {}).get('transport_info') or meta.get('default_transport', 'Muelle 03 | Placa: ABC-789') }}</td>
+    </tr>
+</table>
+
+<!-- 3. Section Title -->
+<div class="section-title">DETALLE DE ÍTEMS / REGISTROS OPERATIVOS</div>
+
+<!-- 4. Items Table -->
+<table class="data-table">
+    <thead>
+        <tr>
+            {% for header in meta.get('headers', ['#', 'Código', 'Descripción', 'U.M.', 'Cant. Esp.', 'Cant. Rec.', 'Estado']) %}
+            <th>{{ header }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% set items = (cmd.document_data or {}).get('items') or meta.get('default_items', []) %}
+        {% for row in items %}
+        <tr>
+            {% if row is mapping %}
+                <td style="text-align: center;">{{ loop.index }}</td>
+                <td><strong>{{ row.get('code') or row.get('sku') or ('ITM-' ~ loop.index) }}</strong></td>
+                <td>{{ row.get('description') or row.get('name', '-') }}</td>
+                <td style="text-align: center;">{{ row.get('unit') or row.get('um', 'UND') }}</td>
+                <td style="text-align: right;">{{ row.get('expected_quantity') or row.get('quantity', '0.00') }}</td>
+                <td style="text-align: right;">{{ row.get('received_quantity') or row.get('accepted_quantity', '0.00') }}</td>
+                <td style="text-align: center;"><span class="item-status-conforme">{{ row.get('status', 'CONFORME') }}</span></td>
+            {% elif row is sequence %}
+                {% for cell in row %}
+                    <td style="{% if loop.first or loop.last %}text-align: center;{% elif loop.index in [5,6] %}text-align: right;{% endif %}">
+                        {% if loop.last %}
+                            <strong style="color: #15803d;">{{ cell }}</strong>
+                        {% elif loop.index == 2 %}
+                            <strong>{{ cell }}</strong>
+                        {% else %}
+                            {{ cell }}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- 5. Observations & General Conditions -->
+<div class="obs-box">
+    <div class="obs-title">OBSERVACIONES Y CONDICIONES GENERALES:</div>
+    <div class="obs-text">
+        {{ (cmd.document_data or {}).get('notes') or (cmd.document_data or {}).get('observations') or meta.get('notes', 'Documento emitido conforme al procedimiento de control de calidad y recepción en almacén.') }}
+    </div>
+</div>
+
+<!-- 6. Signatures Block -->
+<div class="signatures-wrapper">
+    <table class="signatures-table">
+        <tr>
+            <td class="sig-cell">
+                <div class="sig-line">________________________________________</div>
+                <div class="sig-name">{{ (cmd.signature_data or {}).get('signer_name', 'CARLOS ALBERTO MENDOZA') }}</div>
+                <div class="sig-role">{{ (cmd.signature_data or {}).get('signer_role', 'Representante Legal / Apoderado') }}</div>
+                <div class="sig-dni">Doc. Identidad: {{ (cmd.signature_data or {}).get('signer_dni', '****5678') }}</div>
+                <div class="sig-badge">FIRMANTE INSTITUCIONAL AUTORIZADO</div>
+            </td>
+            <td class="sig-cell">
+                <div class="sig-line">________________________________________</div>
+                <div class="sig-name">RESPONSABLE OPERATIVO / RECEPCIÓN</div>
+                <div class="sig-role">Control y Fiscalización de Procesos</div>
+                <div class="sig-dni">Sello y Firma de Conformidad</div>
+                <div class="sig-badge-sec">CONFORMIDAD OPERATIVA</div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- 7. Footer -->
+<div class="page-footer">
+    <div class="footer-left">AndesLog Operaciones — {{ (cmd.header_data or {}).get('trade_name', 'AndesLog Operaciones') }} | {{ meta.get('title', cmd.document_title) }}</div>
+    <div class="footer-right">Página 1 de 1 | Emitido: {{ now.strftime('%d/%m/%Y %H:%M UTC') }}</div>
+</div>
+
+</body>
+</html>

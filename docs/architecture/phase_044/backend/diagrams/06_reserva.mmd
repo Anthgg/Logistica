@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant S as Position AVAILABLE
+    participant D as Position RESERVED
+    participant Mv as MoveMent (RESERVATION_CREATED)
+    S->>S: availability_state -> RESERVED
+    Mv->>Mv: source = S, destination = D

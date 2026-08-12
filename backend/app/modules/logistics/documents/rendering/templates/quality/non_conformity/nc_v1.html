@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>INFORME DE NO CONFORMIDAD</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inbound/shared/inbound.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Familia: <strong>QUALITY</strong> | Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">NO CONFORMIDAD</div>
+                <div class="doc-code">{{ cmd.document_code or "NC-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos del Dictamen de No Conformidad de Calidad</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Recepción Ref.:</td>
+        <td>{{ cmd.document_data.get('reception_reference', 'AREC-LIM-2026-000001') }}</td>
+        <td class="info-label">Fecha Detección:</td>
+        <td>{{ cmd.document_data.get('detection_date', now.strftime('%Y-%m-%d %H:%M UTC')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Tipo No Conformidad:</td>
+        <td><strong>{{ cmd.document_data.get('non_conformity_type', 'DANO_EMBALAJE_O_PRODUCTO') }}</strong></td>
+        <td class="info-label">Severidad:</td>
+        <td><strong style="color: #c0392b;">{{ cmd.document_data.get('severity', 'ALTA') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Proveedor:</td>
+        <td>{{ cmd.document_data.get('supplier_name', 'DISTRIBUIDORA INDUSTRIAL S.A.C.') }}</td>
+        <td class="info-label">Inspector Calidad:</td>
+        <td>{{ cmd.document_data.get('inspector_name', cmd.requested_by or 'Inspector Calidad') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Detalle de Producto / Proceso Afectado</div>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 20%;">SKU / Cód.</th>
+            <th style="width: 45%;">Descripción del Producto</th>
+            <th style="width: 15%; text-align: right;">Cant. Afectada</th>
+            <th style="width: 15%;">Disposición Propuesta</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('affected_items', []) %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.get('sku', '-') }}</td>
+            <td>{{ item.get('description', '-') }}</td>
+            <td style="text-align: right; font-weight: bold; color: #c0392b;">{{ item.get('affected_quantity', 0) }}</td>
+            <td>{{ item.get('disposition', 'CUARENTENA') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="section-title">Requisito Incumplido y Descripción del Hallazgo</div>
+<div style="font-size: 9pt; padding: 6px; background-color: #fadbd8; border-left: 4px solid #c0392b; margin-bottom: 15px;">
+    <strong>Requisito Incumplido:</strong> {{ cmd.document_data.get('unfulfilled_requirement', 'Empaque secundario roto e insumos dañados por humedad.') }}<br>
+    <strong>Descripción Hallazgo:</strong> {{ cmd.document_data.get('description', 'Se constató al abrir el furgón que la paleta 2 presentó cajas aplastadas y derrames.') }}
+</div>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — No Conformidad NC (Familia QUALITY) generada en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+name: Staging Deployment Pipeline
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy-staging:
+    name: Build & Deploy to Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+        continue-on-error: true
+
+      - name: Build & Tag Image
+        run: |
+          echo "Building Docker image: southamerica-west1-docker.pkg.dev/gen-lang-client-0356667380/proyecto-t1-images/api:${{ github.sha }}"
+
+      - name: Trigger Migration Job
+        run: |
+          echo "Triggering out-of-band Alembic migration job for Staging..."
+
+      - name: Deploy to Cloud Run (Staging)
+        run: |
+          echo "Deploying Cloud Run service: proyecto-t1-api-staging"

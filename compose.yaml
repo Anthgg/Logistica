@@ -1,0 +1,124 @@
+name: continuous-authentication
+
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-continuous_authentication}
+      POSTGRES_USER: ${POSTGRES_USER:-continuous_auth_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-for-local-development}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - app_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PYTHON_VERSION: "3.11"
+    restart: unless-stopped
+    init: true
+    environment:
+      APP_NAME: ${APP_NAME:-Continuous Authentication API}
+      APP_VERSION: ${APP_VERSION:-0.9.1}
+      APP_ENV: development
+      DEBUG: "false"
+      API_PREFIX: /api
+      HOST: 0.0.0.0
+      PORT: "8000"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      DEFAULT_LOCALE: ${DEFAULT_LOCALE:-es}
+      SECRET_KEY: ${SECRET_KEY:-change-this-local-development-secret}
+      COOKIE_SECURE: "false"
+      SESSION_COOKIE_SAMESITE: lax
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-continuous_auth_user}:${POSTGRES_PASSWORD:-change-me-for-local-development}@postgres:5432/${POSTGRES_DB:-continuous_authentication}
+      CAPTURE_LOCAL_PATH: /app/data/captures
+      MODEL_PATH: /app/models
+      MODEL_REGISTRY_PATH: /app/models/registry/model_registry.json
+      FACIAL_TEMPLATES_PATH: /app/models/facial/templates
+      FACIAL_THRESHOLD_PATH: /app/models/facial/thresholds
+      INSIGHTFACE_MODEL_ROOT: /app/models/facial/insightface
+      PAD_MODEL_PATH: /app/models/pad/exported
+      PAD_THRESHOLD_PATH: /app/models/pad/thresholds
+      BEHAVIORAL_MODELS_PATH: /app/models/behavioral/participants
+      BEHAVIORAL_FEATURES_PATH: /app/data/processed/behavioral/behavioral_features.parquet
+      FUSION_CONFIG_PATH: /app/models/fusion/fusion_config.json
+      NORMALIZATION_CONFIG_PATH: /app/models/fusion/score_normalization.json
+      MODEL_LOAD_ON_STARTUP: ${MODEL_LOAD_ON_STARTUP:-true}
+      MODEL_STRICT_CHECKSUM: "true"
+      REQUIRE_ALL_MODELS: ${REQUIRE_ALL_MODELS:-false}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      VALIDATE_MODELS_ON_STARTUP: ${VALIDATE_MODELS_ON_STARTUP:-false}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./models:/app/models:ro
+      - ./data/processed:/app/data/processed:ro
+      - ./data/captures:/app/data/captures
+      - ./backend/tests:/app/tests:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4)
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
+    networks:
+      - app_network
+
+  evaluation:
+    profiles:
+      - evaluation
+    build:
+      context: .
+      dockerfile: training/Dockerfile.evaluation
+      args:
+        PYTHON_VERSION: "3.11"
+    init: true
+    environment:
+      PYTHONPATH: /workspace:/workspace/backend
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-continuous_auth_user}:${POSTGRES_PASSWORD:-change-me-for-local-development}@postgres:5432/${POSTGRES_DB:-continuous_authentication}
+      MODEL_PATH: /workspace/models
+      MODEL_REGISTRY_PATH: /workspace/models/registry/model_registry.json
+      MODEL_DEVICE: ${MODEL_DEVICE:-auto}
+      SECRET_KEY: ${SECRET_KEY:-change-this-local-development-secret}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    volumes:
+      - ./models:/workspace/models:ro
+      - ./data/manifests:/workspace/data/manifests:ro
+      - ./data/processed:/workspace/data/processed:ro
+      - ./data/reports/final:/workspace/data/reports/final
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge

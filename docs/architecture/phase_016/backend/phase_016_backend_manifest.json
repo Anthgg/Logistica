@@ -1,0 +1,63 @@
+{
+  "phase": "Phase 016",
+  "name": "Design Inbound Document Package Templates (CIT, CPV, AREC, NI, DIF, NC)",
+  "status": "COMPLETED",
+  "families": [
+    "INBOUND",
+    "QUALITY"
+  ],
+  "document_types": [
+    "CIT",
+    "CPV",
+    "AREC",
+    "NI",
+    "DIF",
+    "NC"
+  ],
+  "template_keys": [
+    "inbound.cit",
+    "inbound.cpv",
+    "inbound.arec",
+    "inbound.ni",
+    "inbound.dif",
+    "quality.nc"
+  ],
+  "template_versions": {
+    "inbound.cit": "1.0.0",
+    "inbound.cpv": "1.0.0",
+    "inbound.arec": "1.0.0",
+    "inbound.ni": "1.0.0",
+    "inbound.dif": "1.0.0",
+    "quality.nc": "1.0.0"
+  },
+  "privacy_features": {
+    "driver_dni_masked": true,
+    "driver_license_masked": true
+  },
+  "endpoints": [
+    "POST /api/logistics/inbound/documents/{document_type_code}/preview",
+    "POST /api/logistics/inbound/documents/{document_type_code}/pdf",
+    "POST /api/logistics/inbound/document-package/manifest"
+  ],
+  "permissions": [
+    "logistics.documents.read"
+  ],
+  "migrations": [
+    "g660970016dc_add_inbound_document_templates.py"
+  ],
+  "tests": {
+    "file": "tests/test_logistics_phase016.py",
+    "total": 5,
+    "passed": 5
+  },
+  "boundaries_verified": {
+    "preview_no_number_reservation": true,
+    "no_real_stock_or_inventory_movement": true,
+    "no_quarantine_or_quality_release": true,
+    "no_external_api_calls_mtc_sunarp": true,
+    "no_digital_signature_pki": true,
+    "no_reprints_or_annulments": true,
+    "no_frontend_changes": true,
+    "no_phase_017_code": true
+  }
+}

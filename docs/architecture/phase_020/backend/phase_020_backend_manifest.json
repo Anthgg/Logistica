@@ -1,0 +1,32 @@
+{
+  "phase": "020",
+  "version": "1.0.0",
+  "module": "logistics.documents.lifecycle",
+  "description": "Document lifecycle, drafts, emission, reprint, cancellation, multi-page PDFs, ZIP exports and packaging",
+  "files": [
+    "README.md",
+    "01_auditoria_ciclo_documental.md",
+    "02_modelo_document_instance.md",
+    "03_snapshot_inmutable.md",
+    "04_artefactos_documentales.md",
+    "05_flujo_emision.md",
+    "06_vista_previa_descarga.md",
+    "07_impresion.md",
+    "08_reimpresion.md",
+    "09_anulacion.md",
+    "10_talonarios_pdf.md",
+    "11_exportaciones_ZIP.md",
+    "12_paquetes_por_operacion.md",
+    "13_storage_hashes.md",
+    "14_idempotencia_concurrencia.md",
+    "15_permisos_step_up.md",
+    "16_auditoria.md",
+    "17_endpoints.md",
+    "18_migracion.md",
+    "19_pruebas.md",
+    "20_rendimiento.md",
+    "21_integracion_futura_fase_030.md",
+    "22_integracion_futura_fase_093.md",
+    "23_decisiones_pendientes.md"
+  ]
+}

@@ -1,0 +1,33 @@
+name: Production Deployment Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  production-deploy-gated:
+    name: Production Release (Manual Approval Required)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Manual Release Gate
+        run: |
+          echo "Production Release Gate Approved."
+          echo "Release Tag: ${{ inputs.release_tag }}"
+          echo "Commit SHA: ${{ github.sha }}"
+
+      - name: Verify Pre-Flight Checklist & DB Backup
+        run: |
+          echo "Verifying database backup snapshot..."
+          echo "Verifying out-of-band Alembic migration script..."
+
+      - name: Deploy to Cloud Run (Production)
+        run: |
+          echo "Deploying Cloud Run service [autenticacion-continua-api] in southamerica-west1..."

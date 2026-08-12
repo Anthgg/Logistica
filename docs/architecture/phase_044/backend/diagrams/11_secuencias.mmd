@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant P as Partition
+    participant S as SequenceService
+    P->>S: SELECT FOR UPDATE
+    S->>P: current_sequence += 1
+    P-->>S: next_sequence

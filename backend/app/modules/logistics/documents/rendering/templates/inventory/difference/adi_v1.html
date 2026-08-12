@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ACTA DE DIFERENCIA DE INVENTARIO (ADI)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inventory/shared/inventory.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <div class="doc-org">{{ cmd.organization_name }} — {{ cmd.branch_name }}</div>
+    <div class="doc-title">ACTA DE DIFERENCIA DE INVENTARIO</div>
+    <div class="doc-meta">
+        <span>Código: {{ cmd.document_code or 'ADI-PREVIEW' }}</span>
+        <span>Versión: {{ cmd.template_version }}</span>
+        <span>Fecha: {{ now.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+    </div>
+</div>
+
+<div style="margin-bottom:8px;">
+    <span class="status-badge status-{{ cmd.document_data.get('investigation_status','open') | lower | replace(' ','_') }}">
+        {{ cmd.document_data.get('investigation_status', 'OPEN') }}
+    </span>
+</div>
+
+<!-- Referencia al conteo -->
+<div class="inv-box">
+    <div class="inv-title">Origen de la Diferencia</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Conteo relacionado:</strong> {{ cmd.document_data.get('count_reference', '—') }}</td>
+            <td><strong>Almacén:</strong> {{ cmd.document_data.get('warehouse_name', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Responsable:</strong> {{ cmd.document_data.get('responsible_user', '—') }}</td>
+            <td><strong>Ubicación:</strong> {{ cmd.document_data.get('location_code', '—') }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Diferencias -->
+<div class="inv-box">
+    <div class="inv-title">Diferencias Detectadas</div>
+    <table class="inv-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>SKU / Descripción</th>
+                <th>Lote</th>
+                <th>Registrado</th>
+                <th>Contado</th>
+                <th>Diferencia</th>
+                <th>Clasificación</th>
+                <th>Unidad</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set differences = cmd.document_data.get('differences', []) %}
+        {% if differences %}
+            {% for diff in differences %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {% if diff.get('sku') %}<strong>{{ diff['sku'] }}</strong><br>{% endif %}
+                    {{ diff.get('description', '—') }}
+                </td>
+                <td>{{ diff.get('lot_number', '—') }}</td>
+                <td class="qty-expected">{{ diff.get('recorded_quantity', '0.00') }}</td>
+                <td class="qty-counted">{{ diff.get('final_count_quantity', '0.00') }}</td>
+                <td>
+                    {% set dq = diff.get('difference_quantity', '0') | string %}
+                    {% if dq.startswith('-') %}
+                    <span class="qty-diff-neg">{{ dq }}</span>
+                    {% elif dq != '0' and dq != '0.00' %}
+                    <span class="qty-diff-pos">+{{ dq }}</span>
+                    {% else %}
+                    <span class="qty-zero">0</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% set cls = diff.get('classification', 'UNKNOWN_CAUSE') | lower | replace('_','-') %}
+                    <span class="diff-badge diff-{{ cls }}">{{ diff.get('classification', '—') }}</span>
+                </td>
+                <td>{{ diff.get('unit', 'UND') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="8" style="text-align:center; color:#7f8c8d;">Sin diferencias registradas</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if cmd.document_data.get('show_economic_impact') %}
+<div class="inv-box">
+    <div class="inv-title">Impacto Económico</div>
+    <div style="font-size:8.5pt;">
+        <strong>Total diferencia:</strong> {{ cmd.document_data.get('total_economic_impact', '—') }}
+    </div>
+</div>
+{% else %}
+<div class="inv-box">
+    <div style="font-size:8pt;" class="sensitivity-notice">Impacto económico — requiere permiso logistics.inventory_documents.read_sensitive</div>
+</div>
+{% endif %}
+
+<!-- Investigación -->
+<div class="inv-box">
+    <div class="inv-title">Investigación</div>
+    <div style="font-size:8.5pt;">
+        <strong>Causa probable:</strong> {{ cmd.document_data.get('probable_cause', '—') }}<br>
+        {% if cmd.document_data.get('investigation_detail') %}
+        <strong>Detalle:</strong> {{ cmd.document_data['investigation_detail'] }}
+        {% endif %}
+        <br><strong>Recomendación:</strong> {{ cmd.document_data.get('recommendation', '—') }}<br>
+        <strong>Ajuste propuesto:</strong> {{ cmd.document_data.get('proposed_adjustment', '—') }}
+    </div>
+</div>
+
+{% if cmd.document_data.get('evidence_references') %}
+<div class="inv-box">
+    <div class="inv-title">Evidencias</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['evidence_references'] | join(', ') if cmd.document_data['evidence_references'] is iterable and cmd.document_data['evidence_references'] is not string else cmd.document_data['evidence_references'] }}</div>
+</div>
+{% endif %}
+
+<div class="inv-box" style="background:#fef9e7; border-color:#f39c12;">
+    <div style="font-size:8pt; color:#8e6718;">
+        <strong>PENDING_PHASE_048</strong> — Vista previa. ADI no crea ajustes de inventario ni modifica saldos.
+        Los ajustes derivados se gestionarán en la Fase 047 (AJI operativo).
+    </div>
+</div>
+
+{% if cmd.document_data.get('observations') %}
+<div class="inv-box">
+    <div class="inv-title">Observaciones</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<!-- Firmas -->
+<table class="approval-chain" style="margin-top:12px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Investigador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Supervisor</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Aprobador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top:8px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">QR de demostración — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    ADI v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_048
+</div>
+</body>
+</html>

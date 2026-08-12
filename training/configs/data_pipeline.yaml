@@ -1,0 +1,23 @@
+dataset_version: pilot-v0.1.0
+data_root: ../data
+database_env_files:
+  - .env
+  - ../backend/.env
+capture_storage_root: ../data/raw/facial
+capture_bucket: gen-lang-client-0356667380-auth-facial-captures
+facial_identity_manifest: manifests/facial_identity_manifest.parquet
+facial_pad_manifest: manifests/facial_pad_manifest.parquet
+behavioral_manifest: manifests/behavioral_manifest.parquet
+dataset_splits: manifests/dataset_splits.json
+frozen_test_manifest: manifests/frozen_test_manifest.parquet
+reports_root: reports/pilot
+split_ratios:
+  train: 0.60
+  validation: 0.20
+  test: 0.20
+critical_leakage_checks:
+  - checksum_cross_split
+  - session_cross_split
+  - window_overlap_cross_split
+  - pad_source_cross_split
+write_csv_copies: true

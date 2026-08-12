@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ACTA DE DIFERENCIAS</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inbound/shared/inbound.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">ACTA DE DIFERENCIAS</div>
+                <div class="doc-code">{{ cmd.document_code or "DIF-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información del Evento de Diferencia</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Recepción Ref.:</td>
+        <td>{{ cmd.document_data.get('reception_reference', 'AREC-LIM-2026-000001') }}</td>
+        <td class="info-label">Fecha Reporte:</td>
+        <td>{{ cmd.document_data.get('report_date', now.strftime('%Y-%m-%d %H:%M UTC')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Proveedor:</td>
+        <td>{{ cmd.document_data.get('supplier_name', 'DISTRIBUIDORA INDUSTRIAL S.A.C.') }}</td>
+        <td class="info-label">Transportista:</td>
+        <td>{{ cmd.document_data.get('carrier_name', 'TRANSPORTES EXPRESS S.A.C.') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Detalle de Diferencias e Incidencias Detectadas</div>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 20%;">Tipo Diferencia</th>
+            <th style="width: 40%;">Descripción / Producto Afectado</th>
+            <th style="width: 15%; text-align: right;">Cant. Esperada</th>
+            <th style="width: 15%; text-align: right;">Cant. Recibida</th>
+            <th style="width: 5%;">Severidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for diff in cmd.document_data.get('differences', []) %}
+        <tr class="{{ 'difference-critical' if diff.get('severity') == 'CRITICAL' else '' }}">
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ diff.get('difference_type', 'FALTANTE') }}</strong></td>
+            <td>{{ diff.get('description', '-') }}</td>
+            <td style="text-align: right;">{{ diff.get('expected_quantity', 0) }}</td>
+            <td style="text-align: right;">{{ diff.get('received_quantity', 0) }}</td>
+            <td>{{ diff.get('severity', 'MEDIA') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="section-title">Acción Inmediata y Disposición Sugerida</div>
+<div style="font-size: 9pt; padding: 6px; background-color: #fcf3cf; border-left: 4px solid #f39c12; margin-bottom: 15px;">
+    {{ cmd.document_data.get('immediate_action', 'Registro de incidencia en el acta de recepción y emisión de reclamo formal.') }}
+</div>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Acta de Diferencias DIF generada en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

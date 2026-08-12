@@ -1,0 +1,54 @@
+{
+  "phase": "Phase 015",
+  "name": "Design Purchasing Document Templates (REQ, SCOT, CCO, OC, APC, CEP)",
+  "status": "COMPLETED",
+  "family": "PURCHASING",
+  "catalog_version": "1.0.0",
+  "document_types": [
+    "REQ",
+    "SCOT",
+    "CCO",
+    "OC",
+    "APC",
+    "CEP"
+  ],
+  "template_keys": [
+    "purchasing.req",
+    "purchasing.scot",
+    "purchasing.cco",
+    "purchasing.oc",
+    "purchasing.apc",
+    "purchasing.cep"
+  ],
+  "template_versions": {
+    "purchasing.req": "1.0.0",
+    "purchasing.scot": "1.0.0",
+    "purchasing.cco": "1.0.0",
+    "purchasing.oc": "1.0.0",
+    "purchasing.apc": "1.0.0",
+    "purchasing.cep": "1.0.0"
+  },
+  "endpoints": [
+    "POST /api/logistics/purchasing/documents/{document_type_code}/preview",
+    "POST /api/logistics/purchasing/documents/{document_type_code}/pdf"
+  ],
+  "permissions": [
+    "logistics.documents.read"
+  ],
+  "migrations": [
+    "f550860015dc_add_purchasing_document_templates.py"
+  ],
+  "tests": {
+    "file": "tests/test_logistics_phase015.py",
+    "total": 3,
+    "passed": 3
+  },
+  "boundaries_verified": {
+    "preview_no_number_reservation": true,
+    "no_real_document_issued": true,
+    "no_digital_signature_pki": true,
+    "no_reprints_or_annulments": true,
+    "no_frontend_changes": true,
+    "no_phase_016_code": true
+  }
+}

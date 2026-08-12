@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>LISTA DE PICKING (PICK)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "outbound/shared/outbound.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">LISTA DE PICKING</div>
+                <div class="doc-code">{{ cmd.document_code or 'PICK-PREVIEW' }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_data.get('status','preview') | lower }}">
+                        {{ cmd.document_data.get('status', 'PREVIEW') }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información de Recolección (Picking)</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Ref. Orden Salida (ODS):</td>
+        <td>{{ cmd.document_data.get('outbound_order_reference', '—') }}</td>
+        <td class="info-label">Método Picking:</td>
+        <td><strong>{{ cmd.document_data.get('picking_method', 'SINGLE_ORDER') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Almacén:</td>
+        <td>{{ cmd.document_data.get('warehouse', '—') }}</td>
+        <td class="info-label">Operador Asignado:</td>
+        <td><strong>{{ cmd.document_data.get('assigned_to', '—') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Zona / Ola:</td>
+        <td>{{ cmd.document_data.get('zone_code', '—') }}</td>
+        <td class="info-label">Fecha Asignación:</td>
+        <td>{{ cmd.document_data.get('assigned_at', '—') }}</td>
+    </tr>
+</table>
+
+<!-- Resumen de Progreso de Picking (Calculadora Documental) -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Progreso del Picking (PickingProgressCalculator)</div>
+    <table style="width: 100%; font-size: 8.5pt;">
+        <tr>
+            <td style="font-weight: bold; width: 25%;">Líneas Totales:</td>
+            <td>{{ cmd.document_data.get('total_lines', '0') }}</td>
+            <td style="font-weight: bold; width: 25%;">Líneas Completadas:</td>
+            <td>{{ cmd.document_data.get('completed_lines', '0') }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Cant. Solicitada:</td>
+            <td>{{ cmd.document_data.get('total_requested_quantity', '0.00') }}</td>
+            <td style="font-weight: bold;">Cant. Recogida:</td>
+            <td><strong style="color: #16a34a;">{{ cmd.document_data.get('total_picked_quantity', '0.00') }}</strong></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Porcentaje Progreso:</td>
+            <td>
+                <strong>{{ cmd.document_data.get('progress_percentage', '0.0') }}%</strong>
+            </td>
+            <td style="font-weight: bold;">Faltante General:</td>
+            <td>
+                {% if cmd.document_data.get('shortage_quantity') and cmd.document_data['shortage_quantity'] != '0' and cmd.document_data['shortage_quantity'] != '0.00' %}
+                    <span style="color: #b91c1c; font-weight: bold;">{{ cmd.document_data['shortage_quantity'] }}</span>
+                {% else %}
+                    0.00
+                {% endif %}
+            </td>
+        </tr>
+        {% if cmd.document_data.get('lines_with_exception', 0) > 0 %}
+        <tr>
+            <td style="font-weight: bold; color: #b91c1c;">Líneas con Excepción:</td>
+            <td colspan="3"><strong style="color: #b91c1c;">{{ cmd.document_data['lines_with_exception'] }}</strong></td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<div class="section-title">Hojas de Recorrido / Recolección Secuencial</div>
+<table class="outbound-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">Seq</th>
+            <th style="width: 15%;">Ubicación</th>
+            <th style="width: 35%;">SKU / Producto</th>
+            <th style="width: 10%;">Lote / Serie</th>
+            <th style="text-align: right; width: 10%;">Solicitado</th>
+            <th style="text-align: right; width: 10%;">Recogido</th>
+            <th style="width: 15%;">Escaneo / Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set lines = cmd.document_data.get('picking_lines', []) %}
+        {% if lines %}
+            {% for line in lines %}
+            <tr class="{% if line.get('exception_code') %}picking-exception-row{% endif %}">
+                <td><span class="picking-seq-badge">{{ line.get('sequence_order', loop.index) }}</span></td>
+                <td><span class="picking-location">{{ line.get('location_snapshot', {}).get('location_code', '—') }}</span></td>
+                <td>
+                    <strong>{{ line.get('product_snapshot', {}).get('description', '—') }}</strong><br>
+                    <span style="font-size: 7.5pt; color: #475569;">SKU: {{ line.get('product_snapshot', {}).get('sku', '—') }}</span>
+                </td>
+                <td style="font-size: 8pt;">
+                    {% if line.get('lot_number') %}Lote: {{ line['lot_number'] }}<br>{% endif %}
+                    {% if line.get('serial_numbers') %}Series: {{ line['serial_numbers'] | join(', ') }}{% endif %}
+                </td>
+                <td style="text-align: right;" class="qty-expected">{{ line.get('requested_quantity', '0.00') }}</td>
+                <td style="text-align: right; font-weight: bold; color: #16a34a;">{{ line.get('picked_quantity', '0.00') }}</td>
+                <td>
+                    {% set scan = line.get('scan_status', 'NOT_STARTED') %}
+                    <span class="scan-status scan-{{ scan | lower | replace('_','-') }}">{{ scan }}</span>
+                    {% if line.get('exception_code') %}
+                        <br><span class="exception-badge">{{ line['exception_code'] }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="7" style="text-align: center; color: #64748b;">No hay tareas de picking registradas.</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+<!-- Sección de excepciones detallada -->
+{% set ex_lines = cmd.document_data.get('picking_lines', []) | selectattr('exception_code') | list %}
+{% if ex_lines %}
+<div class="outbound-box" style="border-left-color: #b91c1c; background-color: #fff1f2;">
+    <div class="outbound-box-title" style="color: #991b1b;">Registro de Excepciones del Operador (STOCK_NOT_FOUND, etc.)</div>
+    <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid #fecdd3; color: #991b1b;">
+                <th style="text-align: left; padding: 2px 4px;">Código Excep.</th>
+                <th style="text-align: left; padding: 2px 4px;">Producto</th>
+                <th style="text-align: right; padding: 2px 4px;">Solicitado</th>
+                <th style="text-align: right; padding: 2px 4px;">Disponible</th>
+                <th style="text-align: left; padding: 2px 4px;">Acción Tomada</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in ex_lines %}
+            <tr style="border-bottom: 1px dotted #fecdd3;">
+                <td style="padding: 3px 4px;"><strong>{{ line.get('exception_code') }}</strong></td>
+                <td style="padding: 3px 4px;">{{ line.get('product_snapshot', {}).get('description', '—') }}</td>
+                <td style="text-align: right; padding: 3px 4px;">{{ line.get('requested_quantity') }}</td>
+                <td style="text-align: right; padding: 3px 4px;">{{ line.get('picked_quantity') }}</td>
+                <td style="padding: 3px 4px; color: #555;">{{ line.get('observations', 'Sin observaciones') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="outbound-box" style="background-color: #fef9e7; border-left-color: #d97706;">
+    <div style="font-size: 8pt; color: #854d0e;">
+        <strong>PENDING_PHASE_053</strong> — Vista previa de Tarea de Picking.
+        No se ejecutan reservas ni movimientos de inventario en base de datos.
+        El proceso transaccional y de recolección en PDA se implementará en la Fase 053.
+    </div>
+</div>
+
+<!-- Responsables y Firmas -->
+<table class="approval-chain" style="margin-top: 15px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Operador de Picking</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('assigned_to', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Supervisor de Almacén</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('supervisor', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top: 10px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">VISTA PREVIA — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    PICK v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_053
+</div>
+</body>
+</html>

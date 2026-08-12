@@ -1,0 +1,142 @@
+/* ============================================================
+   Dispatch CSS Stylesheet — Phase 018
+   Familia: DISPATCH (MAN, ADSP, CPR)
+   ============================================================ */
+
+/* --- Vehicle & Driver Components --- */
+.transport-info-grid {
+    display: table;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.transport-info-row {
+    display: table-row;
+}
+
+.transport-info-cell {
+    display: table-cell;
+    padding: 3px 6px;
+    font-size: 8.5pt;
+}
+
+.verification-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 7.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.verification-verified { background-color: #dcfce7; color: #15803d; }
+.verification-pending { background-color: #fef9c3; color: #854d0e; }
+.verification-failed { background-color: #ffe4e6; color: #b91c1c; }
+
+/* --- Load & Capacity Validation --- */
+.capacity-validation-box {
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    background-color: #f8fafc;
+}
+
+.capacity-metric {
+    font-size: 8.5pt;
+    margin-bottom: 4px;
+}
+
+.capacity-percent {
+    font-weight: bold;
+    font-size: 9pt;
+}
+
+.capacity-status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.capacity-within-limit { background-color: #16a34a; }
+.capacity-near-limit { background-color: #d97706; }
+.capacity-exceeded { background-color: #dc2626; }
+.capacity-incomplete { background-color: #64748b; }
+
+/* --- Seal Control (Precinto) --- */
+.seal-status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+}
+
+.seal-matched { background-color: #16a34a; }
+.seal-mismatched { background-color: #dc2626; }
+.seal-broken { background-color: #7f1d1d; }
+.seal-missing { background-color: #475569; }
+.seal-replaced { background-color: #7c3aed; }
+.seal-verified { background-color: #0d9488; }
+
+.seal-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin-top: 6px;
+}
+
+.seal-history-table th {
+    background-color: #475569;
+    color: #ffffff;
+    padding: 3px 5px;
+    text-align: left;
+}
+
+.seal-history-table td {
+    padding: 3px 5px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* --- Document Timeline --- */
+.dispatch-timeline {
+    width: 100%;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    font-size: 8pt;
+}
+
+.timeline-milestone {
+    border-left: 2px solid #cbd5e1;
+    padding-left: 10px;
+    padding-bottom: 6px;
+    position: relative;
+}
+
+.timeline-milestone:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-circle {
+    width: 8px;
+    height: 8px;
+    background-color: #cbd5e1;
+    border-radius: 50%;
+    position: absolute;
+    left: -5px;
+    top: 3px;
+}
+
+.timeline-circle.active {
+    background-color: #2563eb;
+}
+
+.timeline-time {
+    color: #64748b;
+    font-weight: bold;
+}

@@ -1,0 +1,317 @@
+/* ============================================================
+   Inventory Document Styles — Phase 017
+   Familia: INVENTORY
+   Motor: DocumentRendererEngine (Phase 014)
+   ============================================================ */
+
+/* --- Location Label (EUB) ---------------------------------- */
+.eub-label {
+    border: 2px solid #1a3a5c;
+    border-radius: 4px;
+    padding: 8px;
+    background: #ffffff;
+    page-break-inside: avoid;
+}
+
+.eub-location-code {
+    font-size: 22pt;
+    font-weight: bold;
+    color: #1a3a5c;
+    letter-spacing: 2px;
+    text-align: center;
+    border-bottom: 2px solid #1a3a5c;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+}
+
+.eub-zone-detail {
+    font-size: 9pt;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.eub-status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.eub-status-active { background-color: #27ae60; }
+.eub-status-blocked { background-color: #c0392b; }
+.eub-status-inactive { background-color: #7f8c8d; }
+.eub-status-maintenance { background-color: #e67e22; }
+.eub-status-quarantine_only { background-color: #8e44ad; }
+
+/* --- Inventory Section Boxes -------------------------------- */
+.inv-box {
+    border: 1px solid #2c3e50;
+    border-left: 4px solid #1a3a5c;
+    padding: 6px 8px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border-radius: 2px;
+}
+
+.inv-title {
+    font-size: 9.5pt;
+    font-weight: bold;
+    color: #1a3a5c;
+    border-bottom: 1px solid #bdc3c7;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- Stock State Breakdown ---------------------------------- */
+.stock-state-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin-top: 8px;
+}
+
+.stock-state-table th {
+    background-color: #2c3e50;
+    color: #ffffff;
+    padding: 3px 5px;
+    text-align: left;
+}
+
+.stock-state-table td {
+    padding: 3px 5px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.stock-state-preview {
+    color: #7f8c8d;
+    font-style: italic;
+    font-size: 7.5pt;
+}
+
+/* --- Inventory Data Tables ---------------------------------- */
+.inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    margin-bottom: 12px;
+}
+
+.inv-table th {
+    background-color: #1a3a5c;
+    color: #ffffff;
+    padding: 4px 5px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.inv-table td {
+    padding: 3px 5px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.inv-table tr:nth-child(even) td {
+    background-color: #f2f4f6;
+}
+
+/* --- Quantity Cells ----------------------------------------- */
+.qty-expected { color: #2980b9; font-weight: bold; }
+.qty-counted  { color: #27ae60; font-weight: bold; }
+.qty-diff-pos { color: #27ae60; font-weight: bold; }
+.qty-diff-neg { color: #c0392b; font-weight: bold; }
+.qty-zero     { color: #7f8c8d; }
+
+/* --- Status Badges ------------------------------------------ */
+.status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: bold;
+}
+
+.status-preview     { background-color: #7f8c8d; color: #fff; }
+.status-draft       { background-color: #bdc3c7; color: #2c3e50; }
+.status-approved    { background-color: #27ae60; color: #fff; }
+.status-rejected    { background-color: #c0392b; color: #fff; }
+.status-pending     { background-color: #e67e22; color: #fff; }
+.status-in-progress { background-color: #2980b9; color: #fff; }
+.status-completed   { background-color: #1abc9c; color: #fff; }
+.status-cancelled   { background-color: #95a5a6; color: #fff; }
+
+/* --- Approval Chain ----------------------------------------- */
+.approval-chain {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.approval-block {
+    display: inline-block;
+    width: 30%;
+    border: 1px solid #bdc3c7;
+    padding: 5px;
+    margin: 2px;
+    vertical-align: top;
+    text-align: center;
+    font-size: 8pt;
+}
+
+.approval-role {
+    font-weight: bold;
+    color: #1a3a5c;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+}
+
+.signature-block {
+    border-bottom: 1px solid #2c3e50;
+    height: 20px;
+    margin: 8px 4px 3px 4px;
+}
+
+.signature-notice {
+    font-size: 7pt;
+    color: #95a5a6;
+    font-style: italic;
+    text-align: center;
+}
+
+/* --- Transfer Route ----------------------------------------- */
+.transfer-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background-color: #eaf2fb;
+    border: 1px solid #2980b9;
+    border-radius: 4px;
+    padding: 6px;
+    margin-bottom: 10px;
+    font-size: 9pt;
+}
+
+.transfer-warehouse {
+    text-align: center;
+    font-weight: bold;
+    color: #1a3a5c;
+}
+
+.transfer-arrow {
+    font-size: 16pt;
+    color: #2980b9;
+    font-weight: bold;
+}
+
+/* --- Blind Count Protection --------------------------------- */
+.blind-count-hidden {
+    color: #bdc3c7;
+    font-style: italic;
+    font-size: 7.5pt;
+}
+
+.supervisor-only-section {
+    background-color: #fef9e7;
+    border: 1px dashed #f39c12;
+    padding: 5px;
+    margin-top: 8px;
+    font-size: 8pt;
+}
+
+/* --- Step-Up Referential Block ------------------------------ */
+.stepup-block {
+    background-color: #fdf2f8;
+    border-left: 4px solid #8e44ad;
+    padding: 6px 10px;
+    margin: 10px 0;
+    font-size: 8.5pt;
+    font-style: italic;
+    color: #6c3483;
+}
+
+/* --- Adjustment Calculation Block --------------------------- */
+.adjustment-calc {
+    background-color: #eafaf1;
+    border: 1px solid #27ae60;
+    border-radius: 3px;
+    padding: 6px;
+    margin: 8px 0;
+    font-size: 8.5pt;
+}
+
+.adj-label { font-weight: bold; color: #1e8449; }
+.adj-positive { color: #27ae60; font-weight: bold; font-size: 10pt; }
+.adj-negative { color: #c0392b; font-weight: bold; font-size: 10pt; }
+
+/* --- Difference Classification Badge ----------------------- */
+.diff-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 7.5pt;
+    font-weight: bold;
+    background-color: #e74c3c;
+    color: #ffffff;
+}
+
+.diff-shortage  { background-color: #c0392b; }
+.diff-overage   { background-color: #e67e22; }
+.diff-wrong-loc { background-color: #8e44ad; }
+.diff-damaged   { background-color: #7f8c8d; }
+.diff-unknown   { background-color: #2c3e50; }
+
+/* --- Count Team Table --------------------------------------- */
+.count-team-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin-top: 6px;
+}
+
+.count-team-table th {
+    background-color: #2c3e50;
+    color: #fff;
+    padding: 3px 5px;
+}
+
+.count-team-table td {
+    padding: 3px 5px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+/* --- QR Label Sizing --------------------------------------- */
+.qr-label-container {
+    text-align: center;
+    margin: 6px 0;
+}
+
+.qr-label-img {
+    width: 80px;
+    height: 80px;
+}
+
+.qr-label-caption {
+    font-size: 6.5pt;
+    color: #95a5a6;
+    margin-top: 2px;
+}
+
+/* --- Sensitivity Notice ------------------------------------ */
+.sensitive-redacted {
+    background-color: #2c3e50;
+    color: #2c3e50;
+    padding: 0 4px;
+    border-radius: 2px;
+    font-size: 8pt;
+    user-select: none;
+}
+
+.sensitivity-notice {
+    font-size: 7.5pt;
+    color: #e74c3c;
+    font-style: italic;
+    margin-top: 2px;
+}

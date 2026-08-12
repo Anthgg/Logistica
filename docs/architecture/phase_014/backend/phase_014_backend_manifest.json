@@ -1,0 +1,50 @@
+{
+  "phase": "Phase 014",
+  "name": "Central Document Rendering Engine & Base Template Architecture",
+  "status": "COMPLETED",
+  "renderer_engine": "Jinja2 + WeasyPrint / FallbackPdfEngine",
+  "renderer_version": "1.0.0",
+  "base_template_key": "base.document",
+  "base_template_version": "1.0.0",
+  "components": [
+    "DocumentRendererEngine",
+    "DocumentQRGenerator",
+    "DocumentRenderingService",
+    "DocumentTemplateRepository",
+    "DocumentTemplateVersionRepository"
+  ],
+  "assets": [
+    "shared/print.css",
+    "shared/base_document.html",
+    "base/base_v1.html"
+  ],
+  "qr_support": true,
+  "visual_signature_support": true,
+  "watermark_support": true,
+  "migrations": [
+    "e440750014dc_add_document_template_tables.py"
+  ],
+  "endpoints": [
+    "GET /api/logistics/document-templates",
+    "GET /api/logistics/document-templates/{template_key}",
+    "GET /api/logistics/document-templates/{template_key}/versions",
+    "POST /api/logistics/document-templates/{template_key}/preview",
+    "GET /api/logistics/document-renderer/status"
+  ],
+  "permissions": [
+    "logistics.documents.read"
+  ],
+  "tests": {
+    "file": "tests/test_logistics_phase014.py",
+    "total": 6,
+    "passed": 6
+  },
+  "boundaries_verified": {
+    "preview_no_number_reservation": true,
+    "no_real_document_issued": true,
+    "no_digital_signature_pki": true,
+    "no_reprints_or_annulments": true,
+    "no_frontend_changes": true,
+    "no_phase_015_code": true
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "phase": "024",
+  "name": "Implementar Unidades y Conversiones (Backend)",
+  "version": "1.0.0",
+  "status": "COMPLETED",
+  "architecture": {
+    "pattern": "Domain-Driven Design (DDD) & Clean Architecture",
+    "multi_tenancy": "Organization Isolation (organization_id)",
+    "math_precision": "Fixed-point NUMERIC(38,18) Decimal",
+    "database_tables_count": 7,
+    "tables": [
+      "measurement_dimensions",
+      "units_of_measure",
+      "unit_conversion_rules",
+      "product_unit_configurations",
+      "product_packaging_definitions",
+      "unit_of_measure_versions",
+      "unit_conversion_cache"
+    ]
+  },
+  "deliverables": [
+    {
+      "file": "README.md",
+      "description": "Resumen ejecutivo, diagramas Mermaid de arquitectura del motor de unidades y conversiones."
+    },
+    {
+      "file": "01_auditoria_unidades_conversiones.md",
+      "description": "Auditoría de cero modelos UOM duplicados previos y justificación del modelo relacional de 7 tablas."
+    },
+    {
+      "file": "02_dimensiones.md",
+      "description": "Especificación del catálogo de dimensiones físicas MeasurementDimensionModel (COUNT, MASS, LENGTH, AREA, VOLUME)."
+    },
+    {
+      "file": "03_catalogo_unidades.md",
+      "description": "Maestro UnitOfMeasureModel, scopes (SYSTEM, ORGANIZATION), kinds (BASE, DERIVED, PACKAGING, CUSTOM)."
+    },
+    {
+      "file": "04_unidades_canonicas.md",
+      "description": "Definición y justificación de la unidad canónica por dimensión (UND, KG, M, M2, M3)."
+    },
+    {
+      "file": "05_conversiones_fisicas.md",
+      "description": "Reglas de conversión física del sistema UnitConversionRuleModel."
+    },
+    {
+      "file": "06_configuracion_unidades_producto.md",
+      "description": "Configuración de unidades base y de proceso por producto ProductUnitConfigurationModel."
+    },
+    {
+      "file": "07_empaques_producto.md",
+      "description": "Definición de empaques jerárquicos por producto ProductPackagingDefinitionModel."
+    },
+    {
+      "file": "08_motor_conversion.md",
+      "description": "Especificación del motor UnitConversionEngine y aritmética estricta Decimal NUMERIC(38,18)."
+    },
+    {
+      "file": "09_resolucion_rutas.md",
+      "description": "Resolutor de rutas en grafo ConversionPathResolver con búsqueda BFS multi-salto (hasta 5 saltos)."
+    },
+    {
+      "file": "10_ciclos_ambiguedades.md",
+      "description": "Algoritmo de prevención de ciclos y detección de rutas ambiguas (409 CONVERSION_PATH_AMBIGUOUS)."
+    },
+    {
+      "file": "11_precision_decimal.md",
+      "description": "Política de precisión matemática Decimal exacta y formato string en JSON."
+    },
+    {
+      "file": "12_redondeo.md",
+      "description": "Especificación de políticas de redondeo explícito RoundingPolicy."
+    },
+    {
+      "file": "13_descomposicion.md",
+      "description": "Servicio QuantityDecompositionService con estrategia LARGEST_FIRST."
+    },
+    {
+      "file": "14_vigencia_versionado.md",
+      "description": "Control de vigencias temporales y snapshots versionados UnitOfMeasureVersionModel."
+    },
+    {
+      "file": "15_migracion_base_unit_code.md",
+      "description": "Estrategia y ejecución de migración del campo Product.base_unit_code de la Fase 023."
+    },
+    {
+      "file": "16_endpoints.md",
+      "description": "Especificación detallada OpenAPI/REST de todos los endpoints."
+    },
+    {
+      "file": "17_permisos_step_up.md",
+      "description": "Matriz RBAC (logistics.units.*) y requerimiento de Step-Up Authentication."
+    },
+    {
+      "file": "18_auditoria.md",
+      "description": "Catálogo de eventos de auditoría inmutable registrados en logistics_audit_events."
+    },
+    {
+      "file": "19_concurrencia_idempotencia.md",
+      "description": "Control de concurrencia optimista (row_version), locks transaccionales y claves de idempotencia."
+    },
+    {
+      "file": "20_migracion_seed.md",
+      "description": "DDL SQL de la migración Alembic y script de semilla idempotente seed.py."
+    },
+    {
+      "file": "21_pruebas_matematicas.md",
+      "description": "Cobertura de pruebas matemáticas y de exactitud de coma fija en test_logistics_phase024.py."
+    },
+    {
+      "file": "22_pruebas_integracion.md",
+      "description": "Cobertura de pruebas de integración de empaques, descomposición y API REST."
+    },
+    {
+      "file": "23_rendimiento_cache.md",
+      "description": "Estrategia de caching de grafos de conversión y latencias de evaluación < 15ms."
+    },
+    {
+      "file": "24_integracion_fases_031_060.md",
+      "description": "Contrato de integración downstream con compras, recepción, inventario, picking y transporte."
+    },
+    {
+      "file": "25_integracion_fase_046.md",
+      "description": "Contrato con la futura Fase 046 para creación de contenedores y pallets físicos."
+    },
+    {
+      "file": "26_decisiones_pendientes.md",
+      "description": "Registro de Decisiones de Arquitectura (ADRs 024-01 a 024-05)."
+    },
+    {
+      "file": "phase_024_backend_manifest.json",
+      "description": "Manifiesto JSON estructurado de la Fase 024."
+    }
+  ]
+}

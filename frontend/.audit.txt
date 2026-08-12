@@ -1,0 +1,140 @@
+dashboard | /dashboard | - | - | - | OK
+shipments | /shipments | - | - | - | OK
+routes | /routes | - | - | - | OK
+incidents | /incidents | - | - | - | OK
+clients | /clients | - | - | - | OK
+reports | /reports | - | viewReports | viewReports | OK
+gate_control_dashboard | /logistics/inbound/gate-control | inbound | logistics.gate_check_ins.read | logistics.gate_check_ins.read | OK
+inbound_docks_queue | /logistics/inbound/docks/queue | inbound | logistics.inbound_dock_queue.read | logistics.inbound_dock_queue.read | OK
+inbound_docks_settings | /logistics/inbound/docks/settings | inbound | logistics.warehouse_docks.manage | logistics.warehouse_docks.manage | OK
+reception_differences | /logistics/inbound/reception-differences | inbound | logistics.reception_difference_cases.read | logistics.reception_difference_cases.read | OK
+quality_inspection_plans | /logistics/quality/plans | quality | logistics.quality_plan.read | logistics.quality_plan.read | OK
+quality_quarantine | /logistics/quality/quarantine | quality | logistics.quality_quarantine.read | logistics.quality_quarantine.read | OK
+inventory | /inventory | inventory | - | - | OK
+inventory_ledger | /logistics/inventory/ledger | inventory | logistics.inventory_ledger.read | logistics.inventory_ledger.read | OK
+inventory_balances | /logistics/inventory/stock | inventory | logistics.inventory_ledger.read | logistics.inventory_ledger.read | OK
+putaway | /logistics/putaway | inventory | logistics.putaway.read | logistics.putaway.read | OK
+putaway_mobile | /logistics/putaway/mobile | inventory | logistics.putaway.execute | logistics.putaway.execute | OK
+purchase_requisitions | /logistics/purchasing/requisitions | purchasing | logistics.purchase_requisitions.read | logistics.purchase_requisitions.read | OK
+requisition_review_inbox | /logistics/purchasing/requisitions/review | purchasing | logistics.purchase_requisitions.review | logistics.purchase_requisitions.read | PERMISSION_MISMATCH(nav=logistics.purchase_requisitions.review route=logistics.purchase_requisitions.read)
+purchase_orders | /logistics/purchasing/purchase-orders | purchasing | logistics.purchase_orders.read | logistics.purchase_orders.read | OK
+procurement_approval_inbox | /logistics/purchasing/approvals/inbox | purchasing | logistics.procurement_approvals.read+logistics.purchase_orders.approve | logistics.procurement_approvals.read+logistics.purchase_orders.approve | OK
+procurement_approval_policies | /logistics/purchasing/approval-policies | purchasing | logistics.procurement_approval_policies.read+logistics.procurement_approval_policies.create+logistics.procurement_approval_policies.update+logistics.procurement_approval_policies.activate | logistics.procurement_approval_policies.read+logistics.procurement_approval_policies.create+logistics.procurement_approval_policies.update+logistics.procurement_approval_policies.activate | OK
+catalog_products | /logistics/products | catalogs | logistics.products.read | logistics.products.read | OK
+catalog_units | /logistics/units | catalogs | logistics.units.read | logistics.units.read | OK
+catalog_business_partners | /logistics/business-partners | catalogs | logistics.business_partners.read | logistics.business_partners.read | OK
+cost_centers | /logistics/catalog/cost-centers | catalogs | logistics.cost_centers.read | logistics.cost_centers.read | OK
+vehicles | /logistics/vehicles | fleet | logistics.vehicles.read | logistics.vehicles.read | OK
+vehicle_makes | /logistics/vehicle-makes | fleet | logistics.vehicles.read | logistics.vehicles.read | OK
+vehicle_models | /logistics/vehicle-models | fleet | logistics.vehicles.read | logistics.vehicles.read | OK
+vehicle_verifications | /logistics/integrations/vehicle-verifications | fleet | logistics.vehicles.verify | logistics.vehicles.verify | OK
+drivers | /logistics/drivers | drivers | logistics.drivers.read | logistics.drivers.read | OK
+driver_license_categories | /logistics/driver-license-categories | drivers | logistics.drivers.read | logistics.drivers.read | OK
+driver_alerts | /logistics/alerts/drivers | drivers | logistics.drivers.read | logistics.drivers.read | OK
+organizations | /logistics/organizations | organization | logistics.organizations.read | logistics.organizations.read | OK
+branches | /logistics/branches | organization | logistics.branches.read | logistics.branches.read | OK
+warehouses | /logistics/warehouses | organization | logistics.warehouses.read | logistics.warehouses.read | OK
+company_settings | /logistics/company-profile | organization | logistics.company_profile.read | logistics.company_profile.read | OK
+documents | /logistics/documents | documents | logistics.documents.read | logistics.documents.read | OK
+files | /logistics/files | documents | logistics.files.read | logistics.files.read | OK
+file_deletion_requests | /logistics/file-deletion-requests | documents | logistics.files.read | logistics.files.read | OK
+roles | /logistics/roles | access | logistics.roles.read | logistics.roles.read | OK
+role_assignments | /logistics/role-assignments | access | logistics.role_assignments.read | logistics.role_assignments.read | OK
+permissions_catalog | /logistics/permissions | access | logistics.permissions.read | logistics.permissions.read | OK
+audit_events | /logistics/audit-events | access | logistics.audit.read | logistics.audit.read | OK
+ruc_integration | /logistics/ruc | - | logistics.ruc_lookup.read | logistics.ruc_lookup.read | OK
+research | /research | research | - | - | OK
+participants | /research/participants | research | - | - | OK
+sessions_study | /research/sessions | research | - | - | OK
+profile | /profile | account | - | - | OK
+sessions_devices | /sessions | account | - | - | OK
+change_password | /change-password | account | - | - | OK
+security_status | /security/continuous-auth | account | - | - | OK
+evaluations | /admin/continuous-auth/evaluations | account | - | - | OK
+models_status | /admin/models/status | account | - | - | OK
+
+== PROBLEMAS ==
+requisition_review_inbox: PERMISSION_MISMATCH(nav=logistics.purchase_requisitions.review route=logistics.purchase_requisitions.read)
+
+== RUTAS SIN NAV ==
+/login
+/register
+/warehouses
+/security
+/logistics
+/logistics/settings/warehouses
+/logistics/unit-conversions
+/logistics/unit-conversions/simulator
+/logistics/suppliers
+/logistics/customers
+/logistics/carriers
+/logistics/purchase-orders
+/logistics/ruc/lookup
+/logistics/ruc/datasets
+/logistics/ruc/imports
+/logistics/ruc/assisted-verifications
+/logistics/integrations/vehicle-verifications/sources
+/logistics/integrations/vehicle-verifications/conflicts
+/logistics/integrations/vehicle-verifications/review-tasks
+/logistics/integrations/vehicle-verifications/requirements
+/logistics/vehicles/new
+/logistics/purchasing/requisitions/new
+/logistics/purchasing/requisitions/mine
+/logistics/purchasing/evaluations
+/logistics/purchasing/evaluations/new
+/logistics/purchasing/evaluation-templates
+/logistics/purchasing/evaluation-rubrics
+/logistics/purchasing/purchase-orders/generate
+/logistics/inbound/docks
+/logistics/inbound/docks/board
+/logistics/inbound/docks/calendar
+/logistics/inbound/reception-differences/new
+/logistics/quality/plans/new
+/logistics/quality/tolerances
+/logistics/quality/sampling-plans
+/logistics/quality/plan-resolution
+/logistics/inventory/ledger/movements
+/logistics/inventory/ledger/kardex
+/logistics/inventory/ledger/prepared-events
+/logistics/inventory/ledger/partitions
+/logistics/inventory/ledger/checkpoints
+/logistics/inventory/ledger/reconciliation
+/logistics/inventory/ledger/exports
+/logistics/inventory/stock/products
+/logistics/inventory/stock/warehouses
+/logistics/inventory/stock/locations
+/logistics/inventory/stock/positions
+/logistics/inventory/stock/list
+/logistics/inventory/stock/formulas
+/logistics/inventory/stock/freshness
+/logistics/inventory/stock/reconciliation
+/logistics/inventory/stock/rebuilds
+/logistics/inventory/stock/checkpoints
+/logistics/inventory/stock/history
+/logistics/inventory/stock/negatives
+/logistics/inventory/stock/alerts
+/logistics/inventory/stock/exports
+/logistics/putaway/orders
+/logistics/putaway/orders/new
+/logistics/putaway/tasks
+/logistics/putaway/exceptions
+/logistics/putaway/capacity
+/logistics/quality/quarantine/cases
+/logistics/quality/quarantine/new
+/logistics/quality/inspections
+/logistics/quality/quarantine-zones
+/logistics/quality/availability
+/logistics/inbound/gate-control/queue
+/logistics/inbound/gate-control/check-ins/new
+/logistics/inbound/gate-control/gates
+/logistics/inbound/gate-control/policies
+/logistics/purchasing/approvals
+/logistics/purchasing/approvals/created-by-me
+/logistics/purchasing/approval-policies/new
+/logistics/purchasing/approval-delegations
+/logistics/drivers/new
+/logistics/files/upload
+/logistics/evidence
+/logistics/unavailable
+/unauthorized
+/

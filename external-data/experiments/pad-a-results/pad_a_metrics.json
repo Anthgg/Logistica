@@ -1,0 +1,32 @@
+{
+  "experiment_id": "PAD-A-public-generalization",
+  "training_datasets": "celeba_spoof",
+  "fine_tuning_dataset": null,
+  "validation_dataset": "celeba_spoof_validation",
+  "test_dataset": "celeba_spoof_test",
+  "Accuracy": 0.9943,
+  "Precision": 0.9976,
+  "Recall": 0.9976,
+  "F1": 0.9976,
+  "ROC_AUC": 0.9995,
+  "APCER": 0.0024,
+  "BPCER": 0.0086,
+  "ACER": 0.0055,
+  "EER": 0.5,
+  "latency_ms": 35.01,
+  "model_size_mb": 9.34,
+  "test_loss": 0.067595,
+  "test_samples": 525,
+  "threshold": 0.7045,
+  "protocol_notes": [
+    "División por sujeto 70/15/15; sin mezclar sujetos entre particiones.",
+    "Umbral seleccionado por ACER mínimo en validation.",
+    "Test evaluado una sola vez después de seleccionar el modelo.",
+    "CelebA-Spoof: solo investigación no comercial."
+  ],
+  "split_counts": {
+    "train": 1366,
+    "test": 525,
+    "validation": 228
+  }
+}

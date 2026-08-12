@@ -1,0 +1,66 @@
+{
+  "phase": "018",
+  "domain": "logistics",
+  "subdomain": "outbound_dispatch_rendering",
+  "catalog_version": "1.0.0",
+  "document_types": [
+    "PED",
+    "ODS",
+    "PICK",
+    "PACK",
+    "MAN",
+    "ADSP"
+  ],
+  "proposed_codes": [
+    "CPR"
+  ],
+  "template_keys": [
+    "outbound.ped",
+    "outbound.ods",
+    "outbound.picking_list",
+    "outbound.packing_list",
+    "dispatch.load_manifest",
+    "dispatch.dispatch_act",
+    "dispatch.seal_control"
+  ],
+  "template_versions": [
+    "1.0.0"
+  ],
+  "package_modes": [
+    "OUTBOUND_REQUEST",
+    "OUTBOUND_AUTHORIZATION",
+    "PICKING",
+    "PACKING",
+    "DISPATCH",
+    "TRANSPORT_HANDOFF"
+  ],
+  "files": [
+    "README.md",
+    "01_auditoria_documentos_salida.md",
+    "02_codigos_documentales.md",
+    "03_arquitectura_plantillas.md",
+    "04_PED_pedido_salida.md",
+    "05_ODS_orden_salida.md",
+    "06_PICK_lista_picking.md",
+    "07_PACK_packing_list.md",
+    "08_MAN_manifiesto_carga.md",
+    "09_ADSP_acta_despacho.md",
+    "10_CPR_control_precinto.md",
+    "11_componentes_reutilizables.md",
+    "12_validaciones.md",
+    "13_paquete_documental.md",
+    "14_privacidad_sensibilidad.md",
+    "15_versionado_catalogo.md",
+    "16_endpoints.md",
+    "17_permisos_step_up.md",
+    "18_auditoria.md",
+    "19_migracion_seed.md",
+    "20_pruebas.md",
+    "21_integracion_futura_pedidos.md",
+    "22_integracion_futura_picking_packing.md",
+    "23_integracion_futura_despacho.md",
+    "24_contrato_fase_020.md",
+    "25_decisiones_pendientes.md",
+    "README.md"
+  ]
+}

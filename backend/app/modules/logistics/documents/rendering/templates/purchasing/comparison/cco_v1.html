@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CUADRO COMPARATIVO DE OFERTAS</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "purchasing/shared/purchasing.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">CUADRO COMPARATIVO</div>
+                <div class="doc-code">{{ cmd.document_code or "CCO-PROTOTIPO-001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información del Proceso Comparativo</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Requerimiento Ref.:</td>
+        <td>{{ cmd.document_data.get('related_request_reference', 'REQ-2026-000001') }}</td>
+        <td class="info-label">Fecha Evaluación:</td>
+        <td>{{ cmd.document_data.get('evaluation_date', now.strftime('%Y-%m-%d')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Evaluador:</td>
+        <td>{{ cmd.document_data.get('evaluator', cmd.requested_by or 'Comprador Senior') }}</td>
+        <td class="info-label">Moneda:</td>
+        <td>{{ cmd.document_data.get('currency', 'PEN') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Matriz Comparativa de Proveedores Evaluados</div>
+<table class="comparison-matrix">
+    <thead>
+        <tr>
+            <th>Concepto / Proveedor</th>
+            {% for supp in cmd.document_data.get('suppliers', []) %}
+            <th class="{{ 'recommended-col' if supp.get('is_recommended') else '' }}">
+                {{ supp.get('business_name') }}
+                {% if supp.get('is_recommended') %}<br><small>(RECOMENDADO)</small>{% endif %}
+            </th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>Monto Total Oferta</strong></td>
+            {% for supp in cmd.document_data.get('suppliers', []) %}
+            <td style="text-align: right; font-weight: bold;">
+                {{ supp.get('currency', 'PEN') }} {{ supp.get('total_amount', '0.00') }}
+            </td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>Plazo de Entrega</td>
+            {% for supp in cmd.document_data.get('suppliers', []) %}
+            <td>{{ supp.get('delivery_days', '-') }} días hábiles</td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>Forma de Pago</td>
+            {% for supp in cmd.document_data.get('suppliers', []) %}
+            <td>{{ supp.get('payment_terms', 'Crédito 30 días') }}</td>
+            {% endfor %}
+        </tr>
+        <tr>
+            <td>Cumplimiento Técnico</td>
+            {% for supp in cmd.document_data.get('suppliers', []) %}
+            <td>{{ supp.get('technical_compliance', '100%') }}</td>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
+<div class="section-title">Recomendación y Sustento Técnico</div>
+<div style="font-size: 9pt; padding: 6px; background-color: #e8f8f5; border-left: 4px solid #27ae60; margin-bottom: 15px;">
+    <strong>Proveedor Seleccionado:</strong> {{ cmd.document_data.get('recommended_supplier_name', 'PROVEEDOR RECOMENDADO') }}<br>
+    <strong>Sustento:</strong> {{ cmd.document_data.get('recommendation_reason', 'Mejor relación precio, calidad y plazo de entrega cumpliendo especificaciones.') }}
+</div>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Documento CCO generado en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

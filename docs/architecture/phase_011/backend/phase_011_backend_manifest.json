@@ -1,0 +1,36 @@
+{
+  "phase": "011",
+  "name": "Crear el catálogo de documentos",
+  "domain": "backend",
+  "status": "COMPLETED",
+  "catalog_version": "1.0.0",
+  "families_count": 13,
+  "document_types_count": 28,
+  "proposed_types_count": 9,
+  "retention_policies_count": 4,
+  "database_tables": [
+    "document_families",
+    "document_types",
+    "document_type_versions",
+    "document_retention_policies",
+    "document_catalog_versions"
+  ],
+  "alembic_migration": "b119420011dc_add_document_catalog_tables.py",
+  "endpoints": [
+    "GET /api/logistics/document-catalog",
+    "GET /api/logistics/document-catalog/version",
+    "GET /api/logistics/document-catalog/families",
+    "GET /api/logistics/document-catalog/families/{family_code}",
+    "GET /api/logistics/document-catalog/retention-policies",
+    "GET /api/logistics/document-catalog/types",
+    "GET /api/logistics/document-catalog/types/{code}",
+    "GET /api/logistics/document-catalog/types/{code}/versions",
+    "GET /api/logistics/document-catalog/types/{code}/active-version",
+    "POST /api/logistics/document-catalog/validate"
+  ],
+  "pdf_generation_executed": false,
+  "numbering_series_executed": false,
+  "frontend_modified": false,
+  "phase_012_started": false,
+  "tests_passed": 142
+}

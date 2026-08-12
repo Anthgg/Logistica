@@ -1,0 +1,42 @@
+{
+  "phase": "039",
+  "scope": "backend-only inbound receiving by barcode scanning",
+  "revision": "ac390110039dc",
+  "down_revision": "ab380110038dc",
+  "table_count": 18,
+  "permission_count": 26,
+  "required_document_count": 52,
+  "mermaid_diagram_count": 19,
+  "boundaries": {
+    "phase_040_formal_difference_act": false,
+    "phase_041_quality_inspection": false,
+    "phase_044_inventory_posting": false,
+    "phase_046_putaway": false,
+    "stock_creation": false,
+    "kardex_creation": false,
+    "quarantine_creation": false,
+    "frontend_changes": false
+  },
+  "pending_decisions": [
+    "PENDIENTE_ADAPTADOR_EXPORTACION_ARCHIVOS",
+    "PENDIENTE_PRUEBA_CARGA_100K_RECEPCIONES",
+    "PENDIENTE_PRUEBA_CARGA_1M_EVENTOS",
+    "PENDIENTE_PRUEBA_CARGA_10M_IDENTIFICADORES",
+    "PENDIENTE_PRUEBA_CONCURRENCIA_100_ESCANERES"
+  ],
+  "principal_files": [
+    "backend/app/modules/logistics/inbound/receiving",
+    "backend/alembic/versions/ac390110039dc_phase_039_inbound_receiving.py",
+    "backend/app/modules/logistics/rbac/permission_catalog.py",
+    "backend/app/modules/logistics/security/step_up_policy.py",
+    "backend/app/modules/logistics/audit/catalog.py",
+    "backend/app/models/registry.py",
+    "backend/app/modules/logistics/inbound/router.py",
+    "backend/tests/test_logistics_phase039.py"
+  ],
+  "reused_dependencies": [
+    "Phase 038 receiving scan preparation",
+    "Phase 036 transactional idempotency and outbox",
+    "existing products, identifiers, tracking policies and approved unit conversions"
+  ]
+}

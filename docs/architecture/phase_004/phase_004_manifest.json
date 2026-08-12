@@ -1,0 +1,68 @@
+{
+  "project": "Proyecto T1 - Backend Logístico",
+  "phase": "Fase 004 - Organización, Sedes y Almacenes",
+  "version": "1.0.0",
+  "created_at": "2026-07-26T12:55:00Z",
+  "models_created": ["Organization", "Branch"],
+  "models_modified": ["Warehouse (added branch_id, warehouse_type, is_default)"],
+  "tables_created": ["logistics_organizations", "logistics_branches"],
+  "tables_modified": ["warehouses (added branch_id, warehouse_type, is_default)"],
+  "migration": {
+    "revision": "a2f27fd9a6c0",
+    "down_revision": "20260725_0006",
+    "reversible": true
+  },
+  "endpoints": [
+    "POST /api/logistics/organizations",
+    "GET /api/logistics/organizations",
+    "GET /api/logistics/organizations/{id}",
+    "PATCH /api/logistics/organizations/{id}",
+    "PATCH /api/logistics/organizations/{id}/status",
+    "POST /api/logistics/organizations/{org_id}/branches",
+    "GET /api/logistics/organizations/{org_id}/branches",
+    "GET /api/logistics/branches/{id}",
+    "PATCH /api/logistics/branches/{id}",
+    "PATCH /api/logistics/branches/{id}/status",
+    "POST /api/logistics/branches/{branch_id}/warehouses",
+    "GET /api/logistics/branches/{branch_id}/warehouses",
+    "GET /api/logistics/warehouses/{id}",
+    "PATCH /api/logistics/warehouses/{id}",
+    "PATCH /api/logistics/warehouses/{id}/status",
+    "POST /api/logistics/warehouses/{id}/set-default"
+  ],
+  "tests": {
+    "phase003": {"total": 13, "passed": 13, "failed": 0},
+    "phase004": {"total": 13, "passed": 13, "failed": 0},
+    "total": 26, "passed": 26, "failed": 0
+  },
+  "files_created": [
+    "app/models/organization.py",
+    "app/models/branch.py",
+    "app/modules/logistics/organization/__init__.py",
+    "app/modules/logistics/organization/schemas.py",
+    "app/modules/logistics/organization/repository.py",
+    "app/modules/logistics/organization/service.py",
+    "app/modules/logistics/organization/api/__init__.py",
+    "app/modules/logistics/organization/api/router.py",
+    "alembic/versions/a2f27fd9a6c0_add_logistics_organizations_branches.py",
+    "tests/test_logistics_phase004.py"
+  ],
+  "files_modified": [
+    "app/models/warehouse.py (added branch_id, warehouse_type, is_default)",
+    "app/models/registry.py (registered Organization, Branch)",
+    "app/modules/logistics/router.py (registered organization router)"
+  ],
+  "risks": [
+    "Warehouse.branch_id is nullable for backward compatibility — should be made non-null in a future migration after data migration",
+    "Permissions not enforced yet (Phase 005)",
+    "User-organization assignment pending (Phase 005)"
+  ],
+  "pending_decisions": [
+    "D01_User_organization_assignment",
+    "D02_Permission_enforcement_strategy",
+    "D03_Make_warehouse_branch_id_non_nullable",
+    "D04_Pilot_data_seeding_method"
+  ],
+  "frontend_modified": false,
+  "phase_005_started": false
+}

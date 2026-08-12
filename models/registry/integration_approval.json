@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "status": "blocked_missing_model_artifacts",
+  "dataset_version": "pilot-v0.1.0",
+  "protocol_version": "pilot-protocol-v0.1.0",
+  "model_versions": {
+    "facial": "pending-approval",
+    "pad": "pending-approval",
+    "behavioral": "pending-approval"
+  },
+  "fusion_version": "pending-approval",
+  "normalization_version": "pending-approval",
+  "checksums": {},
+  "hysteresis": {},
+  "ablation_configurations": {},
+  "approved_at": null,
+  "git_commit": "unavailable",
+  "technical_owner": "pending",
+  "reason": "Bloqueado: aún no existen modelos, configuraciones de fusión ni hashes aprobados para una evaluación final."
+}

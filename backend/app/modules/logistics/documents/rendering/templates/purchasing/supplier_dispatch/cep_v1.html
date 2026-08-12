@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CONSTANCIA DE ENVÍO AL PROVEEDOR</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "purchasing/shared/purchasing.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">CONSTANCIA DE ENVÍO</div>
+                <div class="doc-code">{{ cmd.document_code or "CEP-PROTOTIPO-001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Evidencia Técnica de Notificación / Envío</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Documento Notificado:</td>
+        <td>{{ cmd.document_data.get('related_document_code', 'OC-LIM-2026-000001') }}</td>
+        <td class="info-label">Tipo Documental:</td>
+        <td>{{ cmd.document_data.get('related_document_type', 'ORDEN_COMPRA') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Proveedor Destinatario:</td>
+        <td>{{ cmd.document_data.get('supplier_name', 'DISTRIBUIDORA INDUSTRIAL S.A.C.') }}</td>
+        <td class="info-label">Canal Notificación:</td>
+        <td><strong>{{ cmd.document_data.get('channel', 'EMAIL_AUTOMATICO') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Destinatarios Email:</td>
+        <td>{{ cmd.document_data.get('recipients', 'ventas@proveedor.com') }}</td>
+        <td class="info-label">Fecha y Hora Envío:</td>
+        <td>{{ cmd.document_data.get('sent_at', now.strftime('%Y-%m-%d %H:%M:%S UTC')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Estado Envío:</td>
+        <td><span class="status-badge status-active">{{ cmd.document_data.get('send_status', 'ENVIADO') }}</span></td>
+        <td class="info-label">Usuario Responsable:</td>
+        <td>{{ cmd.document_data.get('responsible_user', cmd.requested_by or 'Sistema Compras') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Identificadores Criptográficos de Entrega</div>
+<div style="font-size: 8pt; font-family: monospace; background-color: #f4f6f9; padding: 6px; border: 1px solid #cccccc; margin-bottom: 15px;">
+    Hash Archivo Notificado SHA-256: {{ cmd.document_data.get('file_hash', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855') }}<br>
+    ID Transacción Mensajería: {{ cmd.document_data.get('transaction_id', 'MSG-20260726-987654') }}
+</div>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Documento CEP generado en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>MOVIMIENTO DE ALMACÉN (MOV)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inventory/shared/inventory.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <div class="doc-org">{{ cmd.organization_name }} — {{ cmd.branch_name }}</div>
+    <div class="doc-title">MOVIMIENTO DE ALMACÉN</div>
+    <div class="doc-meta">
+        <span>Código: {{ cmd.document_code or 'MOV-PREVIEW' }}</span>
+        <span>Versión: {{ cmd.template_version }}</span>
+        <span>Fecha: {{ now.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+    </div>
+</div>
+
+<!-- Tipo y estado -->
+<div style="margin-bottom:8px;">
+    <span class="status-badge" style="background:#1a3a5c;">
+        {{ cmd.document_data.get('movement_type', 'INTERNAL_TRANSFER') }}
+    </span>
+    <span class="status-badge status-{{ cmd.document_data.get('status','preview') | lower }}">
+        {{ cmd.document_data.get('status', 'PREVIEW') }}
+    </span>
+    {% if cmd.document_data.get('is_reversal') %}
+    <span class="status-badge" style="background:#8e44ad;">MOVIMIENTO COMPENSATORIO</span>
+    {% endif %}
+</div>
+
+{% if cmd.document_data.get('is_reversal') and cmd.document_data.get('original_movement_reference') %}
+<div class="inv-box" style="background:#fdf2f8; border-color:#8e44ad;">
+    <div class="inv-title" style="color:#6c3483;">Compensación de Movimiento</div>
+    <div style="font-size:8.5pt;">
+        <strong>Movimiento original:</strong> {{ cmd.document_data['original_movement_reference'] }}<br>
+        {% if cmd.document_data.get('reversal_reason') %}
+        <strong>Motivo de compensación:</strong> {{ cmd.document_data['reversal_reason'] }}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Información del movimiento -->
+<div class="inv-box">
+    <div class="inv-title">Información del Movimiento</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Almacén:</strong> {{ cmd.document_data.get('warehouse_name', '—') }}</td>
+            <td><strong>Fecha/Hora:</strong> {{ cmd.document_data.get('movement_at', now.strftime('%Y-%m-%d %H:%M')) }}</td>
+        </tr>
+        <tr>
+            <td><strong>Referencia operación:</strong> {{ cmd.document_data.get('related_operation_reference', '—') }}</td>
+            <td><strong>Responsable:</strong> {{ cmd.document_data.get('responsible_user', '—') }}</td>
+        </tr>
+        {% if cmd.document_data.get('approver') %}
+        <tr><td><strong>Aprobador:</strong> {{ cmd.document_data['approver'] }}</td><td></td></tr>
+        {% endif %}
+    </table>
+</div>
+
+<!-- Ruta -->
+<div class="transfer-route">
+    <div class="transfer-warehouse">
+        <div style="font-size:7pt; color:#555;">ORIGEN</div>
+        <div>{{ cmd.document_data.get('source_location', '—') }}</div>
+        {% if cmd.document_data.get('source_stock_state') %}
+        <div><span class="status-badge status-pending" style="font-size:6.5pt;">{{ cmd.document_data['source_stock_state'] }}</span></div>
+        {% endif %}
+    </div>
+    <div class="transfer-arrow">→</div>
+    <div class="transfer-warehouse">
+        <div style="font-size:7pt; color:#555;">DESTINO</div>
+        <div>{{ cmd.document_data.get('destination_location', '—') }}</div>
+        {% if cmd.document_data.get('destination_stock_state') %}
+        <div><span class="status-badge status-approved" style="font-size:6.5pt;">{{ cmd.document_data['destination_stock_state'] }}</span></div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Items -->
+<div class="inv-box">
+    <div class="inv-title">Productos Movidos</div>
+    <table class="inv-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>SKU / Descripción</th>
+                <th>Lote</th>
+                <th>U.Log.</th>
+                <th>Cantidad</th>
+                <th>Unidad</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set items = cmd.document_data.get('items', []) %}
+        {% if items %}
+            {% for item in items %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {% if item.get('sku') %}<strong>{{ item['sku'] }}</strong><br>{% endif %}
+                    {{ item.get('description', '—') }}
+                </td>
+                <td>{{ item.get('lot_number', '—') }}</td>
+                <td>{{ item.get('logistic_unit', '—') }}</td>
+                <td class="qty-counted">{{ item.get('quantity', '0.00') }}</td>
+                <td>{{ item.get('unit', 'UND') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="6" style="text-align:center; color:#7f8c8d;">Sin líneas de producto</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Motivo -->
+<div class="inv-box">
+    <div class="inv-title">Motivo</div>
+    <div style="font-size:8.5pt;">
+        <strong>Código de motivo:</strong> {{ cmd.document_data.get('reason_code', '—') }}<br>
+        {% if cmd.document_data.get('reason_detail') %}
+        {{ cmd.document_data['reason_detail'] }}
+        {% endif %}
+    </div>
+</div>
+
+{% if cmd.document_data.get('evidence_references') %}
+<div class="inv-box">
+    <div class="inv-title">Evidencias</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['evidence_references'] | join(', ') if cmd.document_data['evidence_references'] is iterable and cmd.document_data['evidence_references'] is not string else cmd.document_data['evidence_references'] }}</div>
+</div>
+{% endif %}
+
+<div class="inv-box" style="background:#fef9e7; border-color:#f39c12;">
+    <div style="font-size:8pt; color:#8e6718;">
+        <strong>PENDING_PHASE_044</strong> — Vista previa. El movimiento real de inventario se implementará en la Fase 044. Este documento no crea ni modifica saldos.
+    </div>
+</div>
+
+<!-- Firmas -->
+<table class="approval-chain" style="margin-top:12px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Operador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Supervisor</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top:8px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">QR de demostración — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    MOV v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_044
+</div>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ACTA DE RECEPCIÓN</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inbound/shared/inbound.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">ACTA DE RECEPCIÓN</div>
+                <div class="doc-code">{{ cmd.document_code or "AREC-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos Generales del Proceso de Descarga y Conteo</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Fecha Recepción:</td>
+        <td>{{ cmd.document_data.get('reception_date', now.strftime('%Y-%m-%d')) }}</td>
+        <td class="info-label">Almacén / Muelle:</td>
+        <td>{{ cmd.document_data.get('warehouse', 'Almacén Principal') }} / {{ cmd.document_data.get('dock', 'Muelle 01') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Inicio Descarga:</td>
+        <td>{{ cmd.document_data.get('unloading_start', '08:15:00') }}</td>
+        <td class="info-label">Fin Descarga:</td>
+        <td>{{ cmd.document_data.get('unloading_end', '09:30:00') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Proveedor:</td>
+        <td>{{ cmd.document_data.get('supplier_name', 'DISTRIBUIDORA INDUSTRIAL S.A.C.') }}</td>
+        <td class="info-label">Orden Compra Ref.:</td>
+        <td>{{ cmd.document_data.get('purchase_order_reference', 'OC-LIM-2026-000001') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Resultado Recepción:</td>
+        <td><strong style="color: #27ae60;">{{ cmd.document_data.get('reception_result', 'ACEPTADO') }}</strong></td>
+        <td class="info-label">Guía Remisión Ref.:</td>
+        <td>{{ cmd.document_data.get('waybill_reference', 'GR-001-98765') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Resumen de Cantidades Recibidas vs Esperadas</div>
+<table class="data-table quantity-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 15%;">SKU</th>
+            <th style="width: 35%;">Descripción del Producto</th>
+            <th style="width: 10%; text-align: right;">Esperado</th>
+            <th style="width: 10%; text-align: right;">Recibido</th>
+            <th style="width: 10%; text-align: right;">Aceptado</th>
+            <th style="width: 10%; text-align: right;">Rechazado</th>
+            <th style="width: 5%;">Unid.</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('received_items', []) %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.get('sku', '-') }}</td>
+            <td>{{ item.get('description', '-') }}</td>
+            <td style="text-align: right;">{{ item.get('expected_quantity', 0) }}</td>
+            <td style="text-align: right;">{{ item.get('received_quantity', 0) }}</td>
+            <td style="text-align: right; color: #27ae60; font-weight: bold;">{{ item.get('accepted_quantity', 0) }}</td>
+            <td style="text-align: right; color: #c0392b;">{{ item.get('rejected_quantity', 0) }}</td>
+            <td>{{ item.get('unit', 'UND') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Acta de Recepción AREC generada en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

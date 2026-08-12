@@ -1,0 +1,31 @@
+image_size:
+  width: 224
+  height: 224
+channels: 3
+backbone: MobileNetV2
+imagenet_weights: true
+include_top: false
+batch_size: 16
+epochs_frozen: 10
+epochs_finetuning: 10
+learning_rate_frozen: 0.001
+learning_rate_finetuning: 0.00001
+dropout: 0.30
+dense_units: 128
+fine_tune_last_layers: 30
+early_stopping_patience: 4
+reduce_lr_patience: 2
+label_smoothing: 0.0
+class_weighting: true
+cache_dataset: false
+threshold_objective: minimum_acer
+target_apcer: 0.05
+random_seed: 42
+dataset_version: pilot-v0.1.0
+model_version: pad-mobilenetv2-v0.1.0
+augmentation:
+  rotation: 0.03
+  translation: 0.03
+  zoom: 0.05
+  contrast: 0.10
+  brightness: 0.08

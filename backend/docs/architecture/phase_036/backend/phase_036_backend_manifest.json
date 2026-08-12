@@ -1,0 +1,50 @@
+{
+  "phase": "036",
+  "scope": "backend-only",
+  "status": "implemented",
+  "migration": {
+    "revision": "y360110036dc",
+    "down_revision": "x350110035dc",
+    "reversible": true,
+    "production_executed": false
+  },
+  "modules": [
+    "arrival_notices",
+    "reception_calendar",
+    "reception_appointments",
+    "cit_document",
+    "appointment_packages",
+    "inbound_outbox",
+    "phase036_jobs"
+  ],
+  "reused_masters": [
+    "organizations",
+    "branches",
+    "warehouses",
+    "business_partners",
+    "vehicles",
+    "drivers",
+    "units_of_measure",
+    "file_assets",
+    "document_engine",
+    "purchase_orders"
+  ],
+  "guarantees": {
+    "tenant_scoped": true,
+    "decimal_only_quantities": true,
+    "backend_authoritative_base_quantity": true,
+    "prevents_overallocation": true,
+    "preview_assigns_cit_number": false,
+    "creates_physical_pallets": false,
+    "registers_arrival": false,
+    "assigns_dock": false,
+    "starts_unloading": false,
+    "registers_reception": false,
+    "modifies_inventory": false,
+    "modifies_frontend": false,
+    "starts_phase_037": false
+  },
+  "documentation_files": 40,
+  "test_file": "tests/test_logistics_phase036.py"
+}
+

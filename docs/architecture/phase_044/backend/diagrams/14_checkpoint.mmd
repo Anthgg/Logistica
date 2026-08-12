@@ -1,0 +1,7 @@
+sequenceDiagram
+    participant P as Partition
+    participant C as CheckpointService
+    P->>C: range request
+    C->>P: read movements
+    C->>C: compute manifest_hash
+    C->>P: persist checkpoint

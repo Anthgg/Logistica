@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ORDEN DE COMPRA</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "purchasing/shared/purchasing.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">ORDEN DE COMPRA</div>
+                <div class="doc-code">{{ cmd.document_code or "OC-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="supplier-box">
+    <div class="supplier-title">DATOS DEL PROVEEDOR</div>
+    <table style="width: 100%; font-size: 9pt;">
+        <tr>
+            <td style="font-weight: bold; width: 20%;">Razón Social:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('business_name', 'DISTRIBUIDORA INDUSTRIAL S.A.C.') }}</td>
+            <td style="font-weight: bold; width: 15%;">RUC:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('ruc', '20987654321') }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Dirección:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('address', 'Av. Industrial 123, Lima') }}</td>
+            <td style="font-weight: bold;">Contacto:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('contact_name', 'Carlos Gómez') }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Condiciones Comerciales y Operativas</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Fecha Orden:</td>
+        <td>{{ cmd.document_data.get('order_date', now.strftime('%Y-%m-%d')) }}</td>
+        <td class="info-label">Moneda:</td>
+        <td><strong>{{ cmd.document_data.get('currency', 'PEN') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Forma de Pago:</td>
+        <td>{{ cmd.document_data.get('payment_terms', 'Crédito 30 días') }}</td>
+        <td class="info-label">Fecha Entrega:</td>
+        <td>{{ cmd.document_data.get('delivery_date', '-') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Lugar Entrega:</td>
+        <td colspan="3">{{ cmd.document_data.get('delivery_address', 'Almacén Central Lima') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Detalle de Productos / Servicios Adquiridos</div>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 15%;">SKU</th>
+            <th style="width: 40%;">Descripción</th>
+            <th style="width: 10%; text-align: right;">Cant.</th>
+            <th style="width: 10%;">Unidad</th>
+            <th style="width: 10%; text-align: right;">P. Unit.</th>
+            <th style="width: 10%; text-align: right;">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('items', []) %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.get('sku', '-') }}</td>
+            <td>{{ item.get('description', '-') }}</td>
+            <td style="text-align: right;">{{ item.get('quantity', 0) }}</td>
+            <td>{{ item.get('unit', 'UND') }}</td>
+            <td style="text-align: right;">{{ item.get('unit_price', '0.00') }}</td>
+            <td style="text-align: right;">{{ item.get('total', '0.00') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="total-summary-box">
+    <table class="total-summary-table">
+        <tr>
+            <td>Subtotal:</td>
+            <td style="text-align: right;">{{ cmd.document_data.get('currency', 'PEN') }} {{ cmd.document_data.get('subtotal', '0.00') }}</td>
+        </tr>
+        <tr>
+            <td>IGV (18%):</td>
+            <td style="text-align: right;">{{ cmd.document_data.get('currency', 'PEN') }} {{ cmd.document_data.get('tax', '0.00') }}</td>
+        </tr>
+        <tr class="final-total">
+            <td>TOTAL:</td>
+            <td style="text-align: right;">{{ cmd.document_data.get('currency', 'PEN') }} {{ cmd.document_data.get('total', '0.00') }}</td>
+        </tr>
+    </table>
+</div>
+<div style="clear: both;"></div>
+
+<div class="avoid-page-break" style="margin-top: 20px;">
+    <div class="section-title">Aprobaciones Institucionales</div>
+    <table style="width: 100%; margin-top: 30px;">
+        <tr>
+            <td style="text-align: center; width: 33%;">
+                <div class="signature-line">
+                    <strong>Comprador</strong><br>
+                    {{ cmd.requested_by or 'Área Compras' }}
+                </div>
+            </td>
+            <td style="text-align: center; width: 33%;">
+                <div class="signature-line">
+                    <strong>Jefe de Finanzas</strong><br>
+                    Aprobado
+                </div>
+            </td>
+            <td style="text-align: center; width: 33%;">
+                <div class="signature-line">
+                    <strong>Gerencia Operaciones</strong><br>
+                    Aprobado
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Orden de Compra OC generada en modo {{ 'Vista Previa (No reservada)' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

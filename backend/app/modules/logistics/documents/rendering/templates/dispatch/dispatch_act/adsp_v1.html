@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ACTA DE DESPACHO (ADSP)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "dispatch/shared/dispatch.css" %}
+        {% include "outbound/shared/outbound.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">ACTA DE DESPACHO</div>
+                <div class="doc-code">{{ cmd.document_code or 'ADSP-PREVIEW' }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_data.get('document_status','preview') | lower }}">
+                        {{ cmd.document_data.get('document_status', 'PREVIEW') }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información de Carga y Cierre de Despacho</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Ref. Despacho:</td>
+        <td>{{ cmd.document_data.get('dispatch_reference', '—') }}</td>
+        <td class="info-label">Manifiesto Carga (MAN):</td>
+        <td>{{ cmd.document_data.get('manifest_reference', '—') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Almacén Origen:</td>
+        <td>{{ cmd.document_data.get('warehouse', '—') }}</td>
+        <td class="info-label">Muelle de Carga:</td>
+        <td>{{ cmd.document_data.get('dock', '—') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Inicio Carga:</td>
+        <td>{{ cmd.document_data.get('loading_start', '—') }}</td>
+        <td class="info-label">Fin Carga:</td>
+        <td>{{ cmd.document_data.get('loading_end', '—') }}</td>
+    </tr>
+</table>
+
+<!-- Conductor y Vehículo -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Datos del Conductor y Vehículo de Salida</div>
+    <div class="transport-info-grid">
+        <div class="transport-info-row">
+            <div class="transport-info-cell" style="font-weight: bold; width: 20%;">Conductor:</div>
+            <div class="transport-info-cell" style="width: 30%;">{{ cmd.document_data.get('driver_snapshot', {}).get('full_name', '—') }}</div>
+            <div class="transport-info-cell" style="font-weight: bold; width: 20%;">Vehículo / Placa:</div>
+            <div class="transport-info-cell" style="width: 30%;">
+                {{ cmd.document_data.get('vehicle_snapshot', {}).get('plate', '—') }} 
+                ({{ cmd.document_data.get('vehicle_snapshot', {}).get('vehicle_type', '—') }})
+            </div>
+        </div>
+        <div class="transport-info-row">
+            <div class="transport-info-cell" style="font-weight: bold;">DNI Conductor:</div>
+            <div class="transport-info-cell">
+                <span class="sensitive-mask">
+                    {{ cmd.document_data.get('driver_snapshot', {}).get('document_number', '—') }}
+                </span>
+            </div>
+            <div class="transport-info-cell" style="font-weight: bold;">Transportista:</div>
+            <div class="transport-info-cell">{{ cmd.document_data.get('carrier_name', '—') }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen de Carga Comparativo (loading_summary) -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Resumen de Carga y Conciliación Física (loading_summary.html)</div>
+    <table style="width: 100%; font-size: 8.5pt; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid #cbd5e1; font-weight: bold; color: #475569;">
+                <th style="text-align: left; padding: 3px 5px;">Métrica de Carga</th>
+                <th style="text-align: right; padding: 3px 5px;">Planificado / Previsto</th>
+                <th style="text-align: right; padding: 3px 5px;">Cargado Real</th>
+                <th style="text-align: right; padding: 3px 5px;">Discrepancia</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 4px 5px; font-weight: bold;">Unidades Logísticas (Bultos):</td>
+                <td style="text-align: right; padding: 4px 5px;">{{ cmd.document_data.get('expected_units', '0') }}</td>
+                <td style="text-align: right; padding: 4px 5px; font-weight: bold;">{{ cmd.document_data.get('loaded_units', '0') }}</td>
+                <td style="text-align: right; padding: 4px 5px;">
+                    {% set diff = (cmd.document_data.get('loaded_units', 0) | int) - (cmd.document_data.get('expected_units', 0) | int) %}
+                    {% if diff < 0 %}
+                        <span style="color: #b91c1c; font-weight: bold;">{{ diff }}</span>
+                    {% elif diff > 0 %}
+                        <span style="color: #16a34a; font-weight: bold;">+{{ diff }}</span>
+                    {% else %}
+                        <span style="color: #64748b;">0</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 4px 5px; font-weight: bold;">Peso Total (kg):</td>
+                <td style="text-align: right; padding: 4px 5px;">{{ cmd.document_data.get('planned_weight', '0.00') }}</td>
+                <td style="text-align: right; padding: 4px 5px; font-weight: bold;">{{ cmd.document_data.get('loaded_weight', '0.00') }}</td>
+                <td style="text-align: right; padding: 4px 5px;">—</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Precintos Aplicados -->
+{% if cmd.document_data.get('seal_number') %}
+<div class="outbound-box">
+    <div class="outbound-box-title">Precinto de Seguridad Aplicado (Control de precinto futuro)</div>
+    <table style="width: 100%; font-size: 8.5pt;">
+        <tr>
+            <td style="font-weight: bold; width: 25%;">Número Precinto:</td>
+            <td><strong style="color: #1e3a8a; font-size: 10pt;">{{ cmd.document_data['seal_number'] }}</strong></td>
+            <td style="font-weight: bold; width: 25%;">Estado Precinto:</td>
+            <td>
+                <span class="seal-status-badge seal-verified">VERIFICADO / APLICADO</span>
+            </td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+{% if cmd.document_data.get('differences_summary') %}
+<div class="outbound-box" style="border-left-color: #b91c1c; background-color: #fff1f2;">
+    <div class="outbound-box-title" style="color: #991b1b;">Discrepancias e Incidencias en la Carga</div>
+    <div style="font-size: 8.5pt; color: #991b1b;">{{ cmd.document_data['differences_summary'] }}</div>
+</div>
+{% endif %}
+
+<div class="outbound-box" style="background-color: #fef9e7; border-left-color: #d97706;">
+    <div style="font-size: 8pt; color: #854d0e;">
+        <strong>PENDING_PHASE_058</strong> — Vista previa de Acta de Despacho.
+        Este reporte no registra la salida real del camión de forma definitiva ni descuenta stock del Kardex.
+        La liberación transaccional de despacho se implementará en la Fase 058.
+    </div>
+</div>
+
+{% if cmd.document_data.get('observations') %}
+<div class="outbound-box">
+    <div class="outbound-box-title">Observaciones</div>
+    <div style="font-size: 8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<!-- Firmas del Acta -->
+<table class="approval-chain" style="margin-top: 15px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Responsable Almacén (Despacho)</div>
+            <div style="font-size: 8pt; margin-top: 3px;">
+                {% if cmd.document_data.get('responsible_users') %}
+                    {{ cmd.document_data['responsible_users'] | join(', ') if cmd.document_data['responsible_users'] is iterable and cmd.document_data['responsible_users'] is not string else cmd.document_data['responsible_users'] }}
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Transportista / Conductor</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('driver_snapshot', {}).get('full_name', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top: 10px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">VISTA PREVIA — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    ADSP v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_058
+</div>
+</body>
+</html>

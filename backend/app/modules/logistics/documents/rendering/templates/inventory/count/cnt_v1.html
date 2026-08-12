@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ACTA DE CONTEO FÍSICO (CNT)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inventory/shared/inventory.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <div class="doc-org">{{ cmd.organization_name }} — {{ cmd.branch_name }}</div>
+    <div class="doc-title">ACTA DE CONTEO FÍSICO</div>
+    <div class="doc-meta">
+        <span>Código: {{ cmd.document_code or 'CNT-PREVIEW' }}</span>
+        <span>Versión: {{ cmd.template_version }}</span>
+        <span>Fecha: {{ now.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+    </div>
+</div>
+
+<!-- Tipo de conteo y estado -->
+<div style="margin-bottom:8px;">
+    <span class="status-badge" style="background:#1a3a5c;">
+        {{ cmd.document_data.get('count_type', 'GENERAL_COUNT') }}
+    </span>
+    <span class="status-badge status-{{ cmd.document_data.get('status','preview') | lower }}">
+        {{ cmd.document_data.get('status', 'PREVIEW') }}
+    </span>
+    {% if cmd.document_data.get('blind_count_mode') %}
+    <span class="status-badge" style="background:#2c3e50;">CONTEO CIEGO — Cantidades teóricas no disponibles para contadores</span>
+    {% endif %}
+</div>
+
+<!-- Información del conteo -->
+<div class="inv-box">
+    <div class="inv-title">Información del Conteo</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Almacén:</strong> {{ cmd.document_data.get('warehouse_name', '—') }}</td>
+            <td><strong>Zona:</strong> {{ cmd.document_data.get('zone_code', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Fecha programada:</strong> {{ cmd.document_data.get('scheduled_date', '—') }}</td>
+            <td><strong>Inicio:</strong> {{ cmd.document_data.get('started_at', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Fin:</strong> {{ cmd.document_data.get('ended_at', '—') }}</td>
+            <td><strong>Supervisor:</strong> {{ cmd.document_data.get('supervisor', '—') }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Equipo de conteo -->
+{% if cmd.document_data.get('count_team') %}
+<div class="inv-box">
+    <div class="inv-title">Equipo de Conteo</div>
+    <table class="count-team-table">
+        <thead>
+            <tr><th>Nombre</th><th>Rol</th><th>Área</th><th>Inicio</th><th>Fin</th></tr>
+        </thead>
+        <tbody>
+        {% for member in cmd.document_data['count_team'] %}
+            <tr>
+                <td>{{ member.get('name', '—') }}</td>
+                <td>{{ member.get('role', '—') }}</td>
+                <td>{{ member.get('area', '—') }}</td>
+                <td>{{ member.get('start_time', '—') }}</td>
+                <td>{{ member.get('end_time', '—') }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Líneas de conteo -->
+<div class="inv-box">
+    <div class="inv-title">Líneas de Conteo</div>
+    <table class="inv-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Ubicación</th>
+                <th>SKU / Descripción</th>
+                <th>Lote</th>
+                {% if not cmd.document_data.get('blind_count_mode') %}
+                <th class="qty-expected">Teórico</th>
+                {% else %}
+                <th class="blind-count-hidden">Teórico</th>
+                {% endif %}
+                <th class="qty-counted">1° Conteo</th>
+                {% if cmd.document_data.get('has_recount') %}
+                <th>Reconteo</th>
+                {% endif %}
+                <th>Final</th>
+                {% if not cmd.document_data.get('blind_count_mode') %}
+                <th>Diferencia</th>
+                {% endif %}
+                <th>Unidad</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% set lines = cmd.document_data.get('count_lines', []) %}
+        {% if lines %}
+            {% for line in lines %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td style="font-size:7.5pt;">{{ line.get('location_code', '—') }}</td>
+                <td>
+                    {% if line.get('sku') %}<strong>{{ line['sku'] }}</strong><br>{% endif %}
+                    {{ line.get('description', '—') }}
+                </td>
+                <td>{{ line.get('lot_number', '—') }}</td>
+
+                {% if not cmd.document_data.get('blind_count_mode') %}
+                    <td class="qty-expected">{{ line.get('expected_quantity', '—') }}</td>
+                {% else %}
+                    <td class="blind-count-hidden" title="No disponible en conteo ciego">—</td>
+                {% endif %}
+
+                <td class="qty-counted">{{ line.get('first_count_quantity', '0.00') }}</td>
+
+                {% if cmd.document_data.get('has_recount') %}
+                <td>{{ line.get('recount_quantity', '—') }}</td>
+                {% endif %}
+
+                <td><strong>{{ line.get('final_count_quantity', '0.00') }}</strong></td>
+
+                {% if not cmd.document_data.get('blind_count_mode') %}
+                    {% set diff = line.get('difference_quantity', '0') | string %}
+                    {% if diff.startswith('-') %}
+                    <td class="qty-diff-neg">{{ diff }}</td>
+                    {% elif diff != '0' and diff != '0.00' %}
+                    <td class="qty-diff-pos">+{{ diff }}</td>
+                    {% else %}
+                    <td class="qty-zero">0</td>
+                    {% endif %}
+                {% endif %}
+                <td>{{ line.get('unit', 'UND') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="10" style="text-align:center; color:#7f8c8d;">Sin líneas de conteo</td></tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if cmd.document_data.get('blind_count_mode') %}
+<div class="supervisor-only-section">
+    <strong>⚠ CONTEO CIEGO ACTIVO</strong> — Las cantidades teóricas no se muestran en esta vista.
+    Solo personal con permiso de supervisión puede acceder a la comparación completa.
+</div>
+{% endif %}
+
+<div class="inv-box" style="background:#fef9e7; border-color:#f39c12;">
+    <div style="font-size:8pt; color:#8e6718;">
+        <strong>PENDING_PHASE_048</strong> — Vista previa. El conteo operativo real se implementará en la Fase 048. Este documento no bloquea ubicaciones ni crea ajustes.
+    </div>
+</div>
+
+{% if cmd.document_data.get('observations') %}
+<div class="inv-box">
+    <div class="inv-title">Observaciones</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<!-- Firmas -->
+<table class="approval-chain" style="margin-top:12px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Supervisor</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Auditor</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Aprobador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top:8px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">QR de demostración — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    CNT v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_048
+</div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+  "phase": "022",
+  "name": "Modelar almacenes y ubicaciones",
+  "domain": "logistics",
+  "subsystem": "warehouses_and_locations",
+  "status": "COMPLETED",
+  "version": "1.0.0",
+  "created_at": "2026-07-28T12:00:00Z",
+  "description": "Especificación técnica completa de arquitectura backend para el modelado jerárquico de almacenes, ubicaciones físicas/lógicas, capacidades, restricciones, layouts 2D, QR opacos y etiquetas PDF.",
+  "migration": {
+    "revision_id": "m240110022dc",
+    "filename": "m240110022dc_phase_022_warehouses_locations.py",
+    "extended_tables": [
+      "warehouses"
+    ],
+    "new_tables": [
+      "warehouse_locations",
+      "warehouse_location_capacities",
+      "warehouse_location_restrictions",
+      "warehouse_location_code_aliases",
+      "warehouse_layout_versions",
+      "warehouse_layout_nodes",
+      "logistics_audit_events"
+    ]
+  },
+  "artifacts": [
+    { "file": "README.md", "type": "DOCUMENTATION", "description": "Resumen ejecutivo, diagramas Mermaid jerárquicos y componentes." },
+    { "file": "01_auditoria_entidades_almacen.md", "type": "DOCUMENTATION", "description": "Auditoría previa y extensión modular in-place de la tabla warehouses." },
+    { "file": "02_modelo_warehouse_location.md", "type": "DOCUMENTATION", "description": "Estructura del modelo WarehouseLocationModel, jerarquía y estados." },
+    { "file": "03_jerarquia_politicas_padres.md", "type": "DOCUMENTATION", "description": "Matriz de padres permitidos, prevención de ciclos y aislamiento." },
+    { "file": "04_normalizacion_codigos.md", "type": "DOCUMENTATION", "description": "Servicio de normalización y construcción determinística de full_code." },
+    { "file": "05_generacion_masiva_ubicaciones.md", "type": "DOCUMENTATION", "description": "Generación combinatoria masiva, vista previa e idempotencia." },
+    { "file": "06_capacidades_configuradas.md", "type": "DOCUMENTATION", "description": "Configuración de límites de peso, volumen, pallets y cajas." },
+    { "file": "07_restricciones_ubicacion.md", "type": "DOCUMENTATION", "description": "Reglas de restricciones físicas, térmicas y normativas." },
+    { "file": "08_movimiento_subarboles_alias.md", "type": "DOCUMENTATION", "description": "Movimiento transaccional de subárboles y registro de alias históricos." },
+    { "file": "09_layout_2d_mapa_logico.md", "type": "DOCUMENTATION", "description": "Versionado de plano 2D y mapa lógico consumible por React." },
+    { "file": "10_referencias_qr_opacas.md", "type": "DOCUMENTATION", "description": "Payloads QR opacos versionados t1loc:v1: y rotación de seguridad." },
+    { "file": "11_etiquetas_pdf_identificacion.md", "type": "DOCUMENTATION", "description": "Renderizado PDF de etiquetas individuales y lotes de impresión." },
+    { "file": "12_endpoints.md", "type": "DOCUMENTATION", "description": "Especificación de API REST / OpenAPI." },
+    { "file": "13_permisos_step_up.md", "type": "DOCUMENTATION", "description": "Permisos RBAC y requerimientos de Step-Up Authentication." },
+    { "file": "14_auditoria.md", "type": "DOCUMENTATION", "description": "Catálogo de 17 eventos de auditoría inmutable." },
+    { "file": "15_migracion.md", "type": "DOCUMENTATION", "description": "DDL SQL y script de migración Alembic m240110022dc." },
+    { "file": "16_pruebas.md", "type": "DOCUMENTATION", "description": "Suite de pruebas automatizadas y cobertura (100% aprobadas)." },
+    { "file": "17_rendimiento.md", "type": "DOCUMENTATION", "description": "Análisis de índices B-Tree y tiempos de respuesta < 20ms." },
+    { "file": "18_integracion_futura_fase_023_catalogo.md", "type": "DOCUMENTATION", "description": "Contrato de integración con el Catálogo Maestro de Productos (Fase 023)." },
+    { "file": "19_integracion_futura_fase_026_sunat_anexo.md", "type": "DOCUMENTATION", "description": "Desacoplamiento de establecimientos anexos SUNAT (Fase 026)." },
+    { "file": "20_integracion_futura_fases_041_046_inventario.md", "type": "DOCUMENTATION", "description": "Contrato con futuras fases de inventario y saldos en tiempo real." },
+    { "file": "21_integracion_futura_fase_044_putaway.md", "type": "DOCUMENTATION", "description": "Contrato con futuras fases de algoritmos de Putaway y picking." },
+    { "file": "22_decisiones_pendientes.md", "type": "DOCUMENTATION", "description": "Registro de Decisiones de Arquitectura (ADR)." },
+    { "file": "phase_022_backend_manifest.json", "type": "MANIFEST", "description": "Manifiesto estructurado de la Fase 022." }
+  ],
+  "endpoints": [
+    "/api/logistics/warehouses",
+    "/api/logistics/warehouses/{id}",
+    "/api/logistics/warehouses/{id}/locations",
+    "/api/logistics/warehouses/{id}/locations/{loc_id}",
+    "/api/logistics/warehouses/{id}/locations/bulk-preview",
+    "/api/logistics/warehouses/{id}/locations/bulk-generate",
+    "/api/logistics/warehouses/{id}/locations/{loc_id}/move-preview",
+    "/api/logistics/warehouses/{id}/locations/{loc_id}/move",
+    "/api/logistics/warehouses/{id}/logical-map",
+    "/api/logistics/warehouses/{id}/layouts",
+    "/api/logistics/locations/resolve-qr",
+    "/api/logistics/warehouses/{id}/locations/{loc_id}/qr-image",
+    "/api/logistics/warehouses/{id}/locations/{loc_id}/rotate-qr",
+    "/api/logistics/warehouses/{id}/locations/{loc_id}/label-pdf",
+    "/api/logistics/warehouses/{id}/locations/labels-batch-pdf"
+  ],
+  "permissions": [
+    "logistics.warehouses.read",
+    "logistics.warehouses.manage",
+    "logistics.warehouse_locations.create",
+    "logistics.warehouse_locations.manage",
+    "logistics.warehouse_locations.move",
+    "logistics.warehouse_layouts.activate"
+  ],
+  "audit_events_count": 17,
+  "test_suite": {
+    "filename": "tests/test_logistics_phase022.py",
+    "tests_count": 18,
+    "status": "PASSED"
+  }
+}

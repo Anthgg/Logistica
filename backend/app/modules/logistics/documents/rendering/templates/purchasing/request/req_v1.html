@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>REQUERIMIENTO DE COMPRA</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "purchasing/shared/purchasing.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">REQUERIMIENTO DE COMPRA</div>
+                <div class="doc-code">{{ cmd.document_code or "REQ-PROTOTIPO-001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos del Requerimiento</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Área Solicitante:</td>
+        <td>{{ cmd.document_data.get('requesting_area', 'Operaciones Logísticas') }}</td>
+        <td class="info-label">Fecha Solicitud:</td>
+        <td>{{ cmd.document_data.get('request_date', now.strftime('%Y-%m-%d')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Solicitante:</td>
+        <td>{{ cmd.document_data.get('requester', cmd.requested_by or 'Usuario Logístico') }}</td>
+        <td class="info-label">Fecha Requerida:</td>
+        <td>{{ cmd.document_data.get('required_date', '-') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Prioridad:</td>
+        <td><strong>{{ cmd.document_data.get('priority', 'MEDIA') }}</strong></td>
+        <td class="info-label">Centro de Costo:</td>
+        <td>{{ cmd.document_data.get('cost_center', 'CC-LOG-01') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Justificación</div>
+<div style="font-size: 9pt; padding: 4px 6px; background-color: #f9f9f9; border-left: 3px solid #003366; margin-bottom: 15px;">
+    {{ cmd.document_data.get('justification', 'Atención de necesidades operativas de almacén.') }}
+</div>
+
+<div class="section-title">Detalle de Productos / Servicios Requeridos</div>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 15%;">SKU / Cód.</th>
+            <th style="width: 45%;">Descripción</th>
+            <th style="width: 15%; text-align: right;">Cantidad</th>
+            <th style="width: 20%;">Unidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('items', []) %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.get('sku', '-') }}</td>
+            <td>{{ item.get('description', '-') }}</td>
+            <td style="text-align: right;">{{ item.get('quantity', 0) }}</td>
+            <td>{{ item.get('unit', 'UND') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="avoid-page-break" style="margin-top: 30px;">
+    <div class="section-title">Aprobaciones</div>
+    <table style="width: 100%; margin-top: 40px;">
+        <tr>
+            <td style="text-align: center; width: 50%;">
+                <div class="signature-line">
+                    <strong>Solicitante</strong><br>
+                    {{ cmd.document_data.get('requester', 'Firma') }}
+                </div>
+            </td>
+            <td style="text-align: center; width: 50%;">
+                <div class="signature-line">
+                    <strong>Jefe de Área / Aprobador</strong><br>
+                    Aprobado
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Documento REQ generado en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

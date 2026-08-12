@@ -1,0 +1,74 @@
+{
+  "phase": "044",
+  "name": "Inventory Ledger (Append-Only Book)",
+  "backend_module": "app.modules.logistics.inventory.ledger",
+  "tables": [
+    "inventory_ledger_partitions",
+    "inventory_positions",
+    "inventory_external_boundaries",
+    "inventory_movement_posting_requests",
+    "inventory_movements",
+    "inventory_movement_lines",
+    "inventory_movement_source_references",
+    "inventory_movement_compensation_requests",
+    "inventory_ledger_checkpoints",
+    "inventory_ledger_reconciliation_jobs",
+    "inventory_ledger_reconciliation_results",
+    "inventory_kardex_export_jobs",
+    "inventory_ledger_outbox_events"
+  ],
+  "services": [
+    "InventoryMovementPostingService",
+    "InventoryMovementValidationService",
+    "InventoryMovementCompensationService",
+    "InventoryKardexQueryService",
+    "InventoryBalancePreparationService",
+    "InventoryTraceabilityPreparationService",
+    "InventoryLedgerIntegrityService",
+    "InventoryLedgerCheckpointService",
+    "InventoryLedgerReconciliationService",
+    "InventoryLedgerExportService",
+    "InventoryMovementSnapshotProvider",
+    "PreparedInventoryEventIngestionService",
+    "InventoryMovementLineService"
+  ],
+  "domains": [
+    "InventoryLedgerSequenceService",
+    "InventoryMovementCodeService",
+    "InventoryLedgerHashChainService",
+    "InventoryPositionService",
+    "SourceBackedAvailabilityProvider",
+    "InventoryMovementIdempotencyService",
+    "InventoryMovementSourceRegistry"
+  ],
+  "adapters_enabled": [
+    "QUALITY_QUARANTINE_APPLIED",
+    "QUALITY_APPROVED",
+    "QUARANTINE_RELEASED",
+    "QUALITY_REJECTED",
+    "DISPOSITION_SPLIT",
+    "PUTAWAY_COMPLETED"
+  ],
+  "adapters_disabled": [
+    "ADJUSTMENT_APPROVED",
+    "PHYSICAL_COUNT_VARIANCE_APPROVED",
+    "TRANSFER_DISPATCHED",
+    "TRANSFER_RECEIVED",
+    "RESERVATION_CREATED",
+    "RESERVATION_RELEASED",
+    "OUTBOUND_PICK_CONFIRMED",
+    "OUTBOUND_DISPATCH_CONFIRMED",
+    "RETURN_RECEIVED"
+  ],
+  "endpoints": 44,
+  "tests": 40,
+  "test_files": [
+    "tests/modules/logistics/inventory/ledger/test_ledger_units.py",
+    "tests/modules/logistics/inventory/ledger/test_ledger_http.py",
+    "tests/modules/logistics/inventory/ledger/test_ledger_db.py"
+  ],
+  "alembic_revision": "gg440110044dc",
+  "alembic_head": "gh440210044mg",
+  "openapi_prefix": "/api/logistics/inventory",
+  "frontend_touched": false
+}

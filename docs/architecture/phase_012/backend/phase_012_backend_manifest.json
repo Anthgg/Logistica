@@ -1,0 +1,50 @@
+{
+  "phase": "012",
+  "name": "Definir el estándar de códigos documentales",
+  "domain": "logistics.documents.codes",
+  "version": "1.0.0",
+  "status": "COMPLETED",
+  "canonical_pattern": "TIPO-SEDE-AÑO-CORRELATIVO",
+  "separator": "-",
+  "example": "OC-LIM-2026-000001",
+  "segments": {
+    "tipo": {
+      "min_length": 2,
+      "max_length": 8,
+      "charset": "A-Z0-9"
+    },
+    "sede": {
+      "min_length": 2,
+      "max_length": 10,
+      "charset": "A-Z0-9"
+    },
+    "year": {
+      "length": 4,
+      "timezone_aware": true
+    },
+    "sequence": {
+      "length": 6,
+      "min": 1,
+      "max": 999999,
+      "padding": "leading_zeros"
+    }
+  },
+  "boundaries": {
+    "real_correlatives_assigned": false,
+    "sequence_tables_created": false,
+    "series_created": false,
+    "talonarios_created": false,
+    "pdf_generated": false,
+    "frontend_modified": false,
+    "phase_013_started": false
+  },
+  "endpoints": [
+    "/api/logistics/document-code-standard",
+    "/api/logistics/document-code-standard/versions",
+    "/api/logistics/document-code-standard/examples",
+    "/api/logistics/document-code-standard/validate",
+    "/api/logistics/document-code-standard/parse",
+    "/api/logistics/document-code-standard/preview",
+    "/api/logistics/document-site-codes"
+  ]
+}

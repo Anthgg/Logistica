@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PEDIDO DE SALIDA (PED)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "outbound/shared/outbound.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">PEDIDO DE SALIDA</div>
+                <div class="doc-code">{{ cmd.document_code or 'PED-PREVIEW' }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_data.get('document_status','preview') | lower }}">
+                        {{ cmd.document_data.get('document_status', 'PREVIEW') }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información del Pedido</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Tipo Solicitud:</td>
+        <td><strong>{{ cmd.document_data.get('request_type', 'INTERNAL_REQUEST') }}</strong></td>
+        <td class="info-label">Fecha Solicitud:</td>
+        <td>{{ cmd.document_data.get('requested_at', now.strftime('%Y-%m-%d %H:%M UTC')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Almacén Solicitado:</td>
+        <td>{{ cmd.document_data.get('warehouse', '—') }}</td>
+        <td class="info-label">Fecha Requerida:</td>
+        <td><strong>{{ cmd.document_data.get('required_at', '—') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Prioridad:</td>
+        <td>
+            <span class="status-badge" style="background-color: {% if cmd.document_data.get('priority') == 'URGENT' %}#e11d48{% else %}#3b82f6{% endif %}; color: white;">
+                {{ cmd.document_data.get('priority', 'NORMAL') }}
+            </span>
+        </td>
+        <td class="info-label">Ref. Pedido Relacionado:</td>
+        <td>{{ cmd.document_data.get('related_request_reference', '—') }}</td>
+    </tr>
+</table>
+
+<!-- Solicitante y Destino -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Solicitante y Destino de Despacho (PENDING_PHASE_025 / PENDING_PHASE_026)</div>
+    <table style="width: 100%; font-size: 8.5pt;">
+        <tr>
+            <td style="font-weight: bold; width: 18%;">Solicitante:</td>
+            <td style="width: 32%;">{{ cmd.document_data.get('requested_by', '—') }}</td>
+            <td style="font-weight: bold; width: 18%;">Destinatario:</td>
+            <td style="width: 32%;">
+                {% if cmd.document_data.get('destination_snapshot') %}
+                    {{ cmd.document_data['destination_snapshot'].get('name', '—') }}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Dirección Entrega:</td>
+            <td colspan="3">
+                {% if cmd.document_data.get('destination_snapshot') %}
+                    {{ cmd.document_data['destination_snapshot'].get('address', '—') }}
+                    {% if cmd.document_data['destination_snapshot'].get('district') %}
+                        , {{ cmd.document_data['destination_snapshot']['district'] }}
+                    {% endif %}
+                    {% if cmd.document_data['destination_snapshot'].get('country') %}
+                        ({{ cmd.document_data['destination_snapshot']['country'] }})
+                    {% endif %}
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+        {% if cmd.document_data.get('destination_snapshot') and cmd.document_data['destination_snapshot'].get('contact_name') %}
+        <tr>
+            <td style="font-weight: bold;">Contacto:</td>
+            <td>{{ cmd.document_data['destination_snapshot']['contact_name'] }}</td>
+            <td style="font-weight: bold;">Telf. Contacto:</td>
+            <td>{{ cmd.document_data['destination_snapshot'].get('contact_phone', '—') }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+<div class="section-title">Productos Solicitados</div>
+<table class="outbound-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 18%;">SKU (PENDING_PHASE_023)</th>
+            <th style="width: 45%;">Descripción del Producto</th>
+            <th style="width: 17%; text-align: right;">Cantidad Requerida</th>
+            <th style="width: 15%;">Unidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set items = cmd.document_data.get('items', []) %}
+        {% if items %}
+            {% for item in items %}
+            <tr>
+                <td>{{ item.get('line_number', loop.index) }}</td>
+                <td>{{ item.get('product_snapshot', {}).get('sku', '—') }}</td>
+                <td>
+                    <strong>{{ item.get('product_snapshot', {}).get('description', '—') }}</strong>
+                    {% if item.get('preferred_lot') %}
+                    <br><span style="font-size: 7.5pt; color: #475569;">Lote preferido: {{ item['preferred_lot'] }}</span>
+                    {% endif %}
+                    {% if item.get('minimum_expiration_date') %}
+                    <span style="font-size: 7.5pt; color: #475569;"> | Expira después de: {{ item['minimum_expiration_date'] }}</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: right;" class="qty-expected">{{ item.get('requested_quantity', '0.00') }}</td>
+                <td>{{ item.get('unit', 'UND') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="5" style="text-align: center; color: #64748b;">No hay productos registrados en esta solicitud.</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+{% if cmd.document_data.get('reason') %}
+<div class="outbound-box">
+    <div class="outbound-box-title">Motivo de la Solicitud</div>
+    <div style="font-size: 8.5pt;">{{ cmd.document_data['reason'] }}</div>
+</div>
+{% endif %}
+
+{% if cmd.document_data.get('observations') %}
+<div class="outbound-box">
+    <div class="outbound-box-title">Observaciones adicionales</div>
+    <div style="font-size: 8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<div class="outbound-box" style="background-color: #fef9e7; border-left-color: #d97706;">
+    <div style="font-size: 8pt; color: #854d0e;">
+        <strong>PENDING_PHASE_051</strong> — Este documento es una vista previa de la solicitud.
+        No autoriza el retiro físico ni reserva inventario. El proceso transaccional se implementará en la Fase 051.
+    </div>
+</div>
+
+<!-- Cadena de Aprobación Visual -->
+<table class="approval-chain" style="margin-top: 15px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Solicitado por</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('requested_by', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Revisado por</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('reviewer', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Aprobado por</div>
+            <div style="font-size: 8pt; margin-top: 3px;">{{ cmd.document_data.get('approver', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top: 10px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">VISTA PREVIA — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    PED v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_051
+</div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "phase": "009",
+  "name": "Integrar autenticación continua con acciones logísticas sensibles",
+  "domain": "backend",
+  "status": "COMPLETED",
+  "policy_version": "1.0.0",
+  "sensitive_permissions_count": 18,
+  "models": [
+    "StepUpChallenge",
+    "StepUpChallengeFactor",
+    "StepUpProof",
+    "RiskEvaluation"
+  ],
+  "endpoints": [
+    "/api/logistics/security/policies",
+    "/api/logistics/security/step-up/challenges",
+    "/api/logistics/security/step-up/challenges/{challenge_id}",
+    "/api/logistics/security/step-up/challenges/{challenge_id}/factors",
+    "/api/logistics/security/step-up/challenges/{challenge_id}/complete"
+  ],
+  "tests_passed": 22,
+  "frontend_modified": false,
+  "models_trained": false,
+  "biometrics_segregated": true
+}

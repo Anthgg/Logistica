@@ -1,0 +1,13 @@
+[project]
+name = "andeslog-biometric-training"
+version = "0.2.0"
+description = "Preparación y entrenamiento biométrico reproducible de AndesLog."
+requires-python = ">=3.11,<3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

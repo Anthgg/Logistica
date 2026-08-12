@@ -1,0 +1,49 @@
+schema_version: 1
+frames_per_second: 2.0
+frames_per_second_minimum: 1.0
+frames_per_second_maximum: 5.0
+
+pad:
+  selection_source: validation
+  recalibrate_on_external_test: false
+  frozen_own_test_requires_approval: true
+  grouping_keys:
+    - source_dataset
+    - source_subject_id
+    - source_session_id
+    - source_video_id
+    - capture_device
+    - presentation_device
+    - attack_type
+  generalization_axes:
+    - unseen_camera
+    - unseen_presentation_device
+    - unseen_illumination
+    - unseen_background
+    - unseen_attack
+    - different_resolution
+    - compression
+    - blur
+    - distance
+    - frame_loss
+
+behavioral:
+  selection_source: validation
+  own_candidate_only: true
+  external_data_directly_mixed_with_own: false
+  generalization_axes:
+    - different_session
+    - different_day
+    - fatigue
+    - mouse_change
+    - keyboard_change
+    - different_resolution
+    - different_browser
+    - different_operating_system
+    - different_logistics_activity
+
+identity:
+  train_arcface_from_scratch: false
+  extractor: insightface_pretrained
+  public_photos_for_production_templates: false
+  production_templates_require_own_consented_images: true

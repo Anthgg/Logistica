@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>REPORTE DE INCIDENCIA</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "transport/shared/transport.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">REPORTE DE INCIDENCIA</div>
+                <div class="doc-code">{{ cmd.document_code or "INC-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos Generales de la Incidencia</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Código Incidencia:</td>
+        <td><strong>{{ cmd.document_data.get('incident_code', '') }}</strong></td>
+        <td class="info-label">Severidad:</td>
+        <td>
+            {% set sev = cmd.document_data.get('severity', '') %}
+            {% if sev == 'CRITICAL' %}
+            <strong style="color: #c0392b; font-size: 11pt;">CRÍTICA 🚨</strong>
+            {% elif sev == 'HIGH' %}
+            <strong style="color: #e67e22;">ALTA ⚠</strong>
+            {% elif sev == 'MEDIUM' %}
+            <strong style="color: #f39c12;">MEDIA</strong>
+            {% else %}
+            <strong style="color: #2c3e50;">BAJA</strong>
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td class="info-label">Viaje Relacionado:</td>
+        <td>{{ cmd.document_data.get('trip_reference', '') }}</td>
+        <td class="info-label">Fecha y Hora:</td>
+        <td>{{ cmd.document_data.get('occurred_at', '') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Tipo de Incidencia:</td>
+        <td><strong>{{ cmd.document_data.get('incident_type', '') }}</strong></td>
+        <td class="info-label">Reportado por:</td>
+        <td>{{ cmd.document_data.get('reported_by', '') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Descripción Detallada</div>
+<p style="font-size: 10pt; background-color: #f9f9f9; padding: 10px; border: 1px solid #e0e0e0; min-height: 50px;">
+    {{ cmd.document_data.get('description', '') }}
+</p>
+
+{% if cmd.document_data.get('affected_items') %}
+<div class="section-title">Carga / Productos Afectados</div>
+<table class="transport-table">
+    <thead>
+        <tr>
+            <th style="width: 15%;">SKU</th>
+            <th style="width: 55%;">Descripción</th>
+            <th style="width: 15%;">Cantidad</th>
+            <th style="width: 15%;">Unidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('affected_items', []) %}
+        <tr>
+            <td>{{ item.product_snapshot.sku or '-' }}</td>
+            <td><strong>{{ item.product_snapshot.description }}</strong></td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.unit or 'UN' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if cmd.document_data.get('immediate_action') %}
+<div class="section-title">Acción Inmediata Tomada</div>
+<p style="font-size: 10pt; border-left: 3px solid #e67e22; padding-left: 10px; font-style: italic;">
+    {{ cmd.document_data.get('immediate_action') }}
+</p>
+{% endif %}
+
+{% if cmd.document_data.get('evidence_references') %}
+<div class="section-title">Referencias de Evidencias</div>
+<ul>
+    {% for ref in cmd.document_data.get('evidence_references', []) %}
+    <li style="font-size: 9pt;">{{ ref }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<table class="footer-layout-table">
+    <tr>
+        <td class="footer-qr-cell">
+            {% if qr_b64 %}
+            <img class="qr-code-img" src="{{ qr_b64 }}" alt="Código QR de Documento" />
+            <div class="qr-code-lbl">Verificación de Vista Previa</div>
+            {% endif %}
+        </td>
+        <td class="footer-signatures-cell">
+            <div class="signature-line-container">
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Reportante (Conductor / Inspector)</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Supervisor de Operaciones / Calidad</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="page-footer">
+    <hr/>
+    <table style="width: 100%; font-size: 8pt; color: #7f8c8d;">
+        <tr>
+            <td>T1 LOGÍSTICA - REPORTE DE INCIDENCIA (INC-v1.0.0)</td>
+            <td style="text-align: right;">Página 1 de 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

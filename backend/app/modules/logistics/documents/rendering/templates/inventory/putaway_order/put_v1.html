@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ORDEN DE UBICACIÓN (PUT)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inventory/shared/inventory.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <div class="doc-org">{{ cmd.organization_name }} — {{ cmd.branch_name }}</div>
+    <div class="doc-title">ORDEN DE UBICACIÓN</div>
+    <div class="doc-meta">
+        <span>Código: {{ cmd.document_code or 'PUT-PREVIEW' }}</span>
+        <span>Versión plantilla: {{ cmd.template_version }}</span>
+        <span>Fecha: {{ now.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+    </div>
+</div>
+
+<!-- Estado -->
+<div style="margin-bottom:8px;">
+    <span class="status-badge status-{{ cmd.document_data.get('status','preview') | lower }}">
+        {{ cmd.document_data.get('status', 'PREVIEW') }}
+    </span>
+    {% if cmd.document_data.get('priority') %}
+    <span class="status-badge" style="background:#e67e22;">
+        PRIORIDAD: {{ cmd.document_data['priority'] }}
+    </span>
+    {% endif %}
+</div>
+
+<!-- Encabezado de operación -->
+<div class="inv-box">
+    <div class="inv-title">Información de la Operación</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Almacén:</strong> {{ cmd.document_data.get('warehouse_name', '—') }}</td>
+            <td><strong>Ref. NI:</strong> {{ cmd.document_data.get('inbound_note_reference', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Ref. AREC:</strong> {{ cmd.document_data.get('reception_reference', '—') }}</td>
+            <td><strong>Responsable:</strong> {{ cmd.document_data.get('responsible_user', '—') }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Producto -->
+<div class="inv-box">
+    <div class="inv-title">Producto</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>SKU:</strong> {{ cmd.document_data.get('sku', '—') }}</td>
+            <td><strong>Descripción:</strong> {{ cmd.document_data.get('description', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Cantidad:</strong> {{ cmd.document_data.get('quantity', '—') }} {{ cmd.document_data.get('unit', '') }}</td>
+            {% if cmd.document_data.get('lot_number') %}<td><strong>Lote:</strong> {{ cmd.document_data['lot_number'] }}</td>{% endif %}
+            {% if cmd.document_data.get('serial_number') %}<td><strong>Serie:</strong> {{ cmd.document_data['serial_number'] }}</td>{% endif %}
+        </tr>
+        {% if cmd.document_data.get('logistic_unit_code') %}
+        <tr><td colspan="2"><strong>Unidad Logística:</strong> {{ cmd.document_data['logistic_unit_code'] }}</td></tr>
+        {% endif %}
+    </table>
+</div>
+
+<!-- Ubicaciones -->
+<div class="inv-box">
+    <div class="inv-title">Ubicación</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Ubicación temporal origen:</strong> {{ cmd.document_data.get('source_location', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Ubicación sugerida destino:</strong>
+                <strong style="font-size:11pt; color:#1a3a5c;">
+                    {{ cmd.document_data.get('suggested_location', '—') }}
+                </strong>
+            </td>
+        </tr>
+        {% if cmd.document_data.get('selection_reason') %}
+        <tr><td><strong>Motivo de selección:</strong> {{ cmd.document_data['selection_reason'] }}</td></tr>
+        {% endif %}
+        {% if cmd.document_data.get('restrictions') %}
+        <tr><td style="color:#c0392b;"><strong>Restricciones:</strong> {{ cmd.document_data['restrictions'] }}</td></tr>
+        {% endif %}
+    </table>
+</div>
+
+<div class="inv-box" style="background:#fef9e7; border-color:#f39c12;">
+    <div style="font-size:8pt; color:#8e6718;">
+        <strong>PENDING_PHASE_043</strong> — Esta orden es un documento de preview.
+        El proceso real de putaway se implementará en la Fase 043.
+    </div>
+</div>
+
+{% if cmd.document_data.get('observations') %}
+<div class="inv-box">
+    <div class="inv-title">Observaciones</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<!-- Firma visual -->
+<table class="approval-chain" style="margin-top:12px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Planificador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Operador</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top:8px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">QR de demostración — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    PUT v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_043
+</div>
+</body>
+</html>

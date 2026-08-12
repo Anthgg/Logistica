@@ -1,0 +1,1 @@
+"""Transactional inbound notification outbox."""

@@ -1,0 +1,18 @@
+model_name: buffalo_l
+providers:
+  - CPUExecutionProvider
+embedding_dimension: 512
+detection_size:
+  width: 640
+  height: 640
+minimum_detection_score: 0.60
+template_strategy: normalized_mean
+similarity_metric: cosine
+minimum_enrollment_images: 3
+maximum_enrollment_images: 30
+maximum_impostor_pairs_per_identity: 500
+threshold_objective: eer
+target_far: 0.01
+random_seed: 42
+dataset_version: pilot-v0.1.0
+model_version: facial-arcface-v0.1.0

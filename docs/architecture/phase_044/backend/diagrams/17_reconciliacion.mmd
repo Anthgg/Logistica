@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant R as ReconciliationJob
+    participant DB as Movements
+    R->>DB: scan
+    R->>R: classify issues
+    R-->>R: results

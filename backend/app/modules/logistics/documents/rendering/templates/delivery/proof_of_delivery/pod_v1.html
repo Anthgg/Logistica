@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PRUEBA DE ENTREGA</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "delivery/shared/delivery.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">PRUEBA DE ENTREGA (POD)</div>
+                <div class="doc-code">{{ cmd.document_code or "POD-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos Generales de la Entrega</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Viaje Ref.:</td>
+        <td>{{ cmd.document_data.get('trip_reference', '') }}</td>
+        <td class="info-label">Fecha y Hora:</td>
+        <td><strong>{{ cmd.document_data.get('occurred_at', '') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Destino / Cliente:</td>
+        <td>{{ cmd.document_data.get('destination', {}).get('name', '') }}</td>
+        <td class="info-label">Resultado:</td>
+        <td>
+            {% set result = cmd.document_data.get('delivery_result', '') %}
+            {% if result == 'DELIVERED' %}
+            <span class="status-badge status-delivered">ENTREGADO CONFORME</span>
+            {% elif result == 'DELIVERED_WITH_OBSERVATIONS' %}
+            <span class="status-badge status-delivered">ENTREGADO CON OBSERVACIONES</span>
+            {% elif result == 'PARTIALLY_DELIVERED' %}
+            <span class="status-badge status-partial">ENTREGA PARCIAL</span>
+            {% else %}
+            <span class="status-badge status-rejected">{{ result }}</span>
+            {% endif %}
+        </td>
+    </tr>
+    <tr>
+        <td class="info-label">Dirección Entrega:</td>
+        <td colspan="3">{{ cmd.document_data.get('destination', {}).get('address', '') }}</td>
+    </tr>
+</table>
+
+{% if cmd.document_data.get('receiver_snapshot') %}
+<div class="section-title">Datos del Receptor Autorizado</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Nombre Completo:</td>
+        <td><strong>{{ cmd.document_data.get('receiver_snapshot', {}).get('full_name', '') }}</strong></td>
+        <td class="info-label">DNI / Documento:</td>
+        <td>{{ cmd.document_data.get('receiver_snapshot', {}).get('document_number_masked', '******') }} (Rol: {{ cmd.document_data.get('receiver_snapshot', {}).get('role_or_relationship', '-') }})</td>
+    </tr>
+    <tr>
+        <td class="info-label">Contacto:</td>
+        <td>Tlf: {{ cmd.document_data.get('receiver_snapshot', {}).get('phone_masked', '') }} | Email: {{ cmd.document_data.get('receiver_snapshot', {}).get('email_masked', '') }}</td>
+        <td class="info-label">Estado Validación:</td>
+        <td>Autorización: {{ cmd.document_data.get('receiver_snapshot', {}).get('authorization_status', '') }}</td>
+    </tr>
+</table>
+{% endif %}
+
+<div class="section-title">Ítems Entregados</div>
+<table class="delivery-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">Lín.</th>
+            <th style="width: 45%;">Descripción Producto</th>
+            <th style="width: 10%;">Planificado</th>
+            <th style="width: 10%;">Entregado</th>
+            <th style="width: 10%;">Rechazado</th>
+            <th style="width: 10%;">Pendiente</th>
+            <th style="width: 10%;">Unidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('delivery_items', []) %}
+        <tr>
+            <td style="text-align: center;">{{ item.line_number }}</td>
+            <td><strong>{{ item.product_snapshot.description }}</strong></td>
+            <td style="text-align: right;">{{ item.planned_quantity }}</td>
+            <td style="text-align: right;">{{ item.delivered_quantity }}</td>
+            <td style="text-align: right;">{{ item.rejected_quantity }}</td>
+            <td style="text-align: right;">{{ item.pending_quantity }}</td>
+            <td style="text-align: center;">{{ item.unit }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="section-title">Evidencia de Entrega Digital</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Firma Receptor:</td>
+        <td>
+            {% for sig in cmd.document_data.get('signatures', []) %}
+            <div><strong>{{ sig.signer_name }}</strong> ({{ sig.signer_role }}) - {{ sig.asset_reference }}</div>
+            {% else %}
+            <div>No capturada o protegida</div>
+            {% endfor %}
+        </td>
+        <td class="info-label">Validación OTP:</td>
+        <td>
+            {% set otp = cmd.document_data.get('otp_verification', {}) %}
+            {% if otp and otp.required %}
+            <div>Estado: <strong>{{ otp.result }}</strong> (Canal: {{ otp.channel or '-' }}, Intentos: {{ otp.attempts_count or 0 }})</div>
+            {% else %}
+            <div>No requerida por política</div>
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+{% if cmd.document_data.get('photos') %}
+<div class="section-title">Evidencias Fotográficas Adjuntas</div>
+<div class="evidence-gallery">
+    {% for photo in cmd.document_data.get('photos', []) %}
+    <div class="evidence-photo-box">
+        <div style="font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 4px; padding-bottom: 2px;">{{ photo.evidence_type }}</div>
+        <div>{{ photo.file_reference }}</div>
+        <div style="font-size: 7pt; color: #7f8c8d;">Estado: {{ photo.validation_status }}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<table class="footer-layout-table">
+    <tr>
+        <td class="footer-qr-cell">
+            {% if qr_b64 %}
+            <img class="qr-code-img" src="{{ qr_b64 }}" alt="Código QR de Documento" />
+            <div class="qr-code-lbl">Verificación de Vista Previa</div>
+            {% endif %}
+        </td>
+        <td class="footer-signatures-cell">
+            <div class="signature-line-container">
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Conductor Asignado</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Receptor (Firma de Conformidad)</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="page-footer">
+    <hr/>
+    <table style="width: 100%; font-size: 8pt; color: #7f8c8d;">
+        <tr>
+            <td>T1 LOGÍSTICA - PRUEBA DE ENTREGA (POD-v1.0.0)</td>
+            <td style="text-align: right;">Página 1 de 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

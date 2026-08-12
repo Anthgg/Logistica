@@ -1,0 +1,83 @@
+{
+  "phase_id": "025",
+  "phase_name": "Crear socios de negocio (Backend)",
+  "subsystem": "Logistics & ERP Master Data",
+  "version": "1.0.0",
+  "status": "APPROVED",
+  "created_at": "2026-07-28T17:00:00Z",
+  "architecture_pattern": "Multi-Role Party Master / Domain-Driven Design",
+  "tables_count": 16,
+  "tables": [
+    "business_partners",
+    "business_partner_roles",
+    "business_partner_supplier_profiles",
+    "business_partner_customer_profiles",
+    "business_partner_carrier_profiles",
+    "business_partner_tax_identifications",
+    "business_partner_addresses",
+    "business_partner_contacts",
+    "business_partner_evaluations",
+    "business_partner_evaluation_details",
+    "business_partner_documents",
+    "business_partner_compliance_records",
+    "business_partner_bank_accounts",
+    "business_partner_versions",
+    "business_partner_duplicates",
+    "business_partner_sequences"
+  ],
+  "supported_roles": [
+    "SUPPLIER",
+    "CUSTOMER",
+    "CARRIER"
+  ],
+  "key_components": {
+    "code_generator": "BusinessPartnerCodeService",
+    "tax_id_validator": "PeruvianRucValidator",
+    "duplicate_detector": "BusinessPartnerDuplicateDetection",
+    "compliance_resolver": "BusinessPartnerComplianceResolver",
+    "snapshot_provider": "BusinessPartnerSnapshotProvider"
+  },
+  "security": {
+    "rbac_permissions": [
+      "logistics.business_partners.create",
+      "logistics.business_partners.read",
+      "logistics.business_partners.update",
+      "logistics.business_partners.activate",
+      "logistics.business_partners.block",
+      "logistics.business_partner_roles.manage",
+      "logistics.business_partner_evaluations.create",
+      "logistics.business_partner_documents.verify"
+    ],
+    "step_up_authenticated_actions": [
+      "BP_STATUS_BLOCKED",
+      "OVERRIDE_DUPLICATE_WARNING",
+      "UPDATE_BANK_ACCOUNTS"
+    ]
+  },
+  "audit": {
+    "target_table": "logistics_audit_events",
+    "events_count": 18
+  },
+  "migration": {
+    "alembic_script": "p270110025dc_phase_025_business_partners.py"
+  },
+  "test_suite": {
+    "file": "tests/test_logistics_phase025.py",
+    "test_cases_count": 35,
+    "test_classes_count": 9
+  },
+  "performance": {
+    "p95_target_ms": 25,
+    "primary_indexes": [
+      "ix_bp_tax_lookup",
+      "ix_bp_org_status",
+      "ix_bp_legal_name_trgm"
+    ]
+  },
+  "downstream_integrations": [
+    { "phase": "026", "description": "Consulta Externa de Padrones SUNAT / RENIEC" },
+    { "phase": "031", "description": "Órdenes de Compra y Aprovisionamiento" },
+    { "phase": "041", "description": "Recepción de Mercadería y Citas de Almacén" },
+    { "phase": "061", "description": "Despacho Logístico, Transportistas y Guías de Remisión" }
+  ]
+}

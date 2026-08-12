@@ -1,0 +1,107 @@
+/* delivery.css - Impresión para documentos de entrega (POD, EP, RECH) */
+
+.delivery-header {
+    border-bottom: 2px solid #27ae60;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+}
+
+.delivery-title {
+    font-size: 18pt;
+    font-weight: bold;
+    color: #27ae60;
+    margin: 0;
+}
+
+.section-title {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #27ae60;
+    border-bottom: 1px solid #bdc3c7;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    padding-bottom: 3px;
+}
+
+/* Tablas compactas de entrega */
+.delivery-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    font-size: 9pt;
+}
+
+.delivery-table th {
+    background-color: #e8f5e9;
+    border: 1px solid #bdc3c7;
+    color: #27ae60;
+    font-weight: bold;
+    text-align: left;
+    padding: 6px;
+}
+
+.delivery-table td {
+    border: 1px solid #bdc3c7;
+    padding: 6px;
+}
+
+.delivery-table tr:nth-child(even) {
+    background-color: #fbfbfb;
+}
+
+/* Firmas y Recepción */
+.signatures-container {
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.signature-box {
+    width: 45%;
+    border-top: 1px solid #bdc3c7;
+    text-align: center;
+    padding-top: 8px;
+    font-size: 9pt;
+    margin-top: 50px;
+}
+
+/* Evidencia de ubicación y fotos */
+.evidence-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.evidence-photo-box {
+    border: 1px solid #bdc3c7;
+    padding: 5px;
+    background-color: #fafafa;
+    text-align: center;
+    width: 150px;
+    font-size: 8pt;
+}
+
+/* Statuses */
+.status-badge {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 8pt;
+    font-weight: bold;
+}
+
+.status-delivered {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-partial {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-rejected {
+    background-color: #ffebee;
+    color: #c62828;
+}

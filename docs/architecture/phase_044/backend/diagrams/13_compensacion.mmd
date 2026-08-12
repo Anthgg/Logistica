@@ -1,0 +1,9 @@
+sequenceDiagram
+    participant Req as CompensationRequest
+    participant Orig as Original MOV
+    participant Comp as Compensation MOV
+    Req->>Orig: request
+    Orig-->>Req: validate
+    Req->>Comp: invert source/destination
+    Comp->>Orig: reference (compensation_for_movement_id)
+    Orig->>Orig: status = COMPENSATED

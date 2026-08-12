@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant Q as RunningQuantityService
+    participant DB as Database
+    Q->>DB: filter by exact dimension
+    Q->>Q: replay lines in sequence order
+    Q->>Q: compute signed_delta + running_quantity

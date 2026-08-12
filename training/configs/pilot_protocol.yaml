@@ -1,0 +1,35 @@
+protocol_version: pilot-protocol-v0.1.0
+pilot_participants: 5
+minimum_sessions_per_participant: 4
+scenarios:
+  - register_shipment
+  - search_shipment
+  - update_shipment_status
+  - assign_route
+  - register_inventory_movement
+  - report_incident
+  - review_dashboard
+  - mixed_operations
+expected_session_duration:
+  register_shipment: [180, 600]
+  search_shipment: [180, 600]
+  update_shipment_status: [180, 600]
+  assign_route: [180, 600]
+  register_inventory_movement: [180, 600]
+  report_incident: [180, 600]
+  review_dashboard: [180, 600]
+  mixed_operations: [600, 900]
+facial_capture_interval_seconds: 5
+behavioral_batch_interval_seconds: 3
+allowed_pad_attack_types:
+  - none
+  - printed_photo
+  - screen_photo
+  - replayed_video
+minimum_face_captures: 1
+minimum_behavioral_events: 20
+minimum_session_duration_seconds: 30
+maximum_session_error_rate: 0.10
+consent_version: v1-pilot
+random_seed: 20260724
+session_annotations: {}

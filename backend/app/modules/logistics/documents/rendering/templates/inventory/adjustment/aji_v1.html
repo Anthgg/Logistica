@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ACTA DE AJUSTE DE INVENTARIO (AJI)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inventory/shared/inventory.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <div class="doc-org">{{ cmd.organization_name }} — {{ cmd.branch_name }}</div>
+    <div class="doc-title">ACTA DE AJUSTE DE INVENTARIO</div>
+    <div class="doc-meta">
+        <span>Código: {{ cmd.document_code or 'AJI-PREVIEW' }}</span>
+        <span>Versión: {{ cmd.template_version }}</span>
+        <span>Fecha: {{ now.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+    </div>
+</div>
+
+<div style="margin-bottom:8px;">
+    <span class="status-badge" style="background:#1a3a5c;">
+        {{ cmd.document_data.get('adjustment_type', 'POSITIVE_ADJUSTMENT') }}
+    </span>
+    <span class="status-badge status-{{ cmd.document_data.get('approval_status','preview') | lower }}">
+        {{ cmd.document_data.get('approval_status', 'PREVIEW') }}
+    </span>
+</div>
+
+<!-- Información general -->
+<div class="inv-box">
+    <div class="inv-title">Información del Ajuste</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>Almacén:</strong> {{ cmd.document_data.get('warehouse_name', '—') }}</td>
+            <td><strong>Ubicación:</strong> {{ cmd.document_data.get('location_code', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Solicitante:</strong> {{ cmd.document_data.get('requested_by', '—') }}</td>
+            <td><strong>Fecha solicitud:</strong> {{ cmd.document_data.get('request_date', now.strftime('%Y-%m-%d')) }}</td>
+        </tr>
+    </table>
+</div>
+
+<!-- Producto -->
+<div class="inv-box">
+    <div class="inv-title">Producto</div>
+    <table style="width:100%; font-size:8.5pt;">
+        <tr>
+            <td><strong>SKU:</strong> {{ cmd.document_data.get('sku', '—') }}</td>
+            <td><strong>Descripción:</strong> {{ cmd.document_data.get('description', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Lote:</strong> {{ cmd.document_data.get('lot_number', '—') }}</td>
+            <td><strong>Estado stock:</strong> {{ cmd.document_data.get('stock_state', '—') }}</td>
+        </tr>
+        <tr>
+            <td><strong>Unidad:</strong> {{ cmd.document_data.get('unit', 'UND') }}</td>
+            {% if cmd.document_data.get('serial_number') %}
+            <td><strong>Serie:</strong> {{ cmd.document_data['serial_number'] }}</td>
+            {% endif %}
+        </tr>
+    </table>
+</div>
+
+<!-- Cálculo del ajuste -->
+<div class="adjustment-calc">
+    <div class="inv-title" style="color:#1e8449;">Cálculo del Ajuste</div>
+    <table style="width:100%; font-size:9pt; border-collapse:collapse;">
+        <tr>
+            <td style="padding:3px 8px;"><span class="adj-label">Cantidad registrada:</span></td>
+            <td style="text-align:right; padding:3px 8px;">
+                <strong class="qty-expected">{{ cmd.document_data.get('recorded_quantity', '0.00') }}</strong>
+                {{ cmd.document_data.get('unit', 'UND') }}
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:3px 8px;"><span class="adj-label">Cantidad verificada:</span></td>
+            <td style="text-align:right; padding:3px 8px;">
+                <strong class="qty-counted">{{ cmd.document_data.get('verified_quantity', '0.00') }}</strong>
+                {{ cmd.document_data.get('unit', 'UND') }}
+            </td>
+        </tr>
+        <tr style="border-top:2px solid #27ae60;">
+            <td style="padding:3px 8px;"><span class="adj-label">Diferencia (ajuste):</span></td>
+            <td style="text-align:right; padding:3px 8px;">
+                {% set adj = cmd.document_data.get('adjustment_quantity', '0.00') | string %}
+                {% if adj.startswith('-') %}
+                <strong class="adj-negative">{{ adj }} {{ cmd.document_data.get('unit', 'UND') }}</strong>
+                {% else %}
+                <strong class="adj-positive">+{{ adj }} {{ cmd.document_data.get('unit', 'UND') }}</strong>
+                {% endif %}
+            </td>
+        </tr>
+        {% if cmd.document_data.get('projected_quantity') %}
+        <tr>
+            <td style="padding:3px 8px; color:#7f8c8d;"><em>Saldo resultante proyectado:</em></td>
+            <td style="text-align:right; padding:3px 8px; color:#7f8c8d;">
+                <em>{{ cmd.document_data['projected_quantity'] }} {{ cmd.document_data.get('unit', 'UND') }}</em>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+    {% if cmd.document_data.get('show_economic_impact') %}
+    <div style="margin-top:6px; font-size:8pt; border-top:1px solid #a9dfbf; padding-top:4px;">
+        <strong>Valor unitario:</strong> {{ cmd.document_data.get('unit_value', '—') }}<br>
+        <strong>Impacto económico:</strong> {{ cmd.document_data.get('economic_impact', '—') }}
+    </div>
+    {% else %}
+    <div class="sensitivity-notice">Impacto económico — requiere permiso logistics.inventory_documents.read_sensitive</div>
+    {% endif %}
+</div>
+
+<!-- Motivo y Causa Raíz -->
+<div class="inv-box">
+    <div class="inv-title">Motivo y Causa Raíz</div>
+    <div style="font-size:8.5pt;">
+        <strong>Motivo:</strong> {{ cmd.document_data.get('reason', '—') }}<br>
+        {% if cmd.document_data.get('root_cause') %}
+        <strong>Causa raíz:</strong> {{ cmd.document_data['root_cause'] }}
+        {% endif %}
+    </div>
+</div>
+
+{% if cmd.document_data.get('evidence_references') %}
+<div class="inv-box">
+    <div class="inv-title">Evidencias</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['evidence_references'] | join(', ') if cmd.document_data['evidence_references'] is iterable and cmd.document_data['evidence_references'] is not string else cmd.document_data['evidence_references'] }}</div>
+</div>
+{% endif %}
+
+<!-- Step-Up Referencial -->
+<div class="stepup-block">
+    ⚡ Verificación reforzada requerida para ejecución — PENDING_PHASE_047
+</div>
+
+<div class="inv-box" style="background:#fef9e7; border-color:#f39c12;">
+    <div style="font-size:8pt; color:#8e6718;">
+        <strong>PENDING_PHASE_047</strong> — Vista previa. El ajuste real de inventario y el movimiento compensatorio se implementarán en la Fase 047. Este documento no modifica saldos.
+    </div>
+</div>
+
+{% if cmd.document_data.get('observations') %}
+<div class="inv-box">
+    <div class="inv-title">Observaciones</div>
+    <div style="font-size:8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<!-- Cadena de aprobación -->
+<table class="approval-chain" style="margin-top:12px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Solicitante</div>
+            <div style="font-size:8pt; color:#555;">{{ cmd.document_data.get('requested_by', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Revisor</div>
+            <div style="font-size:8pt; color:#555;">{{ cmd.document_data.get('reviewer', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Aprobador</div>
+            <div style="font-size:8pt; color:#555;">{{ cmd.document_data.get('approver', '—') }}</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top:8px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">QR de demostración — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    AJI v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_047
+</div>
+</body>
+</html>

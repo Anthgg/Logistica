@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CONTROL VEHICULAR DE TRANSPORTE</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "transport/shared/transport.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">CONTROL VEHICULAR DE TRANSPORTE</div>
+                <div class="doc-code">{{ cmd.document_code or "CVT-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos de la Inspección Preoperacional</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Placa de Vehículo:</td>
+        <td><strong>{{ cmd.document_data.get('vehicle_snapshot', {}).get('plate', '') }}</strong></td>
+        <td class="info-label">Inspeccionado por:</td>
+        <td>{{ cmd.document_data.get('inspected_by', '') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Conductor Asignado:</td>
+        <td>{{ cmd.document_data.get('driver_snapshot', {}).get('full_name', '') }}</td>
+        <td class="info-label">Fecha y Hora:</td>
+        <td>{{ cmd.document_data.get('inspected_at', '') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Lectura Odómetro:</td>
+        <td>{{ cmd.document_data.get('odometer', '-') }} km</td>
+        <td class="info-label">Nivel Combustible:</td>
+        <td>{{ cmd.document_data.get('fuel_level', '-') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Dictamen General:</td>
+        <td>
+            {% set vstate = cmd.document_data.get('verification_state', '') %}
+            {% if vstate == 'FIT_FOR_OPERATION' %}
+            <strong class="result-pass">APTO PARA OPERAR</strong>
+            {% elif vstate == 'FIT_WITH_OBSERVATIONS' %}
+            <strong class="result-observed">APTO CON OBSERVACIONES</strong>
+            {% else %}
+            <strong class="result-fail">NO APTO PARA OPERAR</strong>
+            {% endif %}
+        </td>
+        <td class="info-label">Viaje Ref.:</td>
+        <td>{{ cmd.document_data.get('trip_reference', '') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Lista de Chequeo Vehicular</div>
+<table class="transport-table">
+    <thead>
+        <tr>
+            <th style="width: 25%;">Categoría</th>
+            <th style="width: 40%;">Punto Inspeccionado</th>
+            <th style="width: 15%;">Resultado</th>
+            <th style="width: 20%;">Observación</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('checklist', []) %}
+        <tr>
+            <td>{{ item.category }}</td>
+            <td><strong>{{ item.label }}</strong> {% if item.required %}<span style="color:red;">*</span>{% endif %}</td>
+            <td style="text-align: center;">
+                {% if item.result == 'PASS' %}
+                <span class="result-pass">✔ PASA</span>
+                {% elif item.result == 'FAIL' %}
+                <span class="result-fail">✘ FALLA</span>
+                {% elif item.result == 'OBSERVED' %}
+                <span class="result-observed">⚠ OBS</span>
+                {% else %}
+                <span style="color: #7f8c8d;">-</span>
+                {% endif %}
+            </td>
+            <td>{{ item.observation or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if cmd.document_data.get('notes') %}
+<div class="section-title">Notas y Observaciones Generales</div>
+<p style="font-size: 9pt; background-color: #f9f9f9; padding: 8px; border: 1px solid #e0e0e0;">
+    {{ cmd.document_data.get('notes') }}
+</p>
+{% endif %}
+
+<table class="footer-layout-table">
+    <tr>
+        <td class="footer-qr-cell">
+            {% if qr_b64 %}
+            <img class="qr-code-img" src="{{ qr_b64 }}" alt="Código QR de Documento" />
+            <div class="qr-code-lbl">Verificación de Vista Previa</div>
+            {% endif %}
+        </td>
+        <td class="footer-signatures-cell">
+            <div class="signature-line-container">
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Inspector de Patio / Almacén</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Conductor (Recibo Conforme)</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="page-footer">
+    <hr/>
+    <table style="width: 100%; font-size: 8pt; color: #7f8c8d;">
+        <tr>
+            <td>T1 LOGÍSTICA - CONTROL VEHICULAR (CVT-v1.0.0)</td>
+            <td style="text-align: right;">Página 1 de 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

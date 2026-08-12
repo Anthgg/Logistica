@@ -1,0 +1,37 @@
+{
+  "phase": "013",
+  "name": "Diseñar e implementar series y talonarios digitales",
+  "domain": "logistics.documents.series",
+  "version": "1.0.0",
+  "status": "COMPLETED",
+  "sequence_scope": "TYPE_SITE_YEAR",
+  "concurrency_strategy": "SELECT FOR UPDATE",
+  "idempotency_strategy": "SHA-256 Request Hashing",
+  "boundaries": {
+    "public_next_number_endpoint_created": false,
+    "sequence_recycling_allowed": false,
+    "pdf_generated": false,
+    "html_css_templates_created": false,
+    "frontend_modified": false,
+    "phase_014_started": false
+  },
+  "models": [
+    "DocumentSeriesModel",
+    "DocumentTalonarioModel",
+    "DocumentNumberModel",
+    "IdempotencyRecordModel"
+  ],
+  "endpoints": [
+    "/api/logistics/document-series",
+    "/api/logistics/document-series/{series_id}",
+    "/api/logistics/document-series/{series_id}/activate",
+    "/api/logistics/document-series/{series_id}/suspend",
+    "/api/logistics/document-series/{series_id}/close",
+    "/api/logistics/document-series/{series_id}/talonarios",
+    "/api/logistics/document-series/{series_id}/numbers",
+    "/api/logistics/document-talonarios/{talonario_id}",
+    "/api/logistics/document-talonarios/{talonario_id}/numbers",
+    "/api/logistics/document-talonarios/{talonario_id}/manifest",
+    "/api/logistics/document-talonarios/{talonario_id}/cancel"
+  ]
+}

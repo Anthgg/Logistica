@@ -1,0 +1,69 @@
+feature_columns:
+  - dwell_mean
+  - dwell_std
+  - dwell_median
+  - dwell_min
+  - dwell_max
+  - dwell_p25
+  - dwell_p75
+  - flight_mean
+  - flight_std
+  - flight_median
+  - interval_mean
+  - interval_std
+  - typing_event_rate
+  - correction_ratio
+  - modifier_ratio
+  - navigation_ratio
+  - idle_ratio
+  - burst_count
+  - mean_burst_length
+  - maximum_pause_ms
+  - active_time_ratio
+  - movement_count
+  - click_count
+  - scroll_count
+  - pointer_down_count
+  - pointer_up_count
+  - total_distance
+  - mean_velocity
+  - velocity_std
+  - maximum_velocity
+  - mean_acceleration
+  - acceleration_std
+  - direction_change_count
+  - click_rate
+  - scroll_rate
+  - mouse_idle_ratio
+  - path_straightness
+  - normalized_x_mean
+  - normalized_x_std
+  - normalized_y_mean
+  - normalized_y_std
+  - movement_active_time_ratio
+minimum_train_windows_per_user: 20
+minimum_validation_windows_per_user: 5
+minimum_validation_impostor_windows: 5
+architecture:
+  hidden_layers:
+    - 32
+    - 16
+  latent_dimension: 8
+  activation: relu
+  output_activation: linear
+  dropout: 0.10
+  l2_regularization: 0.0001
+batch_size: 16
+epochs: 50
+learning_rate: 0.001
+early_stopping_patience: 6
+reduce_lr_patience: 3
+validation_fraction_from_train: 0.20
+reconstruction_loss: mse
+threshold_method: percentile
+threshold_percentile: 95.0
+target_far: 0.05
+missing_value_strategy: reject
+random_seed: 42
+dataset_version: pilot-v0.1.0
+model_version_prefix: behavioral-ae

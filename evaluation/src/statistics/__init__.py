@@ -1,0 +1,1 @@
+"""Análisis estadístico reproducible."""

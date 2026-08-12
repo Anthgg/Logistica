@@ -1,0 +1,20 @@
+allowed_formats: [JPEG, WEBP]
+maximum_file_size_bytes: 1048576
+minimum_width: 64
+minimum_height: 64
+maximum_width: 8192
+maximum_height: 8192
+minimum_brightness_mean: 35.0
+maximum_brightness_mean: 225.0
+minimum_contrast: 20.0
+minimum_laplacian_variance: 50.0
+minimum_face_area_ratio: 0.05
+face_border_margin_ratio: 0.02
+minimum_capture_interval_seconds: 2.0
+maximum_rejection_rate: 0.25
+reject_hidden_tab: true
+face_detector:
+  type: opencv_haar
+  scale_factor: 1.1
+  min_neighbors: 5
+  minimum_size: [30, 30]

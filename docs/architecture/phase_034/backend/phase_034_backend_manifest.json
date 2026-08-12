@@ -1,0 +1,152 @@
+{
+  "phase_id": "034",
+  "name": "Implementar órdenes de compra (Backend)",
+  "bounded_context": "app/modules/logistics/procurement/purchase_orders",
+  "status": "COMPLETED",
+  "completed_at": "2026-07-31T00:45:00-05:00",
+  "architecture": {
+    "pattern": "Domain-Driven Design (DDD) & Clean Architecture",
+    "layers": [
+      "domain",
+      "application",
+      "infrastructure",
+      "presentation"
+    ],
+    "table_prefix": "po_",
+    "precision_standard": {
+      "monetary_type": "Numeric(28, 10)",
+      "quantity_type": "Numeric(28, 10)",
+      "tax_rate_type": "Numeric(12, 8)",
+      "float_allowed": false,
+      "rounding_mode": "ROUND_HALF_UP"
+    }
+  },
+  "security": {
+    "rbac_permissions": [
+      "logistics.purchase_orders.read",
+      "logistics.purchase_orders.create",
+      "logistics.purchase_orders.update",
+      "logistics.purchase_orders.submit",
+      "logistics.purchase_orders.approve",
+      "logistics.purchase_orders.reject",
+      "logistics.purchase_orders.return",
+      "logistics.purchase_orders.cancel"
+    ],
+    "step_up_authentication": {
+      "action": "logistics.purchase_orders.approve",
+      "required_factor": "COMBINED_FACE_PAD"
+    },
+    "self_approval_prohibition": {
+      "rule": "creator_user_id != approver_user_id",
+      "exception_class": "PurchaseOrderSelfApprovalDenied"
+    }
+  },
+  "database": {
+    "migration_revision": "w340110034dc",
+    "parent_revision": "v330110033dc",
+    "migration_file": "backend/alembic/versions/w340110034dc_phase_034_purchase_orders.py",
+    "tables_count": 16,
+    "tables": [
+      "po_purchase_orders",
+      "po_purchase_order_revisions",
+      "po_purchase_order_lines",
+      "po_purchase_order_source_allocations",
+      "po_purchase_order_source_variances",
+      "po_purchase_order_tax_components",
+      "po_purchase_order_charges",
+      "po_purchase_order_delivery_schedules",
+      "po_purchase_order_delivery_schedule_lines",
+      "po_purchase_order_approval_history",
+      "po_purchase_order_document_refs",
+      "po_purchase_order_notes",
+      "po_purchase_order_terms",
+      "po_purchase_order_contacts",
+      "po_purchase_order_custom_fields",
+      "po_purchase_order_audit_logs"
+    ]
+  },
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/api/logistics/procurement/purchase-orders/plan-from-cco",
+      "rbac_permission": "logistics.purchase_orders.create"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/procurement/purchase-orders/generate",
+      "rbac_permission": "logistics.purchase_orders.create"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/procurement/purchase-orders/",
+      "rbac_permission": "logistics.purchase_orders.read"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/procurement/purchase-orders/{id}",
+      "rbac_permission": "logistics.purchase_orders.read"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/procurement/purchase-orders/{id}/submit-for-approval",
+      "rbac_permission": "logistics.purchase_orders.submit"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/procurement/purchase-orders/{id}/approve",
+      "rbac_permission": "logistics.purchase_orders.approve",
+      "step_up_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/procurement/purchase-orders/{id}/reject",
+      "rbac_permission": "logistics.purchase_orders.reject"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/procurement/purchase-orders/{id}/return-for-changes",
+      "rbac_permission": "logistics.purchase_orders.return"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/procurement/purchase-orders/{id}/cancel",
+      "rbac_permission": "logistics.purchase_orders.cancel"
+    }
+  ],
+  "audit_events": [
+    "logistics.purchase_order.created_from_decision",
+    "logistics.purchase_order.submitted_for_approval",
+    "logistics.purchase_order.approved",
+    "logistics.purchase_order.rejected",
+    "logistics.purchase_order.returned_for_changes",
+    "logistics.purchase_order.cancelled"
+  ],
+  "test_suite": {
+    "file": "backend/tests/test_logistics_phase034.py",
+    "total_tests": 6,
+    "passed_tests": 6,
+    "success_rate_percentage": 100.0
+  },
+  "documentation_artifacts": [
+    "README.md",
+    "01_auditoria_ordenes_compra.md",
+    "02_modelos_db_po.md",
+    "03_dinero_cantidades_decimal.md",
+    "04_codificacion_atomic_code.md",
+    "05_desacoplamiento_aprobacion.md",
+    "06_prohibicion_autoaprobacion.md",
+    "07_autenticacion_step_up.md",
+    "08_snapshots_inmutables.md",
+    "09_planificador_generacion_cco.md",
+    "10_trazabilidad_asignaciones.md",
+    "11_variaciones_sustituciones.md",
+    "12_desglose_impuestos_cargos.md",
+    "13_programacion_entregas_parciales.md",
+    "14_endpoints_rest.md",
+    "15_auditoria_eventos.md",
+    "16_migracion_alembic.md",
+    "17_pruebas_unitarias_integracion.md",
+    "18_integracion_futura_fase_035_emision.md",
+    "phase_034_backend_manifest.json"
+  ]
+}

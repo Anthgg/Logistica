@@ -1,0 +1,49 @@
+# 14 — Ejemplos Aprobados por Familia Documental
+
+## Canonical Approved Examples (`TIPO-SEDE-AÑO-CORRELATIVO`)
+
+### Compras
+- `REQ-LIM-2026-000001`
+- `SCOT-LIM-2026-000001`
+- `CCO-LIM-2026-000001`
+- `OC-LIM-2026-000001`
+
+### Ingreso y Recepción
+- `CIT-LIM-2026-000001`
+- `CPV-LIM-2026-000001`
+- `AREC-LIM-2026-000001`
+- `NI-LIM-2026-000001`
+- `DIF-LIM-2026-000001`
+
+### Calidad
+- `NC-LIM-2026-000001`
+
+### Inventario
+- `PUT-LIM-2026-000001`
+- `MOV-LIM-2026-000001`
+- `AJI-LIM-2026-000001`
+- `CNT-LIM-2026-000001`
+- `TRA-LIM-2026-000001`
+
+### Salida
+- `PED-LIM-2026-000001`
+- `ODS-LIM-2026-000001`
+- `PICK-LIM-2026-000001`
+- `PACK-LIM-2026-000001`
+
+### Despacho
+- `MAN-LIM-2026-000001`
+- `ADSP-LIM-2026-000001`
+
+### Transporte
+- `HV-LIM-2026-000001`
+- `HR-LIM-2026-000001`
+- `INC-LIM-2026-000001`
+
+### Entrega
+- `POD-LIM-2026-000001`
+- `EP-LIM-2026-000001`
+- `RECH-LIM-2026-000001`
+
+### Logística Inversa
+- `DEV-LIM-2026-000001`

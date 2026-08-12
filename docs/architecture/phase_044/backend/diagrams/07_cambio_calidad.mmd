@@ -1,0 +1,6 @@
+sequenceDiagram
+    participant S as Position QUARANTINE
+    participant D as Position APPROVED
+    participant Mv as MoveMent (STATE_CHANGE)
+    S->>D: same base_quantity, new quality_state
+    Mv->>Mv: preserve quantity, change state

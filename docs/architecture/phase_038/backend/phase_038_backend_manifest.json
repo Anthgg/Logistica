@@ -1,0 +1,37 @@
+{
+  "phase": "038",
+  "scope": "backend-only dock assignment and unloading execution",
+  "revision": "ab380110038dc",
+  "down_revision": "aa370110037dc",
+  "table_count": 21,
+  "permission_count": 31,
+  "required_document_count": 52,
+  "mermaid_diagram_count": 19,
+  "boundaries": {
+    "phase_039_receiving": false,
+    "received_quantities": false,
+    "inventory_movements": false,
+    "ai_recommendation": false
+  },
+  "pending_decisions": [
+    "PENDIENTE_APROBACION_DB_BTREE_GIST",
+    "PENDIENTE_CATALOGO_DOCUMENTAL",
+    "PENDIENTE_CATALOGO_EQUIPOS",
+    "PENDIENTE_POLITICA_OVERRIDE_PRECINTO"
+  ],
+  "principal_files": [
+    "backend/app/modules/logistics/inbound/dock_operations",
+    "backend/alembic/versions/ab380110038dc_phase_038_dock_operations.py",
+    "backend/app/modules/logistics/rbac/permission_catalog.py",
+    "backend/app/modules/logistics/security/step_up_policy.py",
+    "backend/app/modules/logistics/audit/catalog.py",
+    "backend/app/models/registry.py",
+    "backend/app/modules/logistics/inbound/router.py",
+    "backend/tests/test_logistics_phase038.py"
+  ],
+  "adapted_dependencies": [
+    "Phase 037 effective ORM model registration",
+    "Phase 037 obsolete unused schema import",
+    "Phase 036 transactional idempotency and outbox reuse"
+  ]
+}

@@ -1,0 +1,1 @@
+{"project":"Proyecto T1","phase":"Fase 008","version":"1.0.0","new_endpoints":["GET /api/logistics/me","POST /api/logistics/me/context"],"components":["LogisticsPrincipal","LogisticsAccessResolver","get_logistics_principal","require_logistics_access"],"tests":{"total":109,"passed":109,"failed":0},"no_duplicate_auth":true,"frontend_modified":false,"phase_009_started":false}

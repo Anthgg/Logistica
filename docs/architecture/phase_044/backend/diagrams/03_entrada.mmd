@@ -1,0 +1,7 @@
+sequenceDiagram
+    participant Ext as External Boundary (SUPPLIER)
+    participant Pos as InventoryPosition (INTERNAL_LOCATION)
+    participant Mv as MoveMent (ENTRY)
+    Ext->>Pos: base_quantity += qty
+    Pos->>Mv: source = Ext, destination = Pos
+    Mv->>Mv: hash chain

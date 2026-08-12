@@ -1,0 +1,70 @@
+{
+  "project": "Proyecto T1 - Frontend Logístico",
+  "phase": "Fase 003 - Definición del Alcance Logístico del Frontend y Contratos de Integración",
+  "version": "1.0.0",
+  "created_at": "2026-07-26T05:00:00Z",
+  "ui_framework": "React SPA (Vanilla CSS / Design System Tokens)",
+  "map_library": "MapLibre GL JS",
+  "http_client": "Axios / Fetch con Interceptor CSRF + Step-Up",
+  "modules": [
+    "DashboardOverview",
+    "ProductsMasterView",
+    "WarehousesMasterView",
+    "BusinessPartnersView",
+    "FleetAndDriversView",
+    "PurchaseRequestsView",
+    "PurchaseOrderApprovalView",
+    "GateControlView",
+    "DockReceptionView",
+    "QualityInspectionView",
+    "StockKardexView",
+    "InventoryAdjustmentsView",
+    "OutboundOrdersView",
+    "PickingExecutionView",
+    "PackingStationView",
+    "DispatchConsoleView",
+    "RoutePlannerView",
+    "LiveGpsMonitorView",
+    "DriverAppMobileView",
+    "ReturnsAndIncidentsView",
+    "SecurityAuditView",
+    "ExecutiveKpiView"
+  ],
+  "mvp_distribution": {
+    "mvp_1": [
+      "AppLayout con Score de Confianza",
+      "Maestros de Productos, Sedes y Socios",
+      "Consulta RUC SUNAT UI",
+      "Visor Audit Log"
+    ],
+    "mvp_2": [
+      "Vistas Compras y Aprobación",
+      "Vistas Recepción en Garita y Muelle",
+      "Inspección de Calidad",
+      "Stock Kardex y Ajustes con Step-Up",
+      "Estaciones de Picking, Packing LPN y Despacho PDF"
+    ],
+    "mvp_3": [
+      "Planificador gráfico de rutas",
+      "Consola de Mapa Interactivo MapLibre GL",
+      "App Móvil Conductor (GPS + POD)",
+      "Vistas de Devoluciones e Incidencias"
+    ],
+    "consolidacion": [
+      "Tablero de KPIs Ejecutivos",
+      "Exportaciones masivas a CSV/Excel"
+    ]
+  },
+  "exclusions": [
+    "Diseñador de Reportes Drag-and-Drop / WYSIWYG",
+    "Visualización 3D de Pasillos de Almacén",
+    "Modo Fuera de Línea Completo para Consola Web Administrativa",
+    "Personalización Dinámica de Temas por Usuario"
+  ],
+  "execution_constraints": {
+    "code_modified": false,
+    "components_created": false,
+    "css_files_created": false,
+    "phase_004_advanced": false
+  }
+}

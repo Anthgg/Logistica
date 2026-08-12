@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>MANIFIESTO DE CARGA (MAN)</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "dispatch/shared/dispatch.css" %}
+        {% include "outbound/shared/outbound.css" %}
+    </style>
+</head>
+<body>
+{% if cmd.watermark_text %}<div class="watermark">{{ cmd.watermark_text }}</div>{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">MANIFIESTO DE CARGA</div>
+                <div class="doc-code">{{ cmd.document_code or 'MAN-PREVIEW' }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_data.get('status','preview') | lower }}">
+                        {{ cmd.document_data.get('status', 'PREVIEW') }}
+                    </span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Información de Despacho y Transporte</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Ref. Despacho:</td>
+        <td>{{ cmd.document_data.get('dispatch_reference', '—') }}</td>
+        <td class="info-label">Fecha Planificada Salida:</td>
+        <td>{{ cmd.document_data.get('planned_departure_at', '—') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Almacén Origen:</td>
+        <td>{{ cmd.document_data.get('warehouse', '—') }}</td>
+        <td class="info-label">Muelle / Puerta de Carga:</td>
+        <td>{{ cmd.document_data.get('dock', '—') }}</td>
+    </tr>
+</table>
+
+<!-- Componente Vehículo e Información de Conductor -->
+<div class="outbound-box">
+    <div class="outbound-box-title">Datos del Conductor y Vehículo (PENDING_PHASE_027 / PENDING_PHASE_029)</div>
+    <div class="transport-info-grid">
+        <div class="transport-info-row">
+            <div class="transport-info-cell" style="font-weight: bold; width: 20%;">Conductor:</div>
+            <div class="transport-info-cell" style="width: 30%;">{{ cmd.document_data.get('driver_snapshot', {}).get('full_name', '—') }}</div>
+            <div class="transport-info-cell" style="font-weight: bold; width: 20%;">Vehículo / Placa:</div>
+            <div class="transport-info-cell" style="width: 30%;">
+                {{ cmd.document_data.get('vehicle_snapshot', {}).get('plate', '—') }} 
+                ({{ cmd.document_data.get('vehicle_snapshot', {}).get('vehicle_type', '—') }})
+            </div>
+        </div>
+        <div class="transport-info-row">
+            <div class="transport-info-cell" style="font-weight: bold;">DNI Conductor:</div>
+            <div class="transport-info-cell">
+                <span class="sensitive-mask">
+                    {{ cmd.document_data.get('driver_snapshot', {}).get('document_number', '—') }}
+                </span>
+            </div>
+            <div class="transport-info-cell" style="font-weight: bold;">Categoría Licencia:</div>
+            <div class="transport-info-cell">{{ cmd.document_data.get('driver_snapshot', {}).get('license_category', '—') }}</div>
+        </div>
+        <div class="transport-info-row">
+            <div class="transport-info-cell" style="font-weight: bold;">Licencia N°:</div>
+            <div class="transport-info-cell">
+                <span class="sensitive-mask">
+                    {{ cmd.document_data.get('driver_snapshot', {}).get('license_number', '—') }}
+                </span>
+            </div>
+            <div class="transport-info-cell" style="font-weight: bold;">Verificación Transporte:</div>
+            <div class="transport-info-cell">
+                {% set v_state = cmd.document_data.get('driver_snapshot', {}).get('verification_state', 'PENDING') %}
+                <span class="verification-badge verification-{{ v_state | lower }}">{{ v_state }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Componente Validación de Capacidad -->
+{% if cmd.document_data.get('capacity_validation') %}
+<div class="capacity-validation-box">
+    <div class="outbound-box-title" style="color: #475569;">Validación de Capacidad Vehicular (VehicleCapacityValidationResult)</div>
+    {% set cap = cmd.document_data['capacity_validation'] %}
+    <div class="capacity-metric">
+        <strong>Peso Planificado:</strong> {{ cap.get('planned_weight', '0.00') }} kg 
+        {% if cap.get('capacity_weight') %}
+            / Capacidad: {{ cap.get('capacity_weight') }} kg 
+            (Utilización: <span class="capacity-percent">{{ cap.get('weight_utilization_percentage', '0.0') }}%</span>)
+        {% endif %}
+    </div>
+    <div class="capacity-metric">
+        <strong>Volumen Planificado:</strong> {{ cap.get('planned_volume', '0.00') }} m³ 
+        {% if cap.get('capacity_volume') %}
+            / Capacidad: {{ cap.get('capacity_volume') }} m³ 
+            (Utilización: <span class="capacity-percent">{{ cap.get('volume_utilization_percentage', '0.0') }}%</span>)
+        {% endif %}
+    </div>
+    <div style="margin-top: 6px;">
+        {% set status_val = cap.get('validation_status', 'NOT_EVALUATED') %}
+        <span class="capacity-status-badge capacity-{{ status_val | lower | replace('_','-') }}">{{ status_val }}</span>
+        {% if cap.get('warnings') %}
+            <span style="color: #dc2626; font-size: 8pt; margin-left: 8px; font-weight: bold;">
+                ⚠ {{ cap.get('warnings') | join(', ') if cap.get('warnings') is iterable and cap.get('warnings') is not string else cap.get('warnings') }}
+            </span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="section-title">Consolidación de Unidades de Carga a Despachar</div>
+<table class="outbound-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 25%;">Unidad Logística / Bulto</th>
+            <th style="width: 15%;">Tipo Bulto</th>
+            <th style="width: 40%;">Destino / Cliente</th>
+            <th style="text-align: right; width: 15%;">Peso (kg)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set units = cmd.document_data.get('packing_units', []) %}
+        {% if units %}
+            {% for unit in units %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ unit.get('logistic_unit_code', '—') }}</strong></td>
+                <td>{{ unit.get('logistic_unit_type', '—') }}</td>
+                <td>{{ unit.get('destination_name', '—') }}</td>
+                <td style="text-align: right;">{{ unit.get('gross_weight', {}).get('value', '0.00') }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+            <tr><td colspan="5" style="text-align: center; color: #64748b;">No hay bultos consolidados en el manifiesto.</td></tr>
+        {% endif %}
+    </tbody>
+</table>
+
+<!-- Referencias a Documentos Externos (Guías de Remisión) -->
+{% set ext_docs = cmd.document_data.get('external_document_references', []) %}
+{% if ext_docs %}
+<div class="outbound-box">
+    <div class="outbound-box-title">Documentación de Respaldo Adjunta (Guías Remisión SUNAT - PENDING_PHASE_030)</div>
+    <table style="width: 100%; font-size: 8pt; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom: 1px solid #cbd5e1; font-weight: bold; color: #475569;">
+                <th style="text-align: left; padding: 2px 4px;">Tipo Doc</th>
+                <th style="text-align: left; padding: 2px 4px;">Serie - Número</th>
+                <th style="text-align: left; padding: 2px 4px;">Emisor</th>
+                <th style="text-align: left; padding: 2px 4px;">Estado Verificación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doc in ext_docs %}
+            <tr style="border-bottom: 1px dotted #e2e8f0;">
+                <td style="padding: 3px 4px;">{{ doc.get('type') }}</td>
+                <td style="padding: 3px 4px;"><strong>{{ doc.get('serie_external', '—') }}-{{ doc.get('number_external', '—') }}</strong></td>
+                <td style="padding: 3px 4px;">{{ doc.get('emisor', '—') }}</td>
+                <td style="padding: 3px 4px;">
+                    {% set ext_status = doc.get('verification_state', 'ATTACHED') %}
+                    <span class="verification-badge verification-{{ ext_status | lower }}">{{ ext_status }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="outbound-box" style="background-color: #fef9e7; border-left-color: #d97706;">
+    <div style="font-size: 8pt; color: #854d0e;">
+        <strong>PENDING_PHASE_055 / PENDING_PHASE_057</strong> — Vista previa de Manifiesto de Carga.
+        Este reporte no constituye una hoja de ruta oficial ni autoriza el viaje real.
+        La planificación transaccional y asignación de vehículos en muelle se implementará en la Fase 055.
+    </div>
+</div>
+
+{% if cmd.document_data.get('observations') %}
+<div class="outbound-box">
+    <div class="outbound-box-title">Observaciones</div>
+    <div style="font-size: 8.5pt;">{{ cmd.document_data['observations'] }}</div>
+</div>
+{% endif %}
+
+<!-- Cadena de Aprobación -->
+<table class="approval-chain" style="margin-top: 15px;">
+    <tr>
+        <td class="approval-block">
+            <div class="approval-role">Responsable de Carga</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Supervisor Almacén</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+        <td class="approval-block">
+            <div class="approval-role">Responsable Transporte</div>
+            <div class="signature-block"></div>
+            <div class="signature-notice">Firma no aplicada en vista previa</div>
+        </td>
+    </tr>
+</table>
+
+{% if qr_b64 %}
+<div class="qr-label-container" style="margin-top: 10px;">
+    <img class="qr-label-img" src="{{ qr_b64 }}" alt="QR Preview"/>
+    <div class="qr-label-caption">VISTA PREVIA — No productivo</div>
+</div>
+{% endif %}
+
+<div class="document-footer">
+    MAN v{{ cmd.template_version }} | {{ cmd.organization_name }} | {{ now.strftime('%Y-%m-%d') }} | PENDING_PHASE_055
+</div>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SOLICITUD DE COTIZACIÓN</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "purchasing/shared/purchasing.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">SOLICITUD DE COTIZACIÓN</div>
+                <div class="doc-code">{{ cmd.document_code or "SCOT-PROTOTIPO-001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="supplier-box">
+    <div class="supplier-title">DATOS DEL PROVEEDOR DESTINATARIO</div>
+    <table style="width: 100%; font-size: 9pt;">
+        <tr>
+            <td style="font-weight: bold; width: 20%;">Razón Social:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('business_name', 'PROVEEDOR DEMO S.A.C.') }}</td>
+            <td style="font-weight: bold; width: 15%;">RUC:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('ruc', '20123456789') }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Contacto:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('contact_name', 'Juan Pérez') }}</td>
+            <td style="font-weight: bold;">Email:</td>
+            <td>{{ cmd.document_data.get('supplier', {}).get('email', 'contacto@proveedor.com') }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Condiciones de la Solicitud</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Fecha Emisión:</td>
+        <td>{{ cmd.document_data.get('issue_date', now.strftime('%Y-%m-%d')) }}</td>
+        <td class="info-label">Límite Respuesta:</td>
+        <td><strong>{{ cmd.document_data.get('response_deadline', '-') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Moneda Requerida:</td>
+        <td>{{ cmd.document_data.get('currency', 'PEN') }}</td>
+        <td class="info-label">Lugar Entrega:</td>
+        <td>{{ cmd.document_data.get('delivery_address', 'Almacén Principal Sede Lima') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Ítems a Cotizar</div>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 15%;">SKU</th>
+            <th style="width: 50%;">Descripción / Especificación Técnica</th>
+            <th style="width: 15%; text-align: right;">Cantidad</th>
+            <th style="width: 15%;">Unidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('items', []) %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.get('sku', '-') }}</td>
+            <td>{{ item.get('description', '-') }}</td>
+            <td style="text-align: right;">{{ item.get('quantity', 0) }}</td>
+            <td>{{ item.get('unit', 'UND') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Documento SCOT generado en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

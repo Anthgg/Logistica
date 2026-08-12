@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>HOJA DE VIAJE</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "transport/shared/transport.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">HOJA DE VIAJE (HV)</div>
+                <div class="doc-code">{{ cmd.document_code or "HV-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos del Viaje</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Fecha del Viaje:</td>
+        <td><strong>{{ cmd.document_data.get('trip_date', '') }}</strong></td>
+        <td class="info-label">Salida Programada:</td>
+        <td><strong>{{ cmd.document_data.get('planned_departure_at', '') }}</strong></td>
+    </tr>
+    <tr>
+        <td class="info-label">Despacho Ref.:</td>
+        <td>{{ cmd.document_data.get('dispatch_reference', 'No Asignado') }}</td>
+        <td class="info-label">Almacén Origen:</td>
+        <td>{{ cmd.document_data.get('origin', '') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Destino Final:</td>
+        <td>{{ cmd.document_data.get('destination_final', '') }}</td>
+        <td class="info-label">Retorno Programado:</td>
+        <td>{{ cmd.document_data.get('planned_return_at', 'No Programado') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Transporte y Conductor</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Placa Vehículo:</td>
+        <td>{{ cmd.document_data.get('vehicle_snapshot', {}).get('plate', '') }} ({{ cmd.document_data.get('vehicle_snapshot', {}).get('vehicle_type', '') }})</td>
+        <td class="info-label">Capacidad de Carga:</td>
+        <td>{{ cmd.document_data.get('vehicle_snapshot', {}).get('capacity_weight', '0') }} kg / {{ cmd.document_data.get('vehicle_snapshot', {}).get('capacity_volume', '0') }} m³</td>
+    </tr>
+    <tr>
+        <td class="info-label">Conductor:</td>
+        <td><strong>{{ cmd.document_data.get('driver_snapshot', {}).get('full_name', '') }}</strong></td>
+        <td class="info-label">Documentos Conductor:</td>
+        <td>DNI: {{ cmd.document_data.get('driver_snapshot', {}).get('document_number', '') }} | Lic.: {{ cmd.document_data.get('driver_snapshot', {}).get('license_number', '') }} (Cat: {{ cmd.document_data.get('driver_snapshot', {}).get('license_category', '-') }})</td>
+    </tr>
+    <tr>
+        <td class="info-label">Transportista (Carrier):</td>
+        <td>{{ cmd.document_data.get('carrier_snapshot', {}).get('business_name', 'Transporte Propio') }}</td>
+        <td class="info-label">Estado Verificación:</td>
+        <td>Vehículo: {{ cmd.document_data.get('vehicle_snapshot', {}).get('verification_state', '') }} | Conductor: {{ cmd.document_data.get('driver_snapshot', {}).get('verification_state', '') }}</td>
+    </tr>
+</table>
+
+<div class="section-title">Itinerario de Paradas</div>
+<table class="transport-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">Sec.</th>
+            <th style="width: 15%;">Tipo</th>
+            <th style="width: 25%;">Parada / Nombre</th>
+            <th style="width: 35%;">Dirección</th>
+            <th style="width: 20%;">Llegada Planificada</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stop in cmd.document_data.get('planned_stops', []) %}
+        <tr>
+            <td style="text-align: center;">{{ stop.sequence }}</td>
+            <td>{{ stop.stop_type }}</td>
+            <td><strong>{{ stop.name }}</strong></td>
+            <td>{{ stop.address }}</td>
+            <td>{{ stop.planned_arrival_at or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<table class="footer-layout-table">
+    <tr>
+        <td class="footer-qr-cell">
+            {% if qr_b64 %}
+            <img class="qr-code-img" src="{{ qr_b64 }}" alt="Código QR de Documento" />
+            <div class="qr-code-lbl">Verificación de Vista Previa</div>
+            {% endif %}
+        </td>
+        <td class="footer-signatures-cell">
+            <div class="signature-line-container">
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Responsable de Planificación</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Responsable de Despacho</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="page-footer">
+    <hr/>
+    <table style="width: 100%; font-size: 8pt; color: #7f8c8d;">
+        <tr>
+            <td>T1 LOGÍSTICA - HOJA DE VIAJE (HV-v1.0.0)</td>
+            <td style="text-align: right;">Página 1 de 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

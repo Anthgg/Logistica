@@ -1,0 +1,14 @@
+window_size_seconds: 30
+stride_seconds: 10
+minimum_keyboard_events: 3
+minimum_mouse_events: 3
+maximum_idle_ratio: 0.90
+maximum_batch_events: 100
+maximum_timestamp_skew_seconds: 5
+maximum_dwell_time_ms: 5000
+minimum_flight_time_ms: -5000
+maximum_flight_time_ms: 10000
+maximum_interval_ms: 60000
+burst_pause_threshold_ms: 2000
+mouse_idle_threshold_ms: 2000
+maximum_missing_feature_ratio: 0.20

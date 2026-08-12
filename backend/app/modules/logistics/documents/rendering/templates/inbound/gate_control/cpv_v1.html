@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CONTROL DE PUERTA VEHICULAR</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "inbound/shared/inbound.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">CONTROL DE PUERTA</div>
+                <div class="doc-code">{{ cmd.document_code or "CPV-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Registro de Evento de Ingreso / Salida Vehicular</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Tipo Evento:</td>
+        <td><strong>{{ cmd.document_data.get('gate_event_type', 'INGRESO') }}</strong></td>
+        <td class="info-label">Fecha y Hora Llegada:</td>
+        <td>{{ cmd.document_data.get('arrival_at', now.strftime('%Y-%m-%d %H:%M:%S UTC')) }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Puerta de Acceso:</td>
+        <td>{{ cmd.document_data.get('gate', 'Puerta Principal 01') }}</td>
+        <td class="info-label">Operador Control:</td>
+        <td>{{ cmd.document_data.get('gate_operator', cmd.requested_by or 'Agente Vigilancia') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Decisión Acceso:</td>
+        <td><strong style="color: #27ae60;">{{ cmd.document_data.get('access_decision', 'AUTORIZADO') }}</strong></td>
+        <td class="info-label">Cita Ref.:</td>
+        <td>{{ cmd.document_data.get('appointment_reference', 'CIT-2026-000001') }}</td>
+    </tr>
+</table>
+
+<div class="inbound-box">
+    <div class="inbound-title">DATOS DEL VEHÍCULO Y CONDUCTOR (PRIVACIDAD PROTEGIDA)</div>
+    <table style="width: 100%; font-size: 9pt;">
+        <tr>
+            <td style="font-weight: bold; width: 20%;">Placa Vehículo:</td>
+            <td><strong>{{ cmd.document_data.get('plate', 'ABC-123') }}</strong></td>
+            <td style="font-weight: bold; width: 15%;">Tipo Vehículo:</td>
+            <td>{{ cmd.document_data.get('vehicle_type', 'Camión Furgón 10T') }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Conductor:</td>
+            <td>{{ cmd.document_data.get('driver_name', 'Pedro Rodríguez') }}</td>
+            <td style="font-weight: bold;">DNI Enmascarado:</td>
+            <td>{{ cmd.document_data.get('driver_dni_masked', '******42') }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Licencia Enmascarada:</td>
+            <td>{{ cmd.document_data.get('driver_license_masked', 'Q4*****21') }}</td>
+            <td style="font-weight: bold;">Empresa Transportes:</td>
+            <td>{{ cmd.document_data.get('carrier_name', 'LOGISTICA RAPIDA S.A.C.') }}</td>
+        </tr>
+    </table>
+    <div class="privacy-notice">* Los identificadores personales y licencias han sido enmascarados conforme a las políticas de privacidad del sistema.</div>
+</div>
+
+<div class="section-title">Control de Precintos e Inspección Visual</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Precinto Observado:</td>
+        <td>{{ cmd.document_data.get('seal_number', 'SEAL-987654') }}</td>
+        <td class="info-label">Estado Precinto:</td>
+        <td>
+            <span class="seal-badge seal-{{ 'matched' if cmd.document_data.get('seal_status') == 'COINCIDE' else 'broken' }}">
+                {{ cmd.document_data.get('seal_status', 'COINCIDE') }}
+            </span>
+        </td>
+    </tr>
+</table>
+
+<div class="footer-container" style="margin-top: 40px;">
+    Proyecto T1 Logística — Control de Puerta CPV generado en modo {{ 'Vista Previa' if cmd.preview_mode else 'Oficial' }}
+</div>
+
+</body>
+</html>

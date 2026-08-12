@@ -1,0 +1,310 @@
+schema_version: 1
+reviewed_at: "2026-07-26"
+datasets:
+  - dataset_id: oulu_npu
+    official_name: OULU-NPU
+    official_url: https://sites.google.com/site/oulunpudatabase/
+    download_url: null
+    version: "1"
+    modality: pad
+    intended_use: [pad_pretraining, cross_dataset_evaluation]
+    license_name: OULU-NPU End-User License Agreement
+    license_url: https://sites.google.com/site/oulunpudatabase/download
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: false
+    agreement_required: true
+    agreement_evidence_path: null
+    citation: "Boulkenafet et al., OULU-NPU: A Mobile Face Presentation Attack Database with Real-World Variations, FG 2017."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/oulu_npu
+    status: agreement_required
+    access_instructions:
+      - Descargue el EULA desde la página oficial.
+      - Obtenga la firma de una persona con posición permanente.
+      - Envíe el acuerdo desde un correo institucional y espere aprobación.
+      - Guarde el acuerdo aprobado fuera de Git y registre su ruta.
+    approved_download_hosts: []
+
+  - dataset_id: replay_attack
+    official_name: Replay-Attack
+    official_url: https://www.idiap.ch/en/scientific-research/data/replayattack
+    download_url: null
+    version: v1
+    modality: pad
+    intended_use: [pad_pretraining, cross_dataset_evaluation]
+    license_name: Idiap End-User License Agreement (non-commercial research)
+    license_url: https://zenodo.org/records/4593128
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: false
+    agreement_required: true
+    agreement_evidence_path: null
+    citation: "Chingovska, Anjos and Marcel, On the Effectiveness of Local Binary Patterns in Face Anti-spoofing, BIOSIG 2012."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/replay_attack
+    status: agreement_required
+    access_instructions:
+      - Solicite acceso en el registro oficial de Zenodo enlazado por Idiap.
+      - Proporcione firmante permanente y correo académico o profesional.
+      - Use el dataset únicamente para investigación no comercial.
+      - Guarde el EULA aprobado fuera de Git y registre su ruta.
+    approved_download_hosts: []
+
+  - dataset_id: replay_mobile
+    official_name: Replay-Mobile
+    official_url: https://www.idiap.ch/en/scientific-research/data/replay-mobile
+    download_url: null
+    version: v1
+    modality: pad
+    intended_use: [pad_pretraining, cross_dataset_evaluation]
+    license_name: Idiap End-User License Agreement (non-commercial research)
+    license_url: https://zenodo.org/records/4593248
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: false
+    agreement_required: true
+    agreement_evidence_path: null
+    citation: "Costa-Pazo et al., The REPLAY-MOBILE Face Presentation-Attack Database, BIOSIG 2016."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/replay_mobile
+    status: agreement_required
+    access_instructions:
+      - Solicite acceso en el registro oficial de Zenodo enlazado por Idiap.
+      - Proporcione firmante permanente y correo académico o profesional.
+      - Use el dataset únicamente para investigación no comercial.
+      - Guarde el EULA aprobado fuera de Git y registre su ruta.
+    approved_download_hosts: []
+
+  - dataset_id: celeba_spoof
+    official_name: CelebA-Spoof
+    official_url: https://mmlab.ie.cuhk.edu.hk/projects/CelebA/CelebA_Spoof.html
+    download_url: null
+    version: "2020"
+    modality: pad
+    intended_use: [noncommercial_pad_research, cross_dataset_evaluation]
+    license_name: CelebA-Spoof non-commercial research terms
+    license_url: https://mmlab.ie.cuhk.edu.hk/projects/CelebA/CelebA_Spoof.html
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: false
+    agreement_required: true
+    agreement_evidence_path: null
+    citation: "Zhang et al., CelebA-Spoof: Large-Scale Face Anti-Spoofing Dataset with Rich Annotations, ECCV 2020."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/celeba_spoof
+    status: agreement_required
+    access_instructions:
+      - Revise y acepte los términos de investigación no comercial de la fuente oficial.
+      - No use ni redistribuya las imágenes con fines comerciales.
+      - Guarde evidencia de aceptación fuera de Git.
+      - Registre un checksum oficial antes de habilitar cualquier descarga.
+    approved_download_hosts: []
+
+  - dataset_id: siw
+    official_name: Spoof in the Wild (SiW)
+    official_url: https://cvlab.cse.msu.edu/siw-spoof-in-the-wild-database.html
+    download_url: null
+    version: "1"
+    modality: pad
+    intended_use: [pad_pretraining, cross_dataset_evaluation]
+    license_name: Michigan State University Dataset Release Agreement
+    license_url: https://cvlab.cse.msu.edu/pdfs/DRA_form_SiW.pdf
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: false
+    agreement_required: true
+    agreement_evidence_path: null
+    citation: "Liu et al., Learning Deep Models for Face Anti-Spoofing: Binary or Auxiliary Supervision, CVPR 2018."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/siw
+    status: agreement_required
+    access_instructions:
+      - Descargue y firme el DRA oficial de Michigan State University.
+      - Envíe la solicitud siguiendo las instrucciones oficiales.
+      - Espere credenciales temporales de descarga.
+      - Guarde el acuerdo aprobado fuera de Git.
+    approved_download_hosts: []
+
+  - dataset_id: siw_mv2
+    official_name: SiW-Mv2
+    official_url: https://cvlab.cse.msu.edu/siwm-v2-dataset.html
+    download_url: null
+    version: "2"
+    modality: pad
+    intended_use: [pad_pretraining, unknown_attack_evaluation, cross_dataset_evaluation]
+    license_name: Michigan State University SiW-Mv2 Dataset Release Agreement
+    license_url: https://cvlab.cse.msu.edu/pdfs/DRA_form_SIWMv2.pdf
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: false
+    agreement_required: true
+    agreement_evidence_path: null
+    citation: "Guo et al., Multi-domain Learning for Updating Face Anti-spoofing Models, ECCV 2022."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/siw_mv2
+    status: agreement_required
+    access_instructions:
+      - Firme el DRA oficial de SiW-Mv2.
+      - Envíelo al contacto indicado por MSU y espere aprobación.
+      - Use las credenciales dentro de su ventana de 30 días.
+      - Guarde el acuerdo aprobado fuera de Git.
+    approved_download_hosts: []
+
+  - dataset_id: casia_surf_cefa
+    official_name: CASIA-SURF CeFA
+    official_url: https://sites.google.com/view/face-anti-spoofing-challenge/dataset-download/casia-surf-cefacvpr2020
+    download_url: null
+    version: CVPR2020
+    modality: pad
+    intended_use: [optional_cross_ethnicity_pad_evaluation]
+    license_name: CASIA-SURF CeFA licensing agreement
+    license_url: https://sites.google.com/view/face-anti-spoofing-challenge/dataset-download/casia-surf-cefacvpr2020
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: false
+    agreement_required: true
+    agreement_evidence_path: null
+    citation: "Liu et al., Cross-Ethnicity Face Anti-Spoofing Recognition Challenge: A Review, IET Biometrics 2021."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/casia_surf_cefa
+    status: agreement_required
+    access_instructions:
+      - Regístrese mediante el proceso oficial del challenge.
+      - Revise y firme el acuerdo de licencia.
+      - Espere autorización antes de obtener archivos.
+      - No use el flujo académico para fines comerciales.
+    approved_download_hosts: []
+
+  - dataset_id: cmu_keystroke
+    official_name: CMU Keystroke Dynamics Benchmark
+    official_url: https://www.cs.cmu.edu/~keystroke/
+    download_url: null
+    version: "DSL-StrongPasswordData"
+    modality: keyboard
+    intended_use: [behavioral_pipeline_validation, external_benchmark]
+    license_name: null
+    license_url: null
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: null
+    derived_models_allowed: null
+    redistribution_allowed: null
+    agreement_required: false
+    agreement_evidence_path: null
+    citation: "Killourhy and Maxion, Comparing Anomaly-Detection Algorithms for Keystroke Dynamics, DSN 2009."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/cmu_keystroke
+    status: pending_review
+    access_instructions:
+      - Confirme por escrito los términos aplicables al archivo de datos.
+      - Guarde una copia local de esos términos y su fecha de consulta.
+      - Registre el enlace directo oficial y SHA-256.
+      - Apruebe el registro antes de descargar.
+    approved_download_hosts: []
+
+  - dataset_id: aalto_keystrokes
+    official_name: Aalto 136 Million Keystrokes
+    official_url: https://userinterfaces.aalto.fi/136Mkeystrokes/
+    download_url: null
+    version: "2018"
+    modality: keyboard
+    intended_use: [noncommercial_behavioral_research, pipeline_stress_test]
+    license_name: Research and non-commercial use with attribution
+    license_url: https://userinterfaces.aalto.fi/136Mkeystrokes/
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: false
+    derived_models_allowed: null
+    redistribution_allowed: null
+    agreement_required: false
+    agreement_evidence_path: null
+    citation: "Dhakal et al., Observations on Typing from 136 Million Keystrokes, CHI 2018."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/aalto_keystrokes
+    status: pending_review
+    access_instructions:
+      - Descargue y revise readme.txt, que contiene la licencia del paquete.
+      - Confirme que el uso será científico y no comercial con atribución.
+      - Guarde una copia local de readme.txt fuera de Git.
+      - Registre checksum y aprobación antes de procesar.
+    approved_download_hosts: []
+
+  - dataset_id: balabit_mouse
+    official_name: Balabit Mouse Dynamics Challenge
+    official_url: https://github.com/balabit/Mouse-Dynamics-Challenge
+    download_url: null
+    version: master
+    modality: mouse
+    intended_use: [behavioral_pipeline_validation, external_benchmark]
+    license_name: null
+    license_url: null
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: null
+    derived_models_allowed: null
+    redistribution_allowed: null
+    agreement_required: false
+    agreement_evidence_path: null
+    citation: "Fülöp et al., Balabit Mouse Dynamics Challenge data set, 2016."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/balabit_mouse
+    status: pending_review
+    access_instructions:
+      - Solicite confirmación de licencia al mantenedor; el repositorio no publica una licencia explícita.
+      - Guarde la respuesta o licencia fuera de Git.
+      - Registre el commit exacto y SHA-256 del archivo oficial.
+      - Apruebe el registro antes de descargar.
+    approved_download_hosts: []
+
+  - dataset_id: behaviour_biometrics
+    official_name: Behaviour Biometrics Dataset
+    official_url: https://data.mendeley.com/datasets/fnf8b85kr6/1
+    download_url: null
+    version: "1"
+    modality: keyboard_mouse_touch
+    intended_use: [behavioral_pipeline_validation, multimodal_external_benchmark]
+    license_name: Creative Commons Attribution 4.0 International
+    license_url: https://creativecommons.org/licenses/by/4.0/
+    license_reviewed_at: "2026-07-26"
+    license_copy_path: null
+    commercial_use_allowed: true
+    derived_models_allowed: true
+    redistribution_allowed: true
+    agreement_required: false
+    agreement_evidence_path: null
+    citation: "Nnamoko et al., Behaviour Biometrics Dataset, Mendeley Data, V1, 2022, doi:10.17632/fnf8b85kr6.1."
+    downloaded_at: null
+    checksum: null
+    storage_path: external-data/raw/behaviour_biometrics
+    status: pending_review
+    access_instructions:
+      - Guarde una copia local de CC BY 4.0 y de la ficha de Mendeley.
+      - Obtenga el enlace directo oficial y checksum del archivo.
+      - Registre la atribución requerida.
+      - Cambie a approved solo después de la revisión documentada.
+    approved_download_hosts: []

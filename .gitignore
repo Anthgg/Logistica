@@ -1,0 +1,82 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+!.env.test.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+secrets*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+htmlcov/
+.coverage
+coverage.xml
+
+# Editors & Tools
+.vscode/
+.idea/
+.codebase-memory/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs & Temporary Files
+logs/
+*.log
+tmp/
+temp/
+*.pdf
+
+# Local datasets & large model weights
+data/*
+!data/.gitkeep
+models/*
+!models/.gitkeep
+!models/fusion/
+models/fusion/*
+!models/fusion/README.md
+!models/registry/
+models/registry/*
+!models/registry/integration_approval.json
+*.onnx
+*.pt
+*.pth
+*.h5
+*.keras
+*.joblib
+*.pkl
+
+external-data/raw/*
+!external-data/raw/README.md
+!external-data/raw/*/
+!external-data/raw/*/.gitkeep
+external-data/interim/*
+!external-data/interim/*/
+!external-data/interim/*/.gitkeep
+external-data/processed/*
+!external-data/processed/*/
+!external-data/processed/*/.gitkeep
+external-data/manifests/*.parquet
+external-data/manifests/*.csv
+external-data/registry/licenses/*
+!external-data/registry/licenses/README.md
+!external-data/registry/licenses/*.metadata.yaml

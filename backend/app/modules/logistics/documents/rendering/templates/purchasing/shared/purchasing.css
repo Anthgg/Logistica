@@ -1,0 +1,75 @@
+/* Specific CSS Styles for Purchasing Document Templates (Phase 015) */
+
+.supplier-box {
+    width: 100%;
+    border: 1px solid #003366;
+    background-color: #f4f6f9;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 15px;
+}
+
+.supplier-title {
+    font-size: 10pt;
+    font-weight: bold;
+    color: #003366;
+    border-bottom: 1px solid #003366;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+}
+
+.comparison-matrix {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+.comparison-matrix th {
+    background-color: #003366;
+    color: #ffffff;
+    font-size: 8pt;
+    padding: 5px;
+    text-align: center;
+    border: 1px solid #002244;
+}
+
+.comparison-matrix td {
+    font-size: 8pt;
+    padding: 5px;
+    border: 1px solid #cccccc;
+    vertical-align: top;
+}
+
+.recommended-col {
+    background-color: #e8f8f5 !important;
+    border: 2px solid #27ae60 !important;
+}
+
+.total-summary-box {
+    float: right;
+    width: 250px;
+    border: 1px solid #cccccc;
+    background-color: #f9f9f9;
+    padding: 8px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    font-size: 9pt;
+}
+
+.total-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.total-summary-table td {
+    padding: 3px 0;
+}
+
+.total-summary-table .final-total {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #003366;
+    border-top: 1px solid #003366;
+    padding-top: 4px;
+}

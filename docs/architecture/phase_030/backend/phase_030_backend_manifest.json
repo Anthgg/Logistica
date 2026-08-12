@@ -1,0 +1,11 @@
+{
+  "phase": "030",
+  "title": "Centralizar archivos y evidencias",
+  "domain": "logistics",
+  "subdomain": "files",
+  "status": "COMPLETED",
+  "tables_created": 15,
+  "endpoints_created": 20,
+  "audit_events_count": 16,
+  "tests_status": "PASSED_100_PERCENT"
+}

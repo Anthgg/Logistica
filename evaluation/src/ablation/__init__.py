@@ -1,0 +1,1 @@
+"""Evaluación de ablación aprobada."""

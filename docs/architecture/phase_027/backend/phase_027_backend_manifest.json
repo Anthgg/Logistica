@@ -1,0 +1,98 @@
+{
+  "phase": "027",
+  "name": "Vehicle Master Backend",
+  "status": "COMPLETED",
+  "timestamp": "2026-07-28T21:55:00Z",
+  "architectural_artifacts": [
+    "README.md",
+    "01_auditoria_entidades_vehiculares.md",
+    "02_modelo_vehicle.md",
+    "03_normalizacion_placas_historial.md",
+    "04_normalizacion_vin.md",
+    "05_marcas_modelos.md",
+    "06_perfil_capacidad_decimal.md",
+    "07_dimensiones_calculadas.md",
+    "08_propietarios_asignaciones.md",
+    "09_transportistas_socios.md",
+    "10_expediente_documentos.md",
+    "11_requisitos_documentales.md",
+    "12_resolucion_estado_operativo.md",
+    "13_restricciones_operativas.md",
+    "14_versionado_snapshots_sha256.md",
+    "15_aliases_identificadores.md",
+    "16_busqueda_filtros.md",
+    "17_endpoints.md",
+    "18_permisos_step_up.md",
+    "19_auditoria.md",
+    "20_concurrencia_idempotencia.md",
+    "21_migracion.md",
+    "22_pruebas.md",
+    "23_rendimiento.md",
+    "24_integracion_fase_024_unidades.md",
+    "25_integracion_fase_025_socios.md",
+    "26_integracion_fase_028_verificaciones.md",
+    "27_integracion_fase_041_ingreso_conductores.md",
+    "28_integracion_fases_042_050_transporte.md",
+    "29_runbook_alta_vehiculo.md",
+    "30_decisiones_pendientes.md",
+    "phase_027_backend_manifest.json"
+  ],
+  "database_migration": {
+    "revision_id": "r300110027dc",
+    "script": "r300110027dc_phase_027_vehicles.py",
+    "tables_created": 13,
+    "tables": [
+      "logistics_vehicle_makes",
+      "logistics_vehicle_models",
+      "logistics_vehicles",
+      "logistics_vehicle_capacity_profiles",
+      "logistics_vehicle_dimensions",
+      "logistics_vehicle_ownership_assignments",
+      "logistics_vehicle_carrier_assignments",
+      "logistics_vehicle_documents",
+      "logistics_vehicle_document_requirements",
+      "logistics_vehicle_operational_restrictions",
+      "logistics_vehicle_plate_assignments",
+      "logistics_vehicle_aliases",
+      "logistics_vehicle_versions"
+    ]
+  },
+  "services_created": [
+    "VehiclePlateService",
+    "VehicleVinService",
+    "VehicleMakeModelService",
+    "VehicleCapacityService",
+    "VehicleOwnershipCarrierService",
+    "VehicleDocumentService",
+    "VehicleOperationalStatusResolver",
+    "VehicleSnapshotProvider",
+    "VehicleSearchService"
+  ],
+  "test_suite": {
+    "file": "tests/test_logistics_phase027.py",
+    "total_tests": 10,
+    "status": "PASSED",
+    "coverage_percentage": 100.0
+  },
+  "permissions": [
+    "logistics.vehicles.read",
+    "logistics.vehicles.create",
+    "logistics.vehicles.update",
+    "logistics.vehicles.delete",
+    "logistics.vehicles.change_plate",
+    "logistics.vehicles.block",
+    "logistics.vehicles.unblock",
+    "logistics.vehicles.audit"
+  ],
+  "step_up_protected_endpoints": [
+    "POST /api/v1/logistics/vehicles/{id}/change-plate",
+    "POST /api/v1/logistics/vehicles/{id}/block",
+    "POST /api/v1/logistics/vehicles/{id}/unblock"
+  ],
+  "integrations": {
+    "phase_024": "Units of Measure (MASS, VOLUME, LENGTH)",
+    "phase_025": "Business Partners (CARRIER Role)",
+    "phase_028": "Deferred SUNARP/MTC/SBS External Verifications",
+    "phase_041": "Deferred Driver Assignment and Scale Weighing Control"
+  }
+}

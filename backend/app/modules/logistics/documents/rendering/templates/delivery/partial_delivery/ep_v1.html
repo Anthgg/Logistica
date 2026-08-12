@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ACTA DE ENTREGA PARCIAL</title>
+    <style>
+        {% include "shared/print.css" %}
+        {% include "delivery/shared/delivery.css" %}
+    </style>
+</head>
+<body>
+
+{% if cmd.watermark_text %}
+<div class="watermark">{{ cmd.watermark_text }}</div>
+{% endif %}
+
+<div class="document-header">
+    <table class="header-table">
+        <tr>
+            <td class="header-org-info">
+                <div class="header-org-name">{{ cmd.organization_name }}</div>
+                <div>Sede: {{ cmd.branch_name }}</div>
+            </td>
+            <td class="header-doc-box">
+                <div class="doc-title">ACTA DE ENTREGA PARCIAL (EP)</div>
+                <div class="doc-code">{{ cmd.document_code or "EP-LIM-2026-000001" }}</div>
+                <div style="margin-top: 4px;">
+                    <span class="status-badge status-{{ cmd.document_status.lower() }}">{{ cmd.document_status }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="section-title">Datos del Intento de Entrega</div>
+<table class="info-grid">
+    <tr>
+        <td class="info-label">Intento Entrega Ref.:</td>
+        <td>{{ cmd.document_data.get('delivery_attempt_reference', '') }}</td>
+        <td class="info-label">Fecha y Hora:</td>
+        <td>{{ cmd.document_data.get('occurred_at', '') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Destino / Cliente:</td>
+        <td>{{ cmd.document_data.get('destination', {}).get('name', '') }}</td>
+        <td class="info-label">Dirección:</td>
+        <td>{{ cmd.document_data.get('destination', {}).get('address', '') }}</td>
+    </tr>
+    <tr>
+        <td class="info-label">Motivo Parcial:</td>
+        <td><strong>{{ cmd.document_data.get('partial_delivery_reason', '') }}</strong></td>
+        <td class="info-label">Próxima Acción:</td>
+        <td><strong style="color: #ef6c00;">{{ cmd.document_data.get('next_action', '') }}</strong></td>
+    </tr>
+</table>
+
+<div class="section-title">Detalle de Cantidades Parciales</div>
+<table class="delivery-table">
+    <thead>
+        <tr>
+            <th style="width: 5%;">Lín.</th>
+            <th style="width: 45%;">Descripción Producto</th>
+            <th style="width: 10%;">Planificado</th>
+            <th style="width: 10%;">Entregado</th>
+            <th style="width: 10%;">Rechazado</th>
+            <th style="width: 10%;">Pendiente</th>
+            <th style="width: 10%;">Unidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cmd.document_data.get('items', []) %}
+        <tr>
+            <td style="text-align: center;">{{ item.line_number }}</td>
+            <td><strong>{{ item.product_snapshot.description }}</strong></td>
+            <td style="text-align: right;">{{ item.planned_quantity }}</td>
+            <td style="text-align: right; font-weight: bold; color: #2e7d32;">{{ item.delivered_quantity }}</td>
+            <td style="text-align: right; color: #c62828;">{{ item.rejected_quantity }}</td>
+            <td style="text-align: right; color: #ef6c00;">{{ item.pending_quantity }}</td>
+            <td style="text-align: center;">{{ item.unit }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if cmd.document_data.get('observations') %}
+<div class="section-title">Observaciones de la Entrega Parcial</div>
+<p style="font-size: 9pt; background-color: #fcf8e3; padding: 10px; border: 1px solid #faebcc; color: #8a6d3b;">
+    {{ cmd.document_data.get('observations') }}
+</p>
+{% endif %}
+
+<table class="footer-layout-table">
+    <tr>
+        <td class="footer-qr-cell">
+            {% if qr_b64 %}
+            <img class="qr-code-img" src="{{ qr_b64 }}" alt="Código QR de Documento" />
+            <div class="qr-code-lbl">Verificación de Vista Previa</div>
+            {% endif %}
+        </td>
+        <td class="footer-signatures-cell">
+            <div class="signature-line-container">
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Conductor Asignado</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+                <div class="signature-line-box">
+                    <div class="signature-line-label">Receptor / Cliente (Entrega Parcial)</div>
+                    <div class="signature-line-sub">Firma no aplicada en vista previa</div>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="page-footer">
+    <hr/>
+    <table style="width: 100%; font-size: 8pt; color: #7f8c8d;">
+        <tr>
+            <td>T1 LOGÍSTICA - ACTA DE ENTREGA PARCIAL (EP-v1.0.0)</td>
+            <td style="text-align: right;">Página 1 de 1</td>
+        </tr>
+    </table>
+</div>
+
+</body>
+</html>

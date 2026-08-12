@@ -1,0 +1,155 @@
+{
+  "project": "Proyecto T1 - Backend Logístico",
+  "phase": "Fase 003 - Arquitectura Modular Inicial",
+  "version": "1.0.0",
+  "created_at": "2026-07-26T12:30:00Z",
+  "base_path": "/api/logistics",
+  "modules_created": [
+    "logistics/shared",
+    "logistics/documents",
+    "logistics/routes_module",
+    "logistics/files",
+    "logistics/audit",
+    "logistics/integrations"
+  ],
+  "files_created": [
+    "app/modules/__init__.py",
+    "app/modules/logistics/__init__.py",
+    "app/modules/logistics/router.py",
+    "app/modules/logistics/constants.py",
+    "app/modules/logistics/exceptions.py",
+    "app/modules/logistics/dependencies.py",
+    "app/modules/logistics/shared/__init__.py",
+    "app/modules/logistics/shared/domain/__init__.py",
+    "app/modules/logistics/shared/application/__init__.py",
+    "app/modules/logistics/shared/infrastructure/__init__.py",
+    "app/modules/logistics/documents/__init__.py",
+    "app/modules/logistics/documents/api/__init__.py",
+    "app/modules/logistics/documents/api/router.py",
+    "app/modules/logistics/documents/application/__init__.py",
+    "app/modules/logistics/documents/application/services.py",
+    "app/modules/logistics/documents/domain/__init__.py",
+    "app/modules/logistics/documents/domain/contracts.py",
+    "app/modules/logistics/documents/infrastructure/__init__.py",
+    "app/modules/logistics/routes_module/__init__.py",
+    "app/modules/logistics/routes_module/api/__init__.py",
+    "app/modules/logistics/routes_module/api/router.py",
+    "app/modules/logistics/routes_module/application/__init__.py",
+    "app/modules/logistics/routes_module/domain/__init__.py",
+    "app/modules/logistics/routes_module/domain/contracts.py",
+    "app/modules/logistics/routes_module/infrastructure/__init__.py",
+    "app/modules/logistics/files/__init__.py",
+    "app/modules/logistics/files/api/__init__.py",
+    "app/modules/logistics/files/api/router.py",
+    "app/modules/logistics/files/application/__init__.py",
+    "app/modules/logistics/files/domain/__init__.py",
+    "app/modules/logistics/files/domain/contracts.py",
+    "app/modules/logistics/files/infrastructure/__init__.py",
+    "app/modules/logistics/audit/__init__.py",
+    "app/modules/logistics/audit/api/__init__.py",
+    "app/modules/logistics/audit/api/router.py",
+    "app/modules/logistics/audit/application/__init__.py",
+    "app/modules/logistics/audit/domain/__init__.py",
+    "app/modules/logistics/audit/domain/contracts.py",
+    "app/modules/logistics/audit/infrastructure/__init__.py",
+    "app/modules/logistics/integrations/__init__.py",
+    "app/modules/logistics/integrations/api/__init__.py",
+    "app/modules/logistics/integrations/api/router.py",
+    "app/modules/logistics/integrations/application/__init__.py",
+    "app/modules/logistics/integrations/domain/__init__.py",
+    "app/modules/logistics/integrations/domain/contracts.py",
+    "app/modules/logistics/integrations/infrastructure/__init__.py",
+    "tests/test_logistics_phase003.py"
+  ],
+  "files_modified": [
+    "app/api/router.py"
+  ],
+  "contracts": {
+    "documents": [
+      "DocumentRenderer",
+      "DocumentStorage",
+      "DocumentNumberGenerator",
+      "DocumentSnapshotRepository",
+      "DocumentVerificationService",
+      "DocumentIssueService",
+      "DocumentPreviewService",
+      "DocumentReprintService",
+      "DocumentCancelService",
+      "DocumentDownloadService",
+      "DocumentPackageService",
+      "DocumentMetadataService"
+    ],
+    "routes": [
+      "DirectionsProvider",
+      "GeocodingProvider",
+      "MapMatchingProvider",
+      "RouteRepository",
+      "RouteCalculationService"
+    ],
+    "files": [
+      "FileStorage",
+      "FileMetadataRepository",
+      "FileValidator",
+      "FileHashService",
+      "SignedUrlProvider"
+    ],
+    "audit": [
+      "AuditEventWriter",
+      "AuditEventReader",
+      "AuditContextProvider",
+      "AuditSerializer"
+    ],
+    "integrations": [
+      "IntegrationAdapter",
+      "IntegrationRegistry",
+      "IntegrationCache"
+    ]
+  },
+  "routers": {
+    "logistics_root": "/api/logistics",
+    "documents": "/api/logistics/documents",
+    "routes": "/api/logistics/routes",
+    "files": "/api/logistics/files",
+    "audit": "/api/logistics/audit",
+    "integrations": "/api/logistics/integrations"
+  },
+  "tests": {
+    "file": "tests/test_logistics_phase003.py",
+    "total": 13,
+    "passed": 13,
+    "failed": 0
+  },
+  "config_variables": [
+    "LOGISTICS_ENABLED",
+    "DOCUMENT_STORAGE_PROVIDER",
+    "DOCUMENT_STORAGE_BUCKET",
+    "ROUTE_PROVIDER",
+    "GEOCODING_PROVIDER",
+    "ROUTE_REQUEST_TIMEOUT",
+    "FILE_MAX_SIZE_MB",
+    "FILE_ALLOWED_MIME_TYPES",
+    "AUDIT_ENABLED"
+  ],
+  "risks": [
+    "routes_module nombrado así para evitar conflicto con logistics_routes.py existente",
+    "Permisos no enforceados todavía (Phase 005)",
+    "Infraestructura vacía — sin implementaciones concretas"
+  ],
+  "pending_decisions": [
+    "D01_Proveedor_rutas",
+    "D02_Proveedor_almacenamiento",
+    "D03_Motor_PDF",
+    "D04_Asignacion_permisos_roles",
+    "D05_Estrategia_auditoria",
+    "D06_Cache_integraciones"
+  ],
+  "baseline_status": {
+    "docs_baseline_dir": "docs/baseline/",
+    "status": "ABSENT_REGISTERED",
+    "notes": "Directorio baseline no encontrado. Se trabajó con inspección directa del repositorio."
+  },
+  "migrations_created": 0,
+  "tables_created": 0,
+  "auth_modified": false,
+  "phase_004_started": false
+}
