@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from decimal import Decimal
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -46,7 +45,7 @@ def test_posting_creates_appended_only_movement(database: Session):
         "source_event_version": 1,
         "source_hash": "a" * 64,
         "payload_hash": "a" * 64,
-        "occurred_at": datetime.now(timezone.utc).isoformat(),
+        "occurred_at": datetime.now(UTC).isoformat(),
         "lines": [
             {
                 "product_id": str(product_id),
@@ -80,13 +79,17 @@ def test_posting_creates_appended_only_movement(database: Session):
     )
     # Validation will fail because no source allocation exists, but the request must
     # be persisted so the failure is recoverable.
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         posting.post(organization_id=org_id, posting_request_id=request.id)
 
-    database.expire_all()
-    database.refresh(request)
-    assert request.status == "FAILED"
-    assert request.failure_code is not None
+    from app.modules.logistics.inventory.ledger.infrastructure.persistence.models import (
+        InventoryMovementPostingRequestModel,
+    )
+
+    request_db = database.get(InventoryMovementPostingRequestModel, request.id)
+    assert request_db is not None
+    assert request_db.status == "FAILED"
+    assert request_db.failure_code is not None
 
 
 def test_idempotency_record_persisted(database: Session):
@@ -158,11 +161,11 @@ def test_duplicate_with_different_payload_hash_raises(database: Session):
     from app.modules.logistics.inventory.ledger.application.services.validation_service import (
         InventoryMovementValidationService,
     )
-    from app.modules.logistics.inventory.ledger.domain.services.availability_provider import (
-        SourceBackedAvailabilityProvider,
-    )
     from app.modules.logistics.inventory.ledger.domain.errors.exceptions import (
         InventoryMovementSourceDuplicated,
+    )
+    from app.modules.logistics.inventory.ledger.domain.services.availability_provider import (
+        SourceBackedAvailabilityProvider,
     )
 
     org_id = uuid4()
