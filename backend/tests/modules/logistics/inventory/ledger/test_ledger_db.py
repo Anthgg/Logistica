@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.orm import Session
 
+from app.models.organization import Organization
 from app.modules.logistics.inventory.ledger.application.services.posting_service import (
     InventoryMovementPostingService,
 )
@@ -19,10 +20,25 @@ from app.modules.logistics.inventory.ledger.domain.services.availability_provide
 )
 
 
+def _ensure_organization(session: Session, org_id: UUID) -> Organization:
+    org = session.get(Organization, org_id)
+    if not org:
+        org = Organization(
+            id=org_id,
+            code=f"ORG-{str(org_id)[:8]}",
+            name="Test Organization",
+            country_code="PE",
+        )
+        session.add(org)
+        session.flush()
+    return org
+
+
 def test_posting_creates_appended_only_movement(database: Session):
     """End-to-end posting flow should publish a single immutable movement."""
 
     org_id = uuid4()
+    _ensure_organization(database, org_id)
     branch_id = uuid4()
     warehouse_id = uuid4()
     product_id = uuid4()
@@ -106,6 +122,7 @@ def test_idempotency_record_persisted(database: Session):
     )
 
     org_id = uuid4()
+    _ensure_organization(database, org_id)
     availability = SourceBackedAvailabilityProvider(database)
     validation = InventoryMovementValidationService(availability_provider=availability)
     posting = InventoryMovementPostingService(database, validation_service=validation)
@@ -169,6 +186,7 @@ def test_duplicate_with_different_payload_hash_raises(database: Session):
     )
 
     org_id = uuid4()
+    _ensure_organization(database, org_id)
     availability = SourceBackedAvailabilityProvider(database)
     validation = InventoryMovementValidationService(availability_provider=availability)
     posting = InventoryMovementPostingService(database, validation_service=validation)
