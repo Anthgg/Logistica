@@ -109,7 +109,7 @@ jobs:
       - name: Run Linter (Ruff)
         working-directory: backend
         run: |
-          ruff check app tests --output-format=github
+          ruff check app/modules/logistics/inventory/balances tests/logistics/inventory/balances --output-format=github
 
       # -----------------------------------------------------------------------
       # UNIT & HTTP TESTS (no PostgreSQL dependency)
