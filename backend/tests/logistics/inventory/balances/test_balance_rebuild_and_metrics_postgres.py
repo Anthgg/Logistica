@@ -886,13 +886,14 @@ def test_dimension_key_no_collision_at_64_chars(pg_session: Session):
         dimension_key=_COLLISION_KEY_B,
     )
 
-    _create_movement(
+    m1 = _create_movement(
         pg_session, org_id, branch_id, part_key, 1,
         dest_pos_id=pos_a.id, base_qty=Decimal(111), base_unit_id=unit_id,
     )
     _create_movement(
         pg_session, org_id, branch_id, part_key, 2,
-        dest_pos_id=pos_b.id, base_qty=Decimal(222), base_unit_id=unit_id,
+        dest_pos_id=pos_b.id, base_qty=Decimal(222),
+        prev_hash=m1.movement_hash, base_unit_id=unit_id,
     )
     pg_session.commit()
 
