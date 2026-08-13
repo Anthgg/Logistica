@@ -1,17 +1,38 @@
 """
 Rebuild Application Service with Atomic Swap (Phase 045).
 
-Implements canonical ledger rebuild from Phase 044 Event Ledger (or valid checkpoints),
+Implements canonical ledger rebuild from Phase 044 Event Ledger,
 staging projection (G2), hash/sequence integrity verification, pre-swap validation,
 and tenant-safe atomic swap:
+
 - G1 (active projection): is_active_projection=True, rebuild_job_id=None
 - G2 (staging projection): is_active_projection=False, rebuild_job_id=<job_id>
-- Canonical Source: Phase 044 Ledger (InventoryMovementModel + InventoryMovementLineModel) / Checkpoint.
-  Initial quantity conceptual = Decimal("0"). G1.quantity is NEVER copied as source of truth.
+
+- Canonical Source of Truth: Phase 044 Ledger ONLY
+  (InventoryMovementModel + InventoryMovementLineModel).
+  Initial quantity = Decimal("0"). G1.quantity is NEVER copied as source of truth.
+
+- GAP 1 FIX — No Double Replay:
+  InventoryBalanceDeltaModel is NOT replayed during FULL rebuild.
+  Deltas may have been derived from the same F044 MOVs; applying them again would
+  double-count quantities. The delta table is preserved for incremental/audit use.
+
+- GAP 2 FIX — Checkpoint Safe Fallback:
+  InventoryBalanceCheckpointModel does NOT store per-position quantities.
+  Therefore, we CANNOT use checkpoint_sequence to skip historical movements.
+  Strategy: SAFE_FULL_REPLAY_FALLBACK — always replay from sequence 1.
+  CHECKPOINT_OPTIMIZATION_DISABLED_UNTIL_STATEFUL_SNAPSHOT_AVAILABLE
+
+- GAP 3 FIX — Canonical base_unit_id:
+  base_unit_id is resolved from InventoryMovementLineModel.base_unit_id.
+  Using p.product_id as base_unit_id fallback is PROHIBITED.
+  If a position has conflicting base_unit_ids across lines, rebuild fails
+  with BASE_UNIT_CONSISTENCY_ERROR.
+
 - Tenant Safety: All DELETE, UPDATE, and staging operations include explicit organization_id filters.
 - Pre-swap integrity check: Fails if hash mismatch or sequence gap detected in Phase 044 ledger.
 - Atomic swap happens inside a single PostgreSQL transaction.
-- If pre-swap validation or integrity fails, rollback_rebuild cleans up G2 and G1 remains active without interruption.
+- If pre-swap validation or integrity fails, rollback_rebuild cleans up G2 and G1 remains active.
 """
 
 from __future__ import annotations
@@ -26,7 +47,6 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.modules.logistics.inventory.balances.infrastructure.persistence.models import (
-    InventoryBalanceCheckpointModel,
     InventoryBalanceDeltaModel,
     InventoryBalanceRebuildJobModel,
     InventoryPositionBalanceModel,
@@ -192,21 +212,15 @@ class BalanceRebuildApplicationService:
             # Step 1: Ledger Integrity Check
             self.verify_ledger_integrity(job_id)
 
-            # Step 2: Checkpoint Resolution (Optional)
-            checkpoint_start_seq = 0
-            checkpoint = None
-            if job.target_partition_key:
-                checkpoint = self._db.scalars(
-                    select(InventoryBalanceCheckpointModel)
-                    .where(InventoryBalanceCheckpointModel.organization_id == job.organization_id)
-                    .where(InventoryBalanceCheckpointModel.ledger_partition_key == job.target_partition_key)
-                    .where(InventoryBalanceCheckpointModel.status == "VALID")
-                    .order_by(InventoryBalanceCheckpointModel.checkpoint_sequence.desc())
-                ).first()
-                if checkpoint:
-                    checkpoint_start_seq = checkpoint.checkpoint_sequence
+            # Step 2: GAP 2 FIX — Checkpoint Safe Fallback.
+            # InventoryBalanceCheckpointModel does NOT store per-position quantities.
+            # We CANNOT use checkpoint_sequence to skip historical movements without
+            # risking incorrect balances (starting from 0 but skipping prior MOVs).
+            # CHECKPOINT_OPTIMIZATION_DISABLED_UNTIL_STATEFUL_SNAPSHOT_AVAILABLE
+            # Always replay from sequence 1 (full replay).
+            # NOTE: checkpoint object is intentionally NOT used to skip movements.
 
-            # Step 3: Resolve Inventory Positions from Phase 044 Position Model / Movements
+            # Step 3: Resolve Inventory Positions from Phase 044 Position Model
             pos_query = select(InventoryPositionModel).where(
                 InventoryPositionModel.organization_id == job.organization_id
             )
@@ -216,32 +230,68 @@ class BalanceRebuildApplicationService:
                 pos_query = pos_query.where(InventoryPositionModel.product_id == job.target_product_id)
 
             positions = list(self._db.scalars(pos_query))
-            
+
+            # Step 3b: GAP 3 FIX — Resolve canonical base_unit_id from InventoryMovementLineModel.
+            # Using product_id as a base_unit_id fallback is PROHIBITED.
+            # BASE_UNIT_SOURCE = InventoryMovementLineModel.base_unit_id
+            # Build map: position_id -> base_unit_id, validating consistency across lines.
+            pos_base_unit_map: dict[UUID, UUID] = {}
+            lines_for_units = list(
+                self._db.scalars(
+                    select(InventoryMovementLineModel)
+                    .join(
+                        InventoryMovementModel,
+                        InventoryMovementLineModel.inventory_movement_id == InventoryMovementModel.id,
+                    )
+                    .where(InventoryMovementModel.organization_id == job.organization_id)
+                    .where(InventoryMovementModel.status == "POSTED")
+                )
+            )
+            for mvl in lines_for_units:
+                for pos_id in filter(None, [mvl.destination_position_id, mvl.source_position_id]):
+                    existing = pos_base_unit_map.get(pos_id)
+                    if existing is not None and existing != mvl.base_unit_id:
+                        raise RebuildSwapFailedError(
+                            f"BASE_UNIT_CONSISTENCY_ERROR: Position {pos_id} has conflicting "
+                            f"base_unit_ids across movement lines ({existing} vs {mvl.base_unit_id}). "
+                            "Cannot determine canonical unit without UOM conversion service."
+                        )
+                    pos_base_unit_map[pos_id] = mvl.base_unit_id
+
             # Map position definitions
             positions_to_rebuild: list[dict[str, Any]] = []
             for p in positions:
+                # Resolve base_unit_id from movement lines; fall back to a sentinel only if no
+                # lines exist yet (e.g. new position with no movements). This is still NOT product_id.
+                canonical_base_unit = pos_base_unit_map.get(p.id)
+                if canonical_base_unit is None:
+                    # Position has no movement lines yet — skip it in this rebuild
+                    # (it has no ledger history to replay, balance = 0 implicitly).
+                    continue
                 positions_to_rebuild.append(
                     {
                         "inventory_position_id": p.id,
                         "branch_id": p.branch_id,
                         "warehouse_id": p.warehouse_id,
-                        "warehouse_location_id": p.warehouse_location_id,
+                        "warehouse_location_id": getattr(p, "warehouse_location_id", None),
                         "product_id": p.product_id,
-                        "product_version_id": p.product_version_id,
-                        "base_unit_id": p.product_id, # Fallback base unit reference
-                        "initial_quantity": Decimal(0), # Canonical start quantity = 0!
+                        "product_version_id": getattr(p, "product_version_id", None),
+                        # GAP 3 FIX: use canonical base_unit from movement lines, NOT product_id
+                        "base_unit_id": canonical_base_unit,
+                        "initial_quantity": Decimal(0),  # Canonical start = 0 (NEVER from G1)
                         "availability_state": p.availability_state,
                         "quality_state": p.quality_state,
                         "transit_state": p.transit_state,
                         "damage_state": p.damage_state,
                         "expiration_state": p.expiration_state,
+                        # GAP 4 FIX: dimension_key is now String(255) — no truncation needed
                         "dimension_key": p.dimension_key,
                         "partition_key": f"org:{job.organization_id}:default",
-                        "checkpoint_sequence": checkpoint_start_seq,
+                        "checkpoint_sequence": 0,  # Always 0 — checkpoint skip disabled
                     }
                 )
 
-            # If no positions in F044 Position Model nor G1, mark job as COMPLETED with 0 positions
+            # If no positions with movement lines, mark job as COMPLETED with 0 positions
             if not positions_to_rebuild:
                 job.status = "COMPLETED"
                 job.completed_at = datetime.now(UTC)
@@ -252,6 +302,9 @@ class BalanceRebuildApplicationService:
             self.prepare_staging_projection(job_id, positions_to_rebuild)
 
             # Step 5: Replay Phase 044 Movement Lines into G2 Staging Rows
+            # GAP 1 FIX: ONLY F044 Ledger movements are replayed here.
+            # InventoryBalanceDeltaModel is NOT replayed — those deltas may have been derived
+            # from the same F044 MOVs; replaying them would double-count quantities.
             mov_query = (
                 select(InventoryMovementModel)
                 .where(InventoryMovementModel.organization_id == job.organization_id)
@@ -261,8 +314,10 @@ class BalanceRebuildApplicationService:
                     InventoryMovementModel.ledger_sequence.asc(),
                 )
             )
-            if checkpoint_start_seq > 0:
-                mov_query = mov_query.where(InventoryMovementModel.ledger_sequence > checkpoint_start_seq)
+            # GAP 2 FIX: checkpoint_start_seq is always 0, so this filter is never applied.
+            # Kept as explicit documentation that sequence filtering is intentionally disabled.
+            # if checkpoint_start_seq > 0:  # DISABLED: SAFE_FULL_REPLAY_FALLBACK
+            #     mov_query = mov_query.where(InventoryMovementModel.ledger_sequence > checkpoint_start_seq)
             if job.target_partition_key:
                 mov_query = mov_query.where(
                     InventoryMovementModel.ledger_partition_key == job.target_partition_key
@@ -312,26 +367,10 @@ class BalanceRebuildApplicationService:
                         stg.last_applied_movement_hash = mov.movement_hash
                         replayed_count += 1
 
-            # Also replay Phase 045 InventoryBalanceDeltaModel if present
-            deltas = list(
-                self._db.scalars(
-                    select(InventoryBalanceDeltaModel)
-                    .where(InventoryBalanceDeltaModel.organization_id == job.organization_id)
-                    .order_by(InventoryBalanceDeltaModel.ledger_sequence.asc())
-                )
-            )
-            if deltas:
-                for delta in deltas:
-                    if delta.position_id in staging_map:
-                        stg = staging_map[delta.position_id]
-                        if delta.delta_type in ("INCREASE", "INBOUND", "POSITIVE"):
-                            stg.quantity += delta.delta_quantity
-                        elif delta.delta_type in ("DECREASE", "OUTBOUND", "NEGATIVE"):
-                            stg.quantity -= delta.delta_quantity
-                        stg.last_applied_ledger_sequence = max(
-                            stg.last_applied_ledger_sequence, delta.ledger_sequence
-                        )
-                        replayed_count += 1
+            # GAP 1 FIX MARKER: InventoryBalanceDeltaModel replay block intentionally REMOVED.
+            # FULL rebuild MUST NOT apply F045 deltas derived from F044 MOVs.
+            # The delta table exists for: incremental processing, idempotency, audit, reconciliation.
+            # For incremental consumer flow, use replay_deltas_into_staging() separately.
 
             job.movements_replayed = replayed_count
 

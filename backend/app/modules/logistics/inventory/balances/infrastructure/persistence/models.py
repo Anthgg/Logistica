@@ -92,7 +92,7 @@ class InventoryPositionBalanceModel(Base):
     tracking_reference_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     handling_unit_reference_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
-    dimension_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    dimension_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     last_applied_ledger_partition_key: Mapped[str] = mapped_column(String(120), nullable=False)
     last_applied_ledger_sequence: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
