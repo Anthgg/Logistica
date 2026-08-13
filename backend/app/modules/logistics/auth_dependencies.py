@@ -74,8 +74,8 @@ def require_logistics_access(
     return principal
 
 
-def require_permission(permission_code: str):
-    """Require a permission and its step-up proof when the catalog demands one."""
+def require_permission(*permission_codes: str):
+    """Require at least one of the permissions and its step-up proof when the catalog demands one."""
     def dependency(
         principal: LogisticsPrincipal = Depends(get_logistics_principal),
         db: Session = Depends(get_db),
@@ -84,17 +84,18 @@ def require_permission(permission_code: str):
             alias="X-Step-Up-Proof-ID",
         ),
     ) -> LogisticsPrincipal:
-        if not principal.is_platform_admin and not principal.has_permission(permission_code):
+        if not principal.is_platform_admin and not principal.has_any_permission(*permission_codes):
             raise ApplicationError(
                 "FORBIDDEN",
-                f"No tiene el permiso requerido '{permission_code}'.",
+                f"No tiene el permiso requerido '{permission_codes[0]}'.",
                 403,
             )
 
-        if (
-            not principal.is_platform_admin
-            and permission_code in principal.step_up_permissions
-        ):
+        step_up_required_code = next(
+            (code for code in permission_codes if code in principal.step_up_permissions),
+            None,
+        )
+        if not principal.is_platform_admin and step_up_required_code:
             from app.modules.logistics.security.step_up_service import step_up_service
 
             if not x_step_up_proof_id:
@@ -108,7 +109,7 @@ def require_permission(permission_code: str):
                 db,
                 principal.user_id,
                 principal.session_id,
-                permission_code,
+                step_up_required_code,
             )
             if proof is None or str(proof.id) != x_step_up_proof_id:
                 raise ApplicationError(

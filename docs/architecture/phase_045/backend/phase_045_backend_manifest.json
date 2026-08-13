@@ -1,0 +1,20 @@
+{
+  "phase": "045",
+  "name": "Inventory Balances Materialized Projection",
+  "status": "IMPLEMENTED",
+  "tables": [
+    "inventory_position_balances",
+    "inventory_balance_deltas",
+    "inventory_balance_projection_cursors",
+    "inventory_balance_formula_definitions",
+    "inventory_balance_formula_versions",
+    "inventory_balance_checkpoints",
+    "inventory_balance_rebuild_jobs",
+    "inventory_balance_rebuild_differences",
+    "inventory_balance_reconciliation_jobs",
+    "inventory_balance_reconciliation_differences",
+    "inventory_balance_export_jobs"
+  ],
+  "numeric_precision": "Numeric(38,18)",
+  "python_type": "Decimal"
+}

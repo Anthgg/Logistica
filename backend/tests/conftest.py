@@ -48,7 +48,7 @@ def test_engine():
         allowed_prefixes = (
             "organizations", "logistics_", "vehicles", "vehicle_", "assisted_",
             "business_", "units_", "measurement_", "document_", "product",
-            "purchase_", "po_", "audit_logs", "users", "drivers", "driver_",
+            "purchase_", "po_", "audit_logs", "users", "sessions", "step_up_", "drivers", "driver_",
             "file_", "files", "evidence_", "signature_",
             "arrival_", "inbound_", "idempotency_", "reception_", "warehouse_reception_",
               "warehouses", "warehouse_", "gate_control_", "gate_", "dock_", "unloading_",
@@ -90,7 +90,7 @@ def test_engine():
         allowed_prefixes = (
             "organizations", "logistics_", "vehicles", "vehicle_", "assisted_",
             "business_", "units_", "measurement_", "document_", "product",
-            "purchase_", "po_", "audit_logs", "users", "drivers", "driver_",
+            "purchase_", "po_", "audit_logs", "users", "sessions", "step_up_", "drivers", "driver_",
             "file_", "files", "evidence_", "signature_",
             "arrival_", "inbound_", "idempotency_", "reception_", "warehouse_reception_",
               "warehouses", "warehouse_", "gate_control_", "gate_", "dock_", "unloading_",

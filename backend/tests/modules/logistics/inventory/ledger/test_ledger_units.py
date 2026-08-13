@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -45,8 +45,8 @@ class TestHashService:
             canonicalize,
         )
 
-        naive = datetime(2026, 1, 1, 12, 0, 0)
-        aware_utc = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        naive = datetime(2026, 1, 1, 12, 0, 0)  # noqa: DTZ001
+        aware_utc = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
         canonical_a = canonicalize({"t": naive})
         canonical_b = canonicalize({"t": aware_utc})
         assert canonical_a == canonical_b
@@ -68,7 +68,7 @@ class TestHashService:
             compute_movement_hash,
         )
 
-        base = dict(
+        base = dict(  # noqa: C408
             ledger_partition_key="org:wh:2026",
             ledger_sequence=1,
             movement_code="MOV-1",
@@ -78,8 +78,8 @@ class TestHashService:
             branch_id=uuid4(),
             source_event_id="evt-1",
             source_event_version=1,
-            occurred_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
-            posted_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            occurred_at=datetime(2026, 1, 1, tzinfo=UTC),
+            posted_at=datetime(2026, 1, 1, tzinfo=UTC),
             reason_code="PUTAWAY_COMPLETED",
             compensation_for_movement_id=None,
             previous_movement_hash=None,
@@ -96,13 +96,13 @@ class TestHashService:
             compute_line_content_hash,
         )
 
-        base = dict(
+        base = dict(  # noqa: C408
             line_number=1,
             product_id=uuid4(),
             product_version_id=None,
-            quantity=Decimal("5"),
+            quantity=Decimal(5),
             unit_id=uuid4(),
-            base_quantity=Decimal("5"),
+            base_quantity=Decimal(5),
             base_unit_id=uuid4(),
             source_position_id=None,
             destination_position_id=None,
@@ -113,7 +113,7 @@ class TestHashService:
         h1 = compute_line_content_hash(**base)
         h2 = compute_line_content_hash(**base)
         assert h1 == h2
-        tampered = {**base, "quantity": Decimal("6")}
+        tampered = {**base, "quantity": Decimal(6)}
         h3 = compute_line_content_hash(**tampered)
         assert h1 != h3
 
@@ -664,7 +664,7 @@ class TestSourceAdapters:
             "base_quantity": "5",
             "source_event_id": "evt-1",
             "source_hash": "a" * 64,
-            "occurred_at": datetime(2026, 1, 1, tzinfo=timezone.utc),
+            "occurred_at": datetime(2026, 1, 1, tzinfo=UTC),
         }
 
         adapter = QualityQuarantineAppliedAdapter()
