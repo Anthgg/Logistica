@@ -145,8 +145,8 @@ def test_alembic_upgrade_downgrade_cycle_real():
                 f"MIGRATION FAIL: Tabla {table} (Fase 045) existe antes del upgrade 045"
             )
 
-        # Paso 2: Upgrade a Fase 045 Head (gg450210045sw)
-        run_alembic("upgrade", "gg450210045sw")
+        # Paso 2: Upgrade a Fase 045 Head
+        run_alembic("upgrade", "head")
         tables_after_045 = _get_existing_tables(engine)
 
         # Todas las tablas de 045 deben existir
@@ -155,6 +155,14 @@ def test_alembic_upgrade_downgrade_cycle_real():
                 f"MIGRATION FAIL: Tabla {table} no fue creada por la migración. "
                 f"Tablas existentes: {[t for t in tables_after_045 if 'inventory' in t]}"
             )
+
+        # GAP 4 VERIFICATION: dimension_key must be VARCHAR(255) at head
+        inspector = inspect(engine)
+        cols = {c["name"]: str(c["type"]) for c in inspector.get_columns("inventory_position_balances")}
+        dim_type = cols.get("dimension_key", "")
+        assert "255" in dim_type, (
+            f"MIGRATION FAIL: dimension_key type expected VARCHAR(255), got {dim_type}"
+        )
 
         # Paso 3: Downgrade a 044
         run_alembic("downgrade", "gl440610044rb")
@@ -167,8 +175,8 @@ def test_alembic_upgrade_downgrade_cycle_real():
                 f"El downgrade no es limpio."
             )
 
-        # Paso 4: Segundo upgrade (idempotencia de migraciones)
-        run_alembic("upgrade", "gg450210045sw")
+        # Paso 4: Segundo upgrade a head (idempotencia y dejar DB lista para siguientes tests)
+        run_alembic("upgrade", "head")
         tables_final = _get_existing_tables(engine)
 
         for table in PHASE_045_TABLES:
@@ -178,4 +186,9 @@ def test_alembic_upgrade_downgrade_cycle_real():
             )
 
     finally:
+        try:
+            run_alembic("upgrade", "head")
+        except Exception:  # noqa: BLE001, S110
+            pass
         engine.dispose()
+
