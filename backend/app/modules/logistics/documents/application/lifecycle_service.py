@@ -288,7 +288,11 @@ class DocumentLifecycleService:
         *,
         original: bool = False,
     ) -> tuple[DocumentInstanceModel, DocumentArtifactModel, bytes]:
-        """Resolve an issued PDF artifact, load it and record the download audit."""
+        """Resolve and validate an issued PDF artifact without recording delivery.
+
+        The HTTP orchestrator owns the success event because only it knows that
+        response construction completed and whether the intent was a download.
+        """
         inst = self.get_document(document_id)
         if inst.status not in ("ISSUED", "CANCELLED"):
             raise DocumentServiceException(
@@ -320,10 +324,25 @@ class DocumentLifecycleService:
                 "El archivo PDF del documento no se encuentra disponible.",
             )
 
-        # Validate before auditing: a stored artifact that is empty, truncated or
-        # not a PDF must raise here rather than be recorded as a successful
-        # download that the caller then fails to deliver.
+        # Fail closed before the endpoint constructs a response or records a
+        # successful delivery.
         pdf_bytes = assert_pdf_bytes(self.storage.get(artifact.storage_key))
+        return inst, artifact, pdf_bytes
+
+    def record_preview(self, inst: DocumentInstanceModel, actor_id: UUID | None) -> None:
+        """Record a preview only after its HTTP response has been built."""
+        self._write_audit(
+            "logistics.document.preview_rendered",
+            actor_id,
+            inst.organization_id,
+            inst.branch_id,
+            inst.warehouse_id,
+            inst.id,
+            inst.document_code,
+        )
+
+    def record_download(self, inst: DocumentInstanceModel, actor_id: UUID | None) -> None:
+        """Record a download only after its HTTP response has been built."""
         self._write_audit(
             "logistics.document.downloaded",
             actor_id,
@@ -333,7 +352,6 @@ class DocumentLifecycleService:
             inst.id,
             inst.document_code,
         )
-        return inst, artifact, pdf_bytes
 
     def preview_document(
         self,
@@ -491,15 +509,6 @@ class DocumentLifecycleService:
         )
 
         res = self.renderer.render_pdf(cmd)
-        
-        self._write_audit(
-            "logistics.document.preview_rendered",
-            actor_id,
-            inst.organization_id,
-            inst.branch_id,
-            inst.warehouse_id,
-            inst.id,
-        )
         return res.pdf_bytes, f"PREVIEW_{dt.code}_{inst.id}.pdf"
 
     def issue_document(

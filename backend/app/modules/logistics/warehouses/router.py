@@ -411,9 +411,16 @@ def download_location_label_pdf(
     org_id = _resolve_org_id(principal)
     service = WarehouseLocationLabelService(db)
     pdf_bytes, filename = service.render_single_label_pdf(
-        organization_id=org_id, location_id=location_id, paper_size=paper_size, actor_id=principal.user_id
+        organization_id=org_id, location_id=location_id, paper_size=paper_size
     )
-    return build_pdf_download_response(pdf_bytes, filename)
+    response = build_pdf_download_response(pdf_bytes, filename)
+    service.record_single_label_download(
+        organization_id=org_id,
+        location_id=location_id,
+        paper_size=paper_size,
+        actor_id=principal.user_id,
+    )
+    return response
 
 
 @router.post("/locations/labels/export", responses=PDF_RESPONSE_SCHEMA)
@@ -425,7 +432,14 @@ def export_batch_labels_pdf(
 ):
     org_id = _resolve_org_id(principal)
     service = WarehouseLocationLabelService(db)
-    pdf_bytes, filename = service.export_batch_labels_pdf(
-        organization_id=org_id, location_ids=location_ids, paper_size=paper_size, actor_id=principal.user_id
+    pdf_bytes, filename, rendered_count = service.export_batch_labels_pdf(
+        organization_id=org_id, location_ids=location_ids, paper_size=paper_size
     )
-    return build_pdf_download_response(pdf_bytes, filename)
+    response = build_pdf_download_response(pdf_bytes, filename)
+    service.record_batch_labels_download(
+        organization_id=org_id,
+        rendered_count=rendered_count,
+        paper_size=paper_size,
+        actor_id=principal.user_id,
+    )
+    return response

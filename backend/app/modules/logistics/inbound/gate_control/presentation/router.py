@@ -1823,7 +1823,9 @@ def download_cpv_document_pdf(
         document.id,
         principal.user_id,
     )
-    return build_pdf_download_response(pdf_bytes, artifact.filename)
+    response = build_pdf_download_response(pdf_bytes, artifact.filename)
+    document_service.documents.record_download(document, principal.user_id)
+    return response
 
 
 # ─────────────────────────────────────────────────────────────────────────────

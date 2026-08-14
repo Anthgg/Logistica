@@ -462,7 +462,7 @@ def _record_institutional_document_event(
     recorded as a delivered document.
     """
     AuditService().record(
-        db=db,
+        database=db,
         event_type=(
             "logistics.document.downloaded"
             if downloaded
@@ -478,7 +478,6 @@ def _record_institutional_document_event(
             "delivery": "attachment" if downloaded else "inline",
         },
     )
-    db.commit()
 
 
 def _render_institutional_document(

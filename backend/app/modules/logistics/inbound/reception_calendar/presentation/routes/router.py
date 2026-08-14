@@ -614,7 +614,7 @@ def _record_cit_document_event(
     recorded as a delivered document.
     """
     AuditService().record(
-        db=db,
+        database=db,
         event_type=(
             "logistics.reception_appointment.document_downloaded"
             if downloaded
@@ -630,7 +630,6 @@ def _record_cit_document_event(
             "delivery": "attachment" if downloaded else "inline",
         },
     )
-    db.commit()
 
 
 @router.get("/reception-appointments/{appointment_id}/preview", responses=PDF_RESPONSE_SCHEMA)

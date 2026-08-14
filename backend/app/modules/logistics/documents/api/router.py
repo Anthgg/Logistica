@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import StreamingResponse
@@ -15,8 +15,8 @@ from app.core.pdf_response import (
     build_pdf_download_response,
     build_pdf_preview_response,
 )
+from app.database.base import utc_now
 from app.database.session import get_db
-from app.services.audit_service import AuditService
 # Import authorization dependency from logistics auth_dependencies module
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.principal import LogisticsPrincipal
@@ -370,27 +370,13 @@ def preview_document(
     db: Session = Depends(get_db),
 ) -> Response:
     service = DocumentLifecycleService(db)
+    inst = service.get_document(document_id)
+    if not principal.can_access_organization(inst.organization_id):
+        raise HTTPException(status_code=403, detail="No tiene permiso para acceder a este documento.")
     pdf_bytes, filename = service.preview_document(document_id, principal.user_id)
 
     response = build_pdf_preview_response(pdf_bytes, filename)
-
-    # Viewing is recorded as a preview, never as a download, so the trail can
-    # tell "opened it" apart from "took a copy".
-    AuditService().record(
-        db=db,
-        event_type="logistics.document.preview_rendered",
-        user_id=principal.user_id,
-        session_id=principal.session_id,
-        resource_type="document",
-        resource_id=str(document_id),
-        event_metadata={
-            "document_id": str(document_id),
-            "size_bytes": len(pdf_bytes),
-            "delivery": "inline",
-        },
-    )
-    db.commit()
-
+    service.record_preview(inst, principal.user_id)
     return response
 
 
@@ -422,9 +408,7 @@ def download_document_pdf(
                 detail="No tiene permiso de auditoría elevado para descargar el original de un documento anulado."
             )
 
-    # get_downloadable_pdf validates the bytes before recording
-    # "logistics.document.downloaded", so a corrupt artifact raises here instead
-    # of being audited as a delivered download.
+    # The service validates bytes but deliberately does not record delivery.
     _, artifact, pdf_bytes = service.get_downloadable_pdf(
         document_id,
         principal.user_id,
@@ -432,6 +416,7 @@ def download_document_pdf(
     )
 
     response = build_pdf_download_response(pdf_bytes, artifact.filename)
+    service.record_download(inst, principal.user_id)
 
     if elevated_original:
         service._write_audit(

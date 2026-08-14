@@ -639,7 +639,7 @@ def _record_requisition_document_event(
     recorded as a delivered document.
     """
     AuditService().record(
-        db=db,
+        database=db,
         event_type=(
             "logistics.purchase_requisition.document_downloaded"
             if downloaded
@@ -655,7 +655,6 @@ def _record_requisition_document_event(
             "delivery": "attachment" if downloaded else "inline",
         },
     )
-    db.commit()
 
 
 @router.get(

@@ -5,6 +5,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.pdf_response import PDF_RESPONSE_SCHEMA, build_pdf_download_response
@@ -41,7 +42,7 @@ def create_document_series(
     service = DocumentSeriesService(db)
     res = service.create_series(principal.organization_id, req, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -106,7 +107,7 @@ def activate_document_series(
     service = DocumentSeriesService(db)
     res = service.activate_series(series_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.activated",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -132,7 +133,7 @@ def suspend_document_series(
     service = DocumentSeriesService(db)
     res = service.suspend_series(series_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.suspended",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -158,7 +159,7 @@ def close_document_series(
     service = DocumentSeriesService(db)
     res = service.close_series(series_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.closed",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -185,7 +186,7 @@ def reserve_document_number_range(
     service = DocumentSeriesService(db)
     res = service.reserve_number_range(series_id, req, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.range_reserved",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -294,7 +295,7 @@ def cancel_document_talonario(
     service = DocumentSeriesService(db)
     res = service.cancel_talonario(talonario_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_talonario.cancelled",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -323,7 +324,7 @@ def _record_talonario_download(
     recorded as a delivered document.
     """
     AuditService().record(
-        db=db,
+        database=db,
         # Canonical document-download code: the talonario endpoints only ever
         # deliver an attachment, so this records delivery, not generation.
         event_type="logistics.document.downloaded",
@@ -337,7 +338,6 @@ def _record_talonario_download(
             "delivery": "attachment",
         },
     )
-    db.commit()
 
 
 @router.get(
@@ -401,4 +401,3 @@ def export_talonario_to_zip(
             "Cache-Control": "private, no-store",
         },
     )
-
