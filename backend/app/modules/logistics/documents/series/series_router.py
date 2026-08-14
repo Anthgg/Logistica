@@ -310,6 +310,36 @@ from fastapi import Response
 from app.modules.logistics.documents.application.export_service import DocumentExportService
 
 
+
+def _record_talonario_download(
+    db: Session,
+    principal: LogisticsPrincipal,
+    talonario_id,
+    pdf_bytes: bytes,
+) -> None:
+    """Record the talonario PDF download.
+
+    Call only after the PDF has been validated, so a failed render is never
+    recorded as a delivered document.
+    """
+    AuditService().record(
+        db=db,
+        # Canonical document-download code: the talonario endpoints only ever
+        # deliver an attachment, so this records delivery, not generation.
+        event_type="logistics.document.downloaded",
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="document_talonario",
+        resource_id=str(talonario_id),
+        event_metadata={
+            "talonario_id": str(talonario_id),
+            "size_bytes": len(pdf_bytes),
+            "delivery": "attachment",
+        },
+    )
+    db.commit()
+
+
 @router.get(
     "/{series_id}/talonario.pdf",
     summary="Generar PDF del talonario asociado a una serie (Fase 020)",
@@ -330,7 +360,9 @@ def get_series_talonario_pdf(
 
     service = DocumentExportService(db)
     pdf_bytes, filename = service.generate_talonario_pdf(tal.id, principal.user_id)
-    return build_pdf_download_response(pdf_bytes, filename)
+    response = build_pdf_download_response(pdf_bytes, filename)
+    _record_talonario_download(db, principal, tal.id, pdf_bytes)
+    return response
 
 
 @talonarios_router.get(
@@ -345,7 +377,9 @@ def get_talonario_pdf(
 ) -> Response:
     service = DocumentExportService(db)
     pdf_bytes, filename = service.generate_talonario_pdf(talonario_id, principal.user_id)
-    return build_pdf_download_response(pdf_bytes, filename)
+    response = build_pdf_download_response(pdf_bytes, filename)
+    _record_talonario_download(db, principal, talonario_id, pdf_bytes)
+    return response
 
 
 @talonarios_router.post(

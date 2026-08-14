@@ -16,6 +16,7 @@ from app.core.pdf_response import (
     build_pdf_preview_response,
 )
 from app.database.session import get_db
+from app.services.audit_service import AuditService
 # Import authorization dependency from logistics auth_dependencies module
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.principal import LogisticsPrincipal
@@ -371,7 +372,26 @@ def preview_document(
     service = DocumentLifecycleService(db)
     pdf_bytes, filename = service.preview_document(document_id, principal.user_id)
 
-    return build_pdf_preview_response(pdf_bytes, filename)
+    response = build_pdf_preview_response(pdf_bytes, filename)
+
+    # Viewing is recorded as a preview, never as a download, so the trail can
+    # tell "opened it" apart from "took a copy".
+    AuditService().record(
+        db=db,
+        event_type="logistics.document.preview_rendered",
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="document",
+        resource_id=str(document_id),
+        event_metadata={
+            "document_id": str(document_id),
+            "size_bytes": len(pdf_bytes),
+            "delivery": "inline",
+        },
+    )
+    db.commit()
+
+    return response
 
 
 @router.get(
@@ -393,14 +413,27 @@ def download_document_pdf(
         raise HTTPException(status_code=403, detail="No tiene permiso para acceder a este documento.")
 
     # Anullment protection: if cancelled, downloading the original requires logistics.audit.read_sensitive
-    if inst.status == "CANCELLED" and original:
+    elevated_original = inst.status == "CANCELLED" and original
+    if elevated_original:
         # Check permissions
         if principal.role != "admin" and "logistics.audit.read_sensitive" not in principal.permissions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso de auditoría elevado para descargar el original de un documento anulado."
             )
-        # Audit access to original
+
+    # get_downloadable_pdf validates the bytes before recording
+    # "logistics.document.downloaded", so a corrupt artifact raises here instead
+    # of being audited as a delivered download.
+    _, artifact, pdf_bytes = service.get_downloadable_pdf(
+        document_id,
+        principal.user_id,
+        original=original,
+    )
+
+    response = build_pdf_download_response(pdf_bytes, artifact.filename)
+
+    if elevated_original:
         service._write_audit(
             "logistics.document.original_accessed",
             principal.user_id,
@@ -411,13 +444,7 @@ def download_document_pdf(
             inst.document_code,
         )
 
-    _, artifact, pdf_bytes = service.get_downloadable_pdf(
-        document_id,
-        principal.user_id,
-        original=original,
-    )
-
-    return build_pdf_download_response(pdf_bytes, artifact.filename)
+    return response
 
 
 @router.post(

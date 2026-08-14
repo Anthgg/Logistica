@@ -18,6 +18,7 @@ from app.modules.logistics.auth_dependencies import (
     resolve_organization_id,
 )
 from app.modules.logistics.principal import LogisticsPrincipal
+from app.services.audit_service import AuditService
 from app.modules.logistics.procurement.requisitions.application.services.comment_service import (
     comment_service,
 )
@@ -624,6 +625,39 @@ def list_comments(
 # -------------------------------------------------------------------------
 
 
+def _record_requisition_document_event(
+    db: Session,
+    principal: LogisticsPrincipal,
+    requisition_id: UUID,
+    pdf_bytes: bytes,
+    *,
+    downloaded: bool,
+) -> None:
+    """Record viewing vs downloading the requisition document as distinct events.
+
+    Call only after the PDF has been validated, so a failed render is never
+    recorded as a delivered document.
+    """
+    AuditService().record(
+        db=db,
+        event_type=(
+            "logistics.purchase_requisition.document_downloaded"
+            if downloaded
+            else "logistics.document.preview_rendered"
+        ),
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="purchase_requisition_document",
+        resource_id=str(requisition_id),
+        event_metadata={
+            "requisition_id": str(requisition_id),
+            "size_bytes": len(pdf_bytes),
+            "delivery": "attachment" if downloaded else "inline",
+        },
+    )
+    db.commit()
+
+
 @router.get(
     "/{requisition_id}/document/preview",
     summary="Generate PDF preview (watermarked, non-official)",
@@ -638,7 +672,9 @@ def preview_document(
     pdf_bytes = purchase_requisition_document_service.preview(
         db=db, requisition_id=requisition_id, org_id=org_id, user_id=principal.user_id
     )
-    return build_pdf_preview_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
+    response = build_pdf_preview_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
+    _record_requisition_document_event(db, principal, requisition_id, pdf_bytes, downloaded=False)
+    return response
 
 
 @router.get(
@@ -656,7 +692,9 @@ def download_document_preview(
     pdf_bytes = purchase_requisition_document_service.preview(
         db=db, requisition_id=requisition_id, org_id=org_id, user_id=principal.user_id
     )
-    return build_pdf_download_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
+    response = build_pdf_download_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
+    _record_requisition_document_event(db, principal, requisition_id, pdf_bytes, downloaded=True)
+    return response
 
 
 @router.post(

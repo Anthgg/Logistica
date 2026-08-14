@@ -48,6 +48,7 @@ from app.modules.logistics.company_profile.signer_service import SignerService
 from app.modules.logistics.company_profile.snapshot_provider import InstitutionalSnapshotProvider
 from app.modules.logistics.documents.application.lifecycle_service import DocumentLifecycleService
 from app.modules.logistics.principal import LogisticsPrincipal
+from app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/company-profile", tags=["Logistics - Company Profile (Phase 021)"])
 
@@ -447,6 +448,39 @@ def preview_numbering_policy(
 
 # --- Institutional Preview Endpoint ---
 
+def _record_institutional_document_event(
+    db: Session,
+    principal: LogisticsPrincipal,
+    filename: str,
+    pdf_bytes: bytes,
+    *,
+    downloaded: bool,
+) -> None:
+    """Record viewing vs downloading the institutional document as distinct events.
+
+    Call only after the PDF has been validated, so a failed render is never
+    recorded as a delivered document.
+    """
+    AuditService().record(
+        db=db,
+        event_type=(
+            "logistics.document.downloaded"
+            if downloaded
+            else "logistics.document.preview_rendered"
+        ),
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="institutional_document",
+        resource_id=filename,
+        event_metadata={
+            "filename": filename,
+            "size_bytes": len(pdf_bytes),
+            "delivery": "attachment" if downloaded else "inline",
+        },
+    )
+    db.commit()
+
+
 def _render_institutional_document(
     req: InstitutionalPreviewRequest,
     principal: LogisticsPrincipal,
@@ -532,7 +566,9 @@ def preview_institutional_document(
 ) -> Response:
     """Renders document preview merging active company profile and authorized signer without reserving numbers."""
     pdf_bytes, filename = _render_institutional_document(req, principal, db)
-    return build_pdf_preview_response(pdf_bytes, filename)
+    response = build_pdf_preview_response(pdf_bytes, filename)
+    _record_institutional_document_event(db, principal, filename, pdf_bytes, downloaded=False)
+    return response
 
 
 @router.post(
@@ -547,4 +583,6 @@ def download_institutional_document(
 ) -> Response:
     """Same institutional render as the preview, delivered as an explicit download."""
     pdf_bytes, filename = _render_institutional_document(req, principal, db)
-    return build_pdf_download_response(pdf_bytes, filename)
+    response = build_pdf_download_response(pdf_bytes, filename)
+    _record_institutional_document_event(db, principal, filename, pdf_bytes, downloaded=True)
+    return response
