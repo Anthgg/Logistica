@@ -170,8 +170,18 @@ def test_pdf_download_requires_authentication(method, path):
 
 
 def _override(principal):
+    class UnitDb:
+        def add(self, _value):
+            return None
+
+        def flush(self):
+            return None
+
+    def override_database():
+        yield UnitDb()
+
     app.dependency_overrides[get_logistics_principal] = lambda: principal
-    app.dependency_overrides[get_db] = lambda: iter([SimpleNamespace()])
+    app.dependency_overrides[get_db] = override_database
 
 
 def test_pdf_download_without_permission_is_denied():

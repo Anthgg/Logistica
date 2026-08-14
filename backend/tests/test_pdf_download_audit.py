@@ -10,6 +10,7 @@ Two invariants, both regressions from the first review pass:
 
 from __future__ import annotations
 
+import inspect
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from uuid import UUID, uuid4
@@ -225,13 +226,30 @@ def test_corrupt_stored_artifact_is_not_audited_as_downloaded(monkeypatch):
     assert written == [], f"corrupt artifact audited as downloaded: {written}"
 
 
-def test_valid_stored_artifact_is_audited_once(monkeypatch):
+def test_valid_stored_artifact_is_audited_once_after_response_boundary(monkeypatch):
     service, written = _lifecycle_service(monkeypatch, MINIMAL_PDF)
 
-    _, _, pdf_bytes = service.get_downloadable_pdf(uuid4(), uuid4())
+    actor_id = uuid4()
+    inst, _, pdf_bytes = service.get_downloadable_pdf(uuid4(), actor_id)
 
     assert pdf_bytes.startswith(b"%PDF-")
+    assert written == []
+
+    service.record_download(inst, actor_id)
     assert written == ["logistics.document.downloaded"]
+
+
+def test_lifecycle_render_methods_do_not_own_http_success_events():
+    from app.modules.logistics.documents.application.lifecycle_service import (
+        DocumentLifecycleService,
+    )
+
+    assert "_write_audit" not in inspect.getsource(
+        DocumentLifecycleService.preview_document
+    )
+    assert "_write_audit" not in inspect.getsource(
+        DocumentLifecycleService.get_downloadable_pdf
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -311,6 +329,33 @@ def test_requisition_preview_and_download_differ(monkeypatch, audit, client_for)
     assert download.status_code == 200
     assert download.headers["content-disposition"].startswith("attachment;")
     assert audit.events == ["logistics.purchase_requisition.document_downloaded"]
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_status", "expected_events"),
+    [
+        (MINIMAL_PDF, 200, ["logistics.document.downloaded"]),
+        (HTML_ERROR, 500, []),
+    ],
+)
+def test_talonario_download_audits_only_a_valid_response(
+    payload, expected_status, expected_events, monkeypatch, audit, client_for
+):
+    from app.modules.logistics.documents.application.export_service import (
+        DocumentExportService,
+    )
+
+    monkeypatch.setattr(
+        DocumentExportService,
+        "generate_talonario_pdf",
+        lambda self, talonario_id, actor_id: (payload, "talonario.pdf"),
+    )
+    client = client_for(["logistics.documents.read"])
+
+    response = client.get(f"/api/logistics/document-talonarios/{uuid4()}/pdf")
+
+    assert response.status_code == expected_status
+    assert audit.events == expected_events
 
 
 def test_company_profile_preview_and_download_differ(monkeypatch, audit, client_for):
