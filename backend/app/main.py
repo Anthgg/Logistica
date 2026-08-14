@@ -111,6 +111,8 @@ app.add_middleware(
         "X-Step-Up-Proof-ID",
     ],
     expose_headers=[
+        # Lets the browser read the download filename instead of guessing one.
+        "Content-Disposition",
         "Content-Language",
         "ETag",
         "X-Content-SHA256",

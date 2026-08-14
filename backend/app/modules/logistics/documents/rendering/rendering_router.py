@@ -5,6 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.documents.rendering.rendering_service import DocumentRenderingService
@@ -65,6 +70,7 @@ def list_template_versions(
     "/{template_key}/preview",
     response_class=Response,
     summary="Generar vista previa PDF de una plantilla documental",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def render_template_preview_pdf(
     template_key: str,
@@ -75,8 +81,17 @@ def render_template_preview_pdf(
     service = DocumentRenderingService(db)
     pdf_res = service.render_preview_pdf(template_key, req, user_id=str(principal.user_id))
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Renderer": pdf_res.renderer_name,
+            "X-Content-Hash": pdf_res.content_hash,
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_template.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -88,17 +103,50 @@ def render_template_preview_pdf(
             "file_hash": pdf_res.file_hash,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="{pdf_res.filename_suggestion}"',
+    return response
+
+
+@router.post(
+    "/{template_key}/pdf",
+    response_class=Response,
+    summary="Descargar vista previa PDF de una plantilla documental",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def download_template_preview_pdf(
+    template_key: str,
+    req: DocumentPreviewRenderRequest,
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.documents.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Same template render as the preview, delivered as an explicit download."""
+    service = DocumentRenderingService(db)
+    pdf_res = service.render_preview_pdf(template_key, req, user_id=str(principal.user_id))
+
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
             "X-Document-Renderer": pdf_res.renderer_name,
             "X-Content-Hash": pdf_res.content_hash,
         },
     )
+
+    AuditService().record(
+        database=db,
+        event_type="logistics.document_template.preview_downloaded",
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="document_template",
+        resource_id=template_key,
+        event_metadata={
+            "size_bytes": pdf_res.size_bytes,
+            "renderer_name": pdf_res.renderer_name,
+            "file_hash": pdf_res.file_hash,
+        },
+    )
+
+    return response
 
 
 # Status Router under /api/logistics/document-renderer

@@ -7,12 +7,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import (
     require_permission,
     resolve_organization_id,
 )
 from app.modules.logistics.principal import LogisticsPrincipal
+from app.services.audit_service import AuditService
 from app.modules.logistics.procurement.requisitions.application.services.comment_service import (
     comment_service,
 )
@@ -619,9 +625,42 @@ def list_comments(
 # -------------------------------------------------------------------------
 
 
+def _record_requisition_document_event(
+    db: Session,
+    principal: LogisticsPrincipal,
+    requisition_id: UUID,
+    pdf_bytes: bytes,
+    *,
+    downloaded: bool,
+) -> None:
+    """Record viewing vs downloading the requisition document as distinct events.
+
+    Call only after the PDF has been validated, so a failed render is never
+    recorded as a delivered document.
+    """
+    AuditService().record(
+        database=db,
+        event_type=(
+            "logistics.purchase_requisition.document_downloaded"
+            if downloaded
+            else "logistics.document.preview_rendered"
+        ),
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="purchase_requisition_document",
+        resource_id=str(requisition_id),
+        event_metadata={
+            "requisition_id": str(requisition_id),
+            "size_bytes": len(pdf_bytes),
+            "delivery": "attachment" if downloaded else "inline",
+        },
+    )
+
+
 @router.get(
     "/{requisition_id}/document/preview",
     summary="Generate PDF preview (watermarked, non-official)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_document(
     requisition_id: UUID,
@@ -632,11 +671,29 @@ def preview_document(
     pdf_bytes = purchase_requisition_document_service.preview(
         db=db, requisition_id=requisition_id, org_id=org_id, user_id=principal.user_id
     )
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename=REQ-PREVIEW-{requisition_id}.pdf"},
+    response = build_pdf_preview_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
+    _record_requisition_document_event(db, principal, requisition_id, pdf_bytes, downloaded=False)
+    return response
+
+
+@router.get(
+    "/{requisition_id}/document/preview.pdf",
+    summary="Download PDF preview (watermarked, non-official)",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def download_document_preview(
+    requisition_id: UUID,
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.purchase_requisitions.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Same watermarked render as the preview, delivered as an explicit download."""
+    org_id = resolve_organization_id(principal)
+    pdf_bytes = purchase_requisition_document_service.preview(
+        db=db, requisition_id=requisition_id, org_id=org_id, user_id=principal.user_id
     )
+    response = build_pdf_download_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
+    _record_requisition_document_event(db, principal, requisition_id, pdf_bytes, downloaded=True)
+    return response
 
 
 @router.post(

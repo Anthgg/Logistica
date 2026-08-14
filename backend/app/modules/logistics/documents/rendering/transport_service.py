@@ -110,7 +110,7 @@ class TransportRenderingService:
                     status="ACTIVE",
                 )
                 self.version_repo.save(ver)
-        self.db.commit()
+        self.db.flush()
 
     def render_transport_preview(
         self,

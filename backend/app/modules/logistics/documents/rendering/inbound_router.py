@@ -6,8 +6,14 @@ from typing import Any
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
+from app.modules.logistics.documents.rendering.filenames import preview_pdf_filename
 from app.modules.logistics.documents.rendering.inbound_schemas import ReceptionPackageManifestResponse
 from app.modules.logistics.documents.rendering.inbound_service import InboundRenderingService
 from app.modules.logistics.principal import LogisticsPrincipal
@@ -20,6 +26,7 @@ router = APIRouter(prefix="/inbound", tags=["Logistics - Inbound Documents"])
     "/documents/{document_type_code}/preview",
     response_class=Response,
     summary="Generar vista previa PDF de documento de recepción (CIT, CPV, AREC, NI, DIF, NC)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_inbound_document(
     document_type_code: str,
@@ -30,8 +37,18 @@ def preview_inbound_document(
     service = InboundRenderingService(db)
     pdf_res = service.render_inbound_preview(document_type_code, payload, user_id=str(principal.user_id))
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Content-Hash": pdf_res.content_hash,
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inbound_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -45,24 +62,15 @@ def preview_inbound_document(
             "preview_mode": True,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="{pdf_res.filename_suggestion}"',
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Content-Hash": pdf_res.content_hash,
-        },
-    )
+    return response
 
 
 @router.post(
     "/documents/{document_type_code}/pdf",
     response_class=Response,
     summary="Descargar archivo PDF renderizado de recepción (Modo Preview Protegido)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def download_inbound_document_pdf(
     document_type_code: str,
@@ -73,8 +81,17 @@ def download_inbound_document_pdf(
     service = InboundRenderingService(db)
     pdf_res = service.render_inbound_preview(document_type_code, payload, user_id=str(principal.user_id))
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inbound_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -86,17 +103,8 @@ def download_inbound_document_pdf(
             "file_hash": pdf_res.file_hash,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="PREVIEW_{document_type_code.upper()}_2026.pdf"',
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-        },
-    )
+    return response
 
 
 @router.post(
@@ -113,7 +121,7 @@ def get_reception_package_manifest(
     manifest = service.build_reception_package_manifest(payload)
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inbound_document.package_manifest_created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -124,6 +132,5 @@ def get_reception_package_manifest(
             "missing_count": len(manifest.missing_documents),
         },
     )
-    db.commit()
 
     return manifest

@@ -5,8 +5,10 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import PDF_RESPONSE_SCHEMA, build_pdf_download_response
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.documents.series.series_schemas import (
@@ -40,7 +42,7 @@ def create_document_series(
     service = DocumentSeriesService(db)
     res = service.create_series(principal.organization_id, req, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -105,7 +107,7 @@ def activate_document_series(
     service = DocumentSeriesService(db)
     res = service.activate_series(series_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.activated",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -131,7 +133,7 @@ def suspend_document_series(
     service = DocumentSeriesService(db)
     res = service.suspend_series(series_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.suspended",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -157,7 +159,7 @@ def close_document_series(
     service = DocumentSeriesService(db)
     res = service.close_series(series_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.closed",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -184,7 +186,7 @@ def reserve_document_number_range(
     service = DocumentSeriesService(db)
     res = service.reserve_number_range(series_id, req, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_series.range_reserved",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -293,7 +295,7 @@ def cancel_document_talonario(
     service = DocumentSeriesService(db)
     res = service.cancel_talonario(talonario_id, req.reason, actor_id=principal.user_id)
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_talonario.cancelled",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -309,9 +311,39 @@ from fastapi import Response
 from app.modules.logistics.documents.application.export_service import DocumentExportService
 
 
+
+def _record_talonario_download(
+    db: Session,
+    principal: LogisticsPrincipal,
+    talonario_id,
+    pdf_bytes: bytes,
+) -> None:
+    """Record the talonario PDF download.
+
+    Call only after the PDF has been validated, so a failed render is never
+    recorded as a delivered document.
+    """
+    AuditService().record(
+        database=db,
+        # Canonical document-download code: the talonario endpoints only ever
+        # deliver an attachment, so this records delivery, not generation.
+        event_type="logistics.document.downloaded",
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="document_talonario",
+        resource_id=str(talonario_id),
+        event_metadata={
+            "talonario_id": str(talonario_id),
+            "size_bytes": len(pdf_bytes),
+            "delivery": "attachment",
+        },
+    )
+
+
 @router.get(
     "/{series_id}/talonario.pdf",
     summary="Generar PDF del talonario asociado a una serie (Fase 020)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def get_series_talonario_pdf(
     series_id: UUID,
@@ -328,19 +360,15 @@ def get_series_talonario_pdf(
 
     service = DocumentExportService(db)
     pdf_bytes, filename = service.generate_talonario_pdf(tal.id, principal.user_id)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    response = build_pdf_download_response(pdf_bytes, filename)
+    _record_talonario_download(db, principal, tal.id, pdf_bytes)
+    return response
 
 
 @talonarios_router.get(
     "/{talonario_id}/pdf",
     summary="Generar PDF de talonario específico (Fase 020)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def get_talonario_pdf(
     talonario_id: UUID,
@@ -349,14 +377,9 @@ def get_talonario_pdf(
 ) -> Response:
     service = DocumentExportService(db)
     pdf_bytes, filename = service.generate_talonario_pdf(talonario_id, principal.user_id)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    response = build_pdf_download_response(pdf_bytes, filename)
+    _record_talonario_download(db, principal, talonario_id, pdf_bytes)
+    return response
 
 
 @talonarios_router.post(
@@ -378,4 +401,3 @@ def export_talonario_to_zip(
             "Cache-Control": "private, no-store",
         },
     )
-

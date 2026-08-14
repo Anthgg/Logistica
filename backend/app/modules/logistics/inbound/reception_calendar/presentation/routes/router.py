@@ -7,6 +7,11 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import (
     require_permission,
@@ -47,6 +52,7 @@ from app.modules.logistics.inbound.reception_calendar.presentation.schemas.schem
     ReceptionOperatingWindowResponse,
 )
 from app.modules.logistics.principal import LogisticsPrincipal
+from app.services.audit_service import AuditService
 
 
 router = APIRouter(tags=["Logistics - Reception Scheduling"])
@@ -594,7 +600,39 @@ def get_gate_preparation(
     )
 
 
-@router.get("/reception-appointments/{appointment_id}/preview")
+def _record_cit_document_event(
+    db: Session,
+    principal: LogisticsPrincipal,
+    appointment_id: UUID,
+    pdf: bytes,
+    *,
+    downloaded: bool,
+) -> None:
+    """Record viewing vs downloading the appointment CIT as distinct events.
+
+    Call only after the PDF has been validated, so a failed render is never
+    recorded as a delivered document.
+    """
+    AuditService().record(
+        database=db,
+        event_type=(
+            "logistics.reception_appointment.document_downloaded"
+            if downloaded
+            else "logistics.document.preview_rendered"
+        ),
+        user_id=principal.user_id,
+        session_id=principal.session_id,
+        resource_type="reception_appointment_document",
+        resource_id=str(appointment_id),
+        event_metadata={
+            "appointment_id": str(appointment_id),
+            "size_bytes": len(pdf),
+            "delivery": "attachment" if downloaded else "inline",
+        },
+    )
+
+
+@router.get("/reception-appointments/{appointment_id}/preview", responses=PDF_RESPONSE_SCHEMA)
 def preview_reception_appointment_cit(
     appointment_id: UUID,
     principal: LogisticsPrincipal = Depends(
@@ -605,12 +643,26 @@ def preview_reception_appointment_cit(
     pdf, filename = ReceptionAppointmentDocumentService(db).preview(
         appointment_id, resolve_organization_id(principal), principal.user_id
     )
-    db.commit()
-    return Response(
-        pdf,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    response = build_pdf_preview_response(pdf, filename)
+    _record_cit_document_event(db, principal, appointment_id, pdf, downloaded=False)
+    return response
+
+
+@router.get("/reception-appointments/{appointment_id}/preview.pdf", responses=PDF_RESPONSE_SCHEMA)
+def download_reception_appointment_cit(
+    appointment_id: UUID,
+    principal: LogisticsPrincipal = Depends(
+        require_permission("logistics.reception_appointments.download")
+    ),
+    db: Session = Depends(get_db),
+):
+    """Same CIT render as the preview, delivered as an explicit download."""
+    pdf, filename = ReceptionAppointmentDocumentService(db).preview(
+        appointment_id, resolve_organization_id(principal), principal.user_id
     )
+    response = build_pdf_download_response(pdf, filename)
+    _record_cit_document_event(db, principal, appointment_id, pdf, downloaded=True)
+    return response
 
 
 @router.post("/reception-appointments/{appointment_id}/issue")

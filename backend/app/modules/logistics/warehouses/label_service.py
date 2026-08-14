@@ -7,9 +7,10 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import assert_pdf_bytes
 from app.models.organization import Organization
 from app.models.warehouse import Warehouse
-from app.modules.logistics.audit.service import audit_service, AuditEventCommand
+from app.modules.logistics.audit.service import AuditEventCommand, audit_service
 from app.modules.logistics.documents.rendering.rendering import (
     DocumentRenderCommand,
     DocumentRendererEngine,
@@ -40,7 +41,7 @@ class WarehouseLocationLabelService:
         audit_service.write_event(self.db, cmd)
 
     def render_single_label_pdf(
-        self, organization_id: UUID, location_id: UUID, paper_size: str = "A6", actor_id: UUID | None = None
+        self, organization_id: UUID, location_id: UUID, paper_size: str = "A6"
     ) -> tuple[bytes, str]:
         loc = self.db.get(WarehouseLocationModel, location_id)
         if not loc or loc.organization_id != organization_id:
@@ -78,6 +79,21 @@ class WarehouseLocationLabelService:
         res = self.renderer.render_pdf(cmd)
         filename = f"etiqueta_{loc.full_code.replace('-', '_')}.pdf"
 
+        # Response construction and success auditing are owned by the endpoint.
+        pdf_bytes = assert_pdf_bytes(res.pdf_bytes)
+        return pdf_bytes, filename
+
+    def record_single_label_download(
+        self,
+        organization_id: UUID,
+        location_id: UUID,
+        paper_size: str,
+        actor_id: UUID | None,
+    ) -> None:
+        """Record one label download after the response has been built."""
+        loc = self.db.get(WarehouseLocationModel, location_id)
+        if not loc or loc.organization_id != organization_id:
+            raise HTTPException(status_code=404, detail="WarehouseLocation no encontrada.")
         self._write_audit(
             event_code="logistics.warehouse_location.label_downloaded",
             organization_id=organization_id,
@@ -86,11 +102,9 @@ class WarehouseLocationLabelService:
             details={"full_code": loc.full_code, "paper_size": paper_size},
         )
 
-        return res.pdf_bytes, filename
-
     def export_batch_labels_pdf(
-        self, organization_id: UUID, location_ids: list[UUID], paper_size: str = "A6", actor_id: UUID | None = None
-    ) -> tuple[bytes, str]:
+        self, organization_id: UUID, location_ids: list[UUID], paper_size: str = "A6"
+    ) -> tuple[bytes, str, int]:
         if not location_ids:
             raise HTTPException(status_code=400, detail="Debe proporcionar al menos una ubicación para exportar etiquetas.")
 
@@ -132,12 +146,22 @@ class WarehouseLocationLabelService:
         res = self.renderer.render_pdf(cmd)
         filename = f"lote_etiquetas_{len(labels_data)}_ubicaciones.pdf"
 
+        # Response construction and success auditing are owned by the endpoint.
+        pdf_bytes = assert_pdf_bytes(res.pdf_bytes)
+        return pdf_bytes, filename, len(labels_data)
+
+    def record_batch_labels_download(
+        self,
+        organization_id: UUID,
+        rendered_count: int,
+        paper_size: str,
+        actor_id: UUID | None,
+    ) -> None:
+        """Record one batch-label download after the response has been built."""
         self._write_audit(
             event_code="logistics.warehouse_location.batch_labels_downloaded",
             organization_id=organization_id,
             actor_id=actor_id,
             resource_id=organization_id,
-            details={"count": len(labels_data), "paper_size": paper_size},
+            details={"count": rendered_count, "paper_size": paper_size},
         )
-
-        return res.pdf_bytes, filename

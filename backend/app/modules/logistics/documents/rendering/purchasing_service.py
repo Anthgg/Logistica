@@ -62,7 +62,7 @@ class PurchasingRenderingService:
                     status="ACTIVE",
                 )
                 self.version_repo.save(ver)
-        self.db.commit()
+        self.db.flush()
 
     def render_purchasing_preview(
         self,

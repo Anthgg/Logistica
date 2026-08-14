@@ -11,6 +11,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.documents.rendering.dispatch_schemas import (
@@ -20,6 +25,7 @@ from app.modules.logistics.documents.rendering.dispatch_service import (
     DispatchRenderingService,
 )
 from app.modules.logistics.principal import LogisticsPrincipal
+from app.modules.logistics.documents.rendering.filenames import preview_pdf_filename
 from app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/dispatch", tags=["Logistics - Dispatch Documents"])
@@ -29,6 +35,7 @@ router = APIRouter(prefix="/dispatch", tags=["Logistics - Dispatch Documents"])
     "/documents/{document_type_code}/preview",
     response_class=Response,
     summary="Generar vista previa PDF de documento de despacho (MAN, ADSP, CPR)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_dispatch_document(
     document_type_code: str,
@@ -43,8 +50,19 @@ def preview_dispatch_document(
         user_id=str(principal.user_id),
     )
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Content-Hash": pdf_res.content_hash,
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.dispatch_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -58,26 +76,15 @@ def preview_dispatch_document(
             "preview_mode": True,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="{pdf_res.filename_suggestion}"',
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Content-Hash": pdf_res.content_hash,
-            "X-Template-Version": "1.0.0",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return response
 
 
 @router.post(
     "/documents/{document_type_code}/pdf",
     response_class=Response,
     summary="Descargar PDF de documento de despacho (Modo Preview Protegido)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def download_dispatch_document_pdf(
     document_type_code: str,
@@ -92,8 +99,18 @@ def download_dispatch_document_pdf(
         user_id=str(principal.user_id),
     )
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.dispatch_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -106,21 +123,8 @@ def download_dispatch_document_pdf(
             "preview_mode": True,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="PREVIEW_{document_type_code.upper()}_{{}}.pdf"'.format(
-                __import__("datetime").datetime.now().strftime("%Y%m%d")
-            ),
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Template-Version": "1.0.0",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return response
 
 
 @router.post(
@@ -137,7 +141,7 @@ def get_dispatch_package_manifest(
     manifest = service.build_dispatch_package_manifest(payload)
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.dispatch_document.package_manifest_created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -150,6 +154,5 @@ def get_dispatch_package_manifest(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return manifest

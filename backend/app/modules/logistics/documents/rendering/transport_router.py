@@ -4,6 +4,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.principal import LogisticsPrincipal
@@ -11,15 +16,19 @@ from app.modules.logistics.documents.rendering.transport_service import Transpor
 from app.modules.logistics.documents.rendering.delivery_schemas import (
     TransportDeliveryDocumentPackageManifest,
 )
+from app.modules.logistics.documents.rendering.filenames import preview_pdf_filename
 from app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/transport", tags=["Logistics Transport Documents"])
+
+PACKAGE_PDF_FILENAME = "PREVIEW-PAQUETE-TRANSPORTE-COMBINADO.pdf"
 
 
 @router.post(
     "/documents/{document_type_code}/preview",
     response_class=Response,
     summary="Previsualizar PDF de documento de transporte (Modo Preview Protegido)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_transport_document(
     document_type_code: str,
@@ -37,8 +46,19 @@ def preview_transport_document(
         sensitive_read=sensitive_read,
     )
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Content-Hash": pdf_res.content_hash,
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.transport_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -52,26 +72,15 @@ def preview_transport_document(
             "sensitive_read": sensitive_read,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="{pdf_res.filename_suggestion}"',
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Content-Hash": pdf_res.content_hash,
-            "X-Template-Version": "1.0.0",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return response
 
 
 @router.post(
     "/documents/{document_type_code}/pdf",
     response_class=Response,
     summary="Descargar PDF de documento de transporte (Modo Preview Protegido)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def download_transport_document_pdf(
     document_type_code: str,
@@ -89,8 +98,18 @@ def download_transport_document_pdf(
         sensitive_read=sensitive_read,
     )
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.transport_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -104,21 +123,8 @@ def download_transport_document_pdf(
             "sensitive_read": sensitive_read,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="PREVIEW_{document_type_code.upper()}_{{}}.pdf"'.format(
-                __import__("datetime").datetime.now().strftime("%Y%m%d")
-            ),
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Template-Version": "1.0.0",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return response
 
 
 @router.post(
@@ -135,7 +141,7 @@ def get_transport_package_manifest(
     manifest = service.build_transport_delivery_package_manifest(payload)
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.transport_document.package_manifest_created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -148,21 +154,22 @@ def get_transport_package_manifest(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return manifest
 
 
-@router.post(
-    "/document-package/preview",
-    response_class=Response,
-    summary="Generar previsualización conjunta (PDF) del paquete documental de transporte",
-)
-def preview_transport_package_combined(
+def _render_transport_package_pdf(
     payload: dict[str, Any],
-    principal: LogisticsPrincipal = Depends(require_permission("logistics.transport_documents.read")),
-    db: Session = Depends(get_db),
-) -> Response:
+    principal: LogisticsPrincipal,
+    db: Session,
+):
+    """Render the combined transport package PDF.
+
+    Shared by the preview and download endpoints so both always deliver exactly
+    the same bytes. Rendering only: the caller records the preview or download
+    event once the PDF has been validated, so a failed render is never audited
+    as a successful one.
+    """
     sensitive_read = principal.has_permission("logistics.transport_documents.read_sensitive")
     service = TransportRenderingService(db)
     manifest = service.build_transport_delivery_package_manifest(payload)
@@ -181,9 +188,26 @@ def preview_transport_package_combined(
         sensitive_read=sensitive_read,
     )
 
+    return pdf_res, manifest, target_code
+
+
+def _record_transport_package_event(
+    db: Session,
+    principal: LogisticsPrincipal,
+    manifest,
+    pdf_res,
+    target_code: str,
+    *,
+    downloaded: bool,
+) -> None:
+    """Record the package preview/download event. Call only after validation."""
     AuditService().record(
-        db=db,
-        event_type="logistics.transport_document.package_preview_rendered",
+        database=db,
+        event_type=(
+            "logistics.transport_document.package_preview_downloaded"
+            if downloaded
+            else "logistics.transport_document.package_preview_rendered"
+        ),
         user_id=principal.user_id,
         session_id=principal.session_id,
         resource_type="transport_package_preview",
@@ -194,15 +218,62 @@ def preview_transport_package_combined(
             "size_bytes": pdf_res.size_bytes,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": 'inline; filename="PREVIEW_PAQUETE-TRANSPORTE_COMBINED.pdf"',
+
+@router.post(
+    "/document-package/preview",
+    response_class=Response,
+    summary="Generar previsualización conjunta (PDF) del paquete documental de transporte",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def preview_transport_package_combined(
+    payload: dict[str, Any],
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.transport_documents.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    pdf_res, manifest, target_code = _render_transport_package_pdf(payload, principal, db)
+
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        PACKAGE_PDF_FILENAME,
+        extra_headers={
             "X-Document-Mode": "PREVIEW",
             "X-Package-Mode": manifest.package_mode,
-            "Cache-Control": "private, no-store",
         },
     )
+
+    _record_transport_package_event(
+        db, principal, manifest, pdf_res, target_code, downloaded=False
+    )
+
+    return response
+
+
+@router.post(
+    "/document-package/pdf",
+    response_class=Response,
+    summary="Descargar previsualización conjunta (PDF) del paquete documental de transporte",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def download_transport_package_combined(
+    payload: dict[str, Any],
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.transport_documents.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Same combined PDF as the preview, delivered as an explicit download."""
+    pdf_res, manifest, target_code = _render_transport_package_pdf(payload, principal, db)
+
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        PACKAGE_PDF_FILENAME,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Package-Mode": manifest.package_mode,
+        },
+    )
+
+    _record_transport_package_event(
+        db, principal, manifest, pdf_res, target_code, downloaded=True
+    )
+
+    return response

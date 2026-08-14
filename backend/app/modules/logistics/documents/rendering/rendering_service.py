@@ -59,7 +59,7 @@ class DocumentRenderingService:
                 status="ACTIVE",
             )
             self.version_repo.save(ver)
-            self.db.commit()
+        self.db.flush()
         return tpl
 
     def list_templates(self) -> list[DocumentTemplateResponse]:

@@ -98,7 +98,7 @@ class OutboundRenderingService:
                     status="ACTIVE",
                 )
                 self.version_repo.save(ver)
-        self.db.commit()
+        self.db.flush()
 
     def render_outbound_preview(
         self,

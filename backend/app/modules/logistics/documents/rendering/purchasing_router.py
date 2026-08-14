@@ -6,8 +6,14 @@ from typing import Any
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
+from app.modules.logistics.documents.rendering.filenames import preview_pdf_filename
 from app.modules.logistics.documents.rendering.purchasing_service import PurchasingRenderingService
 from app.modules.logistics.principal import LogisticsPrincipal
 from app.services.audit_service import AuditService
@@ -19,6 +25,7 @@ router = APIRouter(prefix="/purchasing/documents", tags=["Logistics - Purchasing
     "/{document_type_code}/preview",
     response_class=Response,
     summary="Generar vista previa PDF de documento de compras (REQ, SCOT, CCO, OC, APC, CEP)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_purchasing_document(
     document_type_code: str,
@@ -29,8 +36,18 @@ def preview_purchasing_document(
     service = PurchasingRenderingService(db)
     pdf_res = service.render_purchasing_preview(document_type_code, payload, user_id=str(principal.user_id))
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Content-Hash": pdf_res.content_hash,
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.purchasing_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -44,24 +61,15 @@ def preview_purchasing_document(
             "preview_mode": True,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="{pdf_res.filename_suggestion}"',
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Content-Hash": pdf_res.content_hash,
-        },
-    )
+    return response
 
 
 @router.post(
     "/{document_type_code}/pdf",
     response_class=Response,
     summary="Descargar archivo PDF renderizado de compras (Modo Preview Protegido)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def download_purchasing_document_pdf(
     document_type_code: str,
@@ -72,8 +80,17 @@ def download_purchasing_document_pdf(
     service = PurchasingRenderingService(db)
     pdf_res = service.render_purchasing_preview(document_type_code, payload, user_id=str(principal.user_id))
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+        },
+    )
+
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.purchasing_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -85,14 +102,5 @@ def download_purchasing_document_pdf(
             "file_hash": pdf_res.file_hash,
         },
     )
-    db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="PREVIEW_{document_type_code.upper()}_2026.pdf"',
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-        },
-    )
+    return response
