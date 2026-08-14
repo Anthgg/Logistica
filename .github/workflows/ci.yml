@@ -285,6 +285,7 @@ jobs:
             tests/test_pdf_download_response.py \
             tests/test_pdf_download_http.py \
             tests/test_pdf_download_audit.py \
+            tests/test_pdf_download_audit_postgres.py \
             scripts/audit_pdf_downloads.py \
             --output-format=github
 
@@ -333,6 +334,37 @@ jobs:
             exit 1
           fi
           echo "PASS: suite PDF completa sin fallos ni skips."
+
+      - name: Run PDF PostgreSQL Audit Integration Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest tests/test_pdf_download_audit_postgres.py \
+            -m "pdf_postgres" --tb=short -v -p no:cacheprovider \
+            2>&1 | tee /tmp/pytest_pdf_postgres.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_pdf_postgres.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_pdf_postgres.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_pdf_postgres.log | tail -1 || true)
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
+          SKIPPED=${SKIPPED:-0}
+
+          echo "PDF PostgreSQL Audit Integration Tests — PASSED: $PASSED | FAILED: $FAILED | SKIPPED: $SKIPPED"
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -ne 0 ] || [ "$SKIPPED" -ne 0 ]; then
+            echo "FAIL: PDF PostgreSQL gate requires FAILED=0 and SKIPPED=0."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 11 ]; then
+            echo "FAIL: expected at least 11 real PostgreSQL PDF tests."
+            exit 1
+          fi
+          echo "PASS: PDF PostgreSQL audit invariants verified on the real service."
 
       - name: Verify PDF Download Contract (OpenAPI)
         working-directory: backend
