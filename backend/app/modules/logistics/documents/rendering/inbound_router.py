@@ -37,6 +37,16 @@ def preview_inbound_document(
     service = InboundRenderingService(db)
     pdf_res = service.render_inbound_preview(document_type_code, payload, user_id=str(principal.user_id))
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Content-Hash": pdf_res.content_hash,
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.inbound_document.preview_rendered",
@@ -54,15 +64,7 @@ def preview_inbound_document(
     )
     db.commit()
 
-    return build_pdf_preview_response(
-        pdf_res.pdf_bytes,
-        pdf_res.filename_suggestion,
-        extra_headers={
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Content-Hash": pdf_res.content_hash,
-        },
-    )
+    return response
 
 
 @router.post(
@@ -80,6 +82,15 @@ def download_inbound_document_pdf(
     service = InboundRenderingService(db)
     pdf_res = service.render_inbound_preview(document_type_code, payload, user_id=str(principal.user_id))
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.inbound_document.preview_downloaded",
@@ -95,14 +106,7 @@ def download_inbound_document_pdf(
     )
     db.commit()
 
-    return build_pdf_download_response(
-        pdf_res.pdf_bytes,
-        preview_pdf_filename(document_type_code),
-        extra_headers={
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-        },
-    )
+    return response
 
 
 @router.post(

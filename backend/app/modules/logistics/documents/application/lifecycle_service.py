@@ -16,6 +16,7 @@ from sqlalchemy import select, and_, or_, func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.pdf_response import assert_pdf_bytes
 from app.modules.logistics.documents.models import (
     DocumentInstanceModel,
     DocumentSnapshotModel,
@@ -319,7 +320,10 @@ class DocumentLifecycleService:
                 "El archivo PDF del documento no se encuentra disponible.",
             )
 
-        pdf_bytes = self.storage.get(artifact.storage_key)
+        # Validate before auditing: a stored artifact that is empty, truncated or
+        # not a PDF must raise here rather than be recorded as a successful
+        # download that the caller then fails to deliver.
+        pdf_bytes = assert_pdf_bytes(self.storage.get(artifact.storage_key))
         self._write_audit(
             "logistics.document.downloaded",
             actor_id,

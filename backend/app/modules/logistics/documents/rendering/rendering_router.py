@@ -81,6 +81,15 @@ def render_template_preview_pdf(
     service = DocumentRenderingService(db)
     pdf_res = service.render_preview_pdf(template_key, req, user_id=str(principal.user_id))
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Renderer": pdf_res.renderer_name,
+            "X-Content-Hash": pdf_res.content_hash,
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.document_template.preview_rendered",
@@ -96,14 +105,7 @@ def render_template_preview_pdf(
     )
     db.commit()
 
-    return build_pdf_preview_response(
-        pdf_res.pdf_bytes,
-        pdf_res.filename_suggestion,
-        extra_headers={
-            "X-Document-Renderer": pdf_res.renderer_name,
-            "X-Content-Hash": pdf_res.content_hash,
-        },
-    )
+    return response
 
 
 @router.post(
@@ -122,6 +124,15 @@ def download_template_preview_pdf(
     service = DocumentRenderingService(db)
     pdf_res = service.render_preview_pdf(template_key, req, user_id=str(principal.user_id))
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Renderer": pdf_res.renderer_name,
+            "X-Content-Hash": pdf_res.content_hash,
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.document_template.preview_downloaded",
@@ -137,14 +148,7 @@ def download_template_preview_pdf(
     )
     db.commit()
 
-    return build_pdf_download_response(
-        pdf_res.pdf_bytes,
-        pdf_res.filename_suggestion,
-        extra_headers={
-            "X-Document-Renderer": pdf_res.renderer_name,
-            "X-Content-Hash": pdf_res.content_hash,
-        },
-    )
+    return response
 
 
 # Status Router under /api/logistics/document-renderer

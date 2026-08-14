@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import assert_pdf_bytes
 from app.models.organization import Organization
 from app.models.warehouse import Warehouse
 from app.modules.logistics.audit.service import audit_service, AuditEventCommand
@@ -78,6 +79,10 @@ class WarehouseLocationLabelService:
         res = self.renderer.render_pdf(cmd)
         filename = f"etiqueta_{loc.full_code.replace('-', '_')}.pdf"
 
+        # Validate before auditing: a failed render must not be recorded as a
+        # label the operator actually received.
+        pdf_bytes = assert_pdf_bytes(res.pdf_bytes)
+
         self._write_audit(
             event_code="logistics.warehouse_location.label_downloaded",
             organization_id=organization_id,
@@ -86,7 +91,7 @@ class WarehouseLocationLabelService:
             details={"full_code": loc.full_code, "paper_size": paper_size},
         )
 
-        return res.pdf_bytes, filename
+        return pdf_bytes, filename
 
     def export_batch_labels_pdf(
         self, organization_id: UUID, location_ids: list[UUID], paper_size: str = "A6", actor_id: UUID | None = None
@@ -132,6 +137,10 @@ class WarehouseLocationLabelService:
         res = self.renderer.render_pdf(cmd)
         filename = f"lote_etiquetas_{len(labels_data)}_ubicaciones.pdf"
 
+        # Validate before auditing: a failed render must not be recorded as a
+        # label batch the operator actually received.
+        pdf_bytes = assert_pdf_bytes(res.pdf_bytes)
+
         self._write_audit(
             event_code="logistics.warehouse_location.batch_labels_downloaded",
             organization_id=organization_id,
@@ -140,4 +149,4 @@ class WarehouseLocationLabelService:
             details={"count": len(labels_data), "paper_size": paper_size},
         )
 
-        return res.pdf_bytes, filename
+        return pdf_bytes, filename

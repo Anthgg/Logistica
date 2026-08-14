@@ -41,6 +41,17 @@ def preview_delivery_document(
         sensitive_read=sensitive_read,
     )
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Content-Hash": pdf_res.content_hash,
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.delivery_document.preview_rendered",
@@ -58,16 +69,7 @@ def preview_delivery_document(
     )
     db.commit()
 
-    return build_pdf_preview_response(
-        pdf_res.pdf_bytes,
-        pdf_res.filename_suggestion,
-        extra_headers={
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Content-Hash": pdf_res.content_hash,
-            "X-Template-Version": "1.0.0",
-        },
-    )
+    return response
 
 
 @router.post(
@@ -92,6 +94,16 @@ def download_delivery_document_pdf(
         sensitive_read=sensitive_read,
     )
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.delivery_document.preview_downloaded",
@@ -109,12 +121,4 @@ def download_delivery_document_pdf(
     )
     db.commit()
 
-    return build_pdf_download_response(
-        pdf_res.pdf_bytes,
-        preview_pdf_filename(document_type_code),
-        extra_headers={
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Template-Version": "1.0.0",
-        },
-    )
+    return response

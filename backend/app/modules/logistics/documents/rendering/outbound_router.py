@@ -52,6 +52,17 @@ def preview_outbound_document(
         user_id=str(principal.user_id),
     )
 
+    response = build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Content-Hash": pdf_res.content_hash,
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.outbound_document.preview_rendered",
@@ -69,16 +80,7 @@ def preview_outbound_document(
     )
     db.commit()
 
-    return build_pdf_preview_response(
-        pdf_res.pdf_bytes,
-        pdf_res.filename_suggestion,
-        extra_headers={
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Content-Hash": pdf_res.content_hash,
-            "X-Template-Version": "1.0.0",
-        },
-    )
+    return response
 
 
 @router.post(
@@ -100,6 +102,16 @@ def download_outbound_document_pdf(
         user_id=str(principal.user_id),
     )
 
+    response = build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Document-Type": document_type_code.upper(),
+            "X-Template-Version": "1.0.0",
+        },
+    )
+
     AuditService().record(
         db=db,
         event_type="logistics.outbound_document.preview_downloaded",
@@ -116,15 +128,7 @@ def download_outbound_document_pdf(
     )
     db.commit()
 
-    return build_pdf_download_response(
-        pdf_res.pdf_bytes,
-        preview_pdf_filename(document_type_code),
-        extra_headers={
-            "X-Document-Mode": "PREVIEW",
-            "X-Document-Type": document_type_code.upper(),
-            "X-Template-Version": "1.0.0",
-        },
-    )
+    return response
 
 
 @router.post(
@@ -163,13 +167,13 @@ def _render_outbound_package_pdf(
     payload: dict[str, Any],
     principal: LogisticsPrincipal,
     db: Session,
-    *,
-    downloaded: bool,
 ):
     """Render the combined outbound package PDF.
 
     Shared by the preview and download endpoints so both always deliver exactly
-    the same bytes; only the Content-Disposition differs.
+    the same bytes. Rendering only: the caller records the preview or download
+    event once the PDF has been validated, so a failed render is never audited
+    as a successful one.
     """
     service = OutboundRenderingService(db)
     manifest = service.build_outbound_package_manifest(payload)
@@ -190,6 +194,19 @@ def _render_outbound_package_pdf(
         user_id=str(principal.user_id),
     )
 
+    return pdf_res, manifest, target_code
+
+
+def _record_outbound_package_event(
+    db: Session,
+    principal: LogisticsPrincipal,
+    manifest,
+    pdf_res,
+    target_code: str,
+    *,
+    downloaded: bool,
+) -> None:
+    """Record the package preview/download event. Call only after validation."""
     AuditService().record(
         db=db,
         event_type=(
@@ -209,8 +226,6 @@ def _render_outbound_package_pdf(
     )
     db.commit()
 
-    return pdf_res, manifest
-
 
 @router.post(
     "/document-package/preview",
@@ -224,9 +239,9 @@ def preview_outbound_package_combined(
     db: Session = Depends(get_db),
 ) -> Response:
     """Combined PDF preview of all documents in the manifest (Phase 018)."""
-    pdf_res, manifest = _render_outbound_package_pdf(payload, principal, db, downloaded=False)
+    pdf_res, manifest, target_code = _render_outbound_package_pdf(payload, principal, db)
 
-    return build_pdf_preview_response(
+    response = build_pdf_preview_response(
         pdf_res.pdf_bytes,
         PACKAGE_PDF_FILENAME,
         extra_headers={
@@ -234,6 +249,12 @@ def preview_outbound_package_combined(
             "X-Package-Mode": manifest.package_mode,
         },
     )
+
+    _record_outbound_package_event(
+        db, principal, manifest, pdf_res, target_code, downloaded=False
+    )
+
+    return response
 
 
 @router.post(
@@ -248,9 +269,9 @@ def download_outbound_package_combined(
     db: Session = Depends(get_db),
 ) -> Response:
     """Same combined PDF as the preview, delivered as an explicit download."""
-    pdf_res, manifest = _render_outbound_package_pdf(payload, principal, db, downloaded=True)
+    pdf_res, manifest, target_code = _render_outbound_package_pdf(payload, principal, db)
 
-    return build_pdf_download_response(
+    response = build_pdf_download_response(
         pdf_res.pdf_bytes,
         PACKAGE_PDF_FILENAME,
         extra_headers={
@@ -258,3 +279,9 @@ def download_outbound_package_combined(
             "X-Package-Mode": manifest.package_mode,
         },
     )
+
+    _record_outbound_package_event(
+        db, principal, manifest, pdf_res, target_code, downloaded=True
+    )
+
+    return response
