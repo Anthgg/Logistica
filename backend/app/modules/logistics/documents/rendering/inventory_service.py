@@ -111,7 +111,7 @@ class InventoryRenderingService:
                     status="ACTIVE",
                 )
                 self.version_repo.save(ver)
-        self.db.commit()
+        self.db.flush()
 
     def render_inventory_preview(
         self,

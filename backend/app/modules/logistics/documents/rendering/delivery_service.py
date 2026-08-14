@@ -88,7 +88,7 @@ class DeliveryRenderingService:
                     status="ACTIVE",
                 )
                 self.version_repo.save(ver)
-        self.db.commit()
+        self.db.flush()
 
     def render_delivery_preview(
         self,

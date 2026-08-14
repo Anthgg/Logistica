@@ -91,7 +91,7 @@ def render_template_preview_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_template.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -103,7 +103,6 @@ def render_template_preview_pdf(
             "file_hash": pdf_res.file_hash,
         },
     )
-    db.commit()
 
     return response
 
@@ -134,7 +133,7 @@ def download_template_preview_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.document_template.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -146,7 +145,6 @@ def download_template_preview_pdf(
             "file_hash": pdf_res.file_hash,
         },
     )
-    db.commit()
 
     return response
 

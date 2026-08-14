@@ -64,7 +64,7 @@ def preview_outbound_document(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.outbound_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -78,7 +78,6 @@ def preview_outbound_document(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return response
 
@@ -113,7 +112,7 @@ def download_outbound_document_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.outbound_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -126,7 +125,6 @@ def download_outbound_document_pdf(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return response
 
@@ -145,7 +143,7 @@ def get_outbound_package_manifest(
     manifest = service.build_outbound_package_manifest(payload)
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.outbound_document.package_manifest_created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -158,7 +156,6 @@ def get_outbound_package_manifest(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return manifest
 
@@ -208,7 +205,7 @@ def _record_outbound_package_event(
 ) -> None:
     """Record the package preview/download event. Call only after validation."""
     AuditService().record(
-        db=db,
+        database=db,
         event_type=(
             "logistics.outbound_document.package_preview_downloaded"
             if downloaded
@@ -224,7 +221,6 @@ def _record_outbound_package_event(
             "size_bytes": pdf_res.size_bytes,
         },
     )
-    db.commit()
 
 
 @router.post(

@@ -47,7 +47,7 @@ def preview_purchasing_document(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.purchasing_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -61,7 +61,6 @@ def preview_purchasing_document(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return response
 
@@ -91,7 +90,7 @@ def download_purchasing_document_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.purchasing_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -103,6 +102,5 @@ def download_purchasing_document_pdf(
             "file_hash": pdf_res.file_hash,
         },
     )
-    db.commit()
 
     return response

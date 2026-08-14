@@ -58,7 +58,7 @@ def preview_transport_document(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.transport_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -72,7 +72,6 @@ def preview_transport_document(
             "sensitive_read": sensitive_read,
         },
     )
-    db.commit()
 
     return response
 
@@ -110,7 +109,7 @@ def download_transport_document_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.transport_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -124,7 +123,6 @@ def download_transport_document_pdf(
             "sensitive_read": sensitive_read,
         },
     )
-    db.commit()
 
     return response
 
@@ -143,7 +141,7 @@ def get_transport_package_manifest(
     manifest = service.build_transport_delivery_package_manifest(payload)
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.transport_document.package_manifest_created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -156,7 +154,6 @@ def get_transport_package_manifest(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return manifest
 
@@ -205,7 +202,7 @@ def _record_transport_package_event(
 ) -> None:
     """Record the package preview/download event. Call only after validation."""
     AuditService().record(
-        db=db,
+        database=db,
         event_type=(
             "logistics.transport_document.package_preview_downloaded"
             if downloaded
@@ -221,7 +218,6 @@ def _record_transport_package_event(
             "size_bytes": pdf_res.size_bytes,
         },
     )
-    db.commit()
 
 
 @router.post(

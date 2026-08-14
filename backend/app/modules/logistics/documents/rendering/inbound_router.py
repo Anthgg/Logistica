@@ -48,7 +48,7 @@ def preview_inbound_document(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inbound_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -62,7 +62,6 @@ def preview_inbound_document(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return response
 
@@ -92,7 +91,7 @@ def download_inbound_document_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inbound_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -104,7 +103,6 @@ def download_inbound_document_pdf(
             "file_hash": pdf_res.file_hash,
         },
     )
-    db.commit()
 
     return response
 
@@ -123,7 +121,7 @@ def get_reception_package_manifest(
     manifest = service.build_reception_package_manifest(payload)
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inbound_document.package_manifest_created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -134,6 +132,5 @@ def get_reception_package_manifest(
             "missing_count": len(manifest.missing_documents),
         },
     )
-    db.commit()
 
     return manifest

@@ -53,7 +53,7 @@ def preview_delivery_document(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.delivery_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -67,7 +67,6 @@ def preview_delivery_document(
             "sensitive_read": sensitive_read,
         },
     )
-    db.commit()
 
     return response
 
@@ -105,7 +104,7 @@ def download_delivery_document_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.delivery_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -119,6 +118,5 @@ def download_delivery_document_pdf(
             "sensitive_read": sensitive_read,
         },
     )
-    db.commit()
 
     return response

@@ -64,7 +64,7 @@ def preview_inventory_document(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inventory_document.preview_rendered",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -79,7 +79,6 @@ def preview_inventory_document(
             "blind_count_mode": blind_count_mode,
         },
     )
-    db.commit()
 
     return response
 
@@ -116,7 +115,7 @@ def download_inventory_document_pdf(
     )
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inventory_document.preview_downloaded",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -129,7 +128,6 @@ def download_inventory_document_pdf(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return response
 
@@ -148,7 +146,7 @@ def get_inventory_package_manifest(
     manifest = service.build_inventory_package_manifest(payload)
 
     AuditService().record(
-        db=db,
+        database=db,
         event_type="logistics.inventory_document.package_manifest_created",
         user_id=principal.user_id,
         session_id=principal.session_id,
@@ -161,6 +159,5 @@ def get_inventory_package_manifest(
             "preview_mode": True,
         },
     )
-    db.commit()
 
     return manifest

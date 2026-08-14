@@ -106,7 +106,7 @@ class DispatchRenderingService:
                     status="ACTIVE",
                 )
                 self.version_repo.save(ver)
-        self.db.commit()
+        self.db.flush()
 
     def render_dispatch_preview(
         self,
