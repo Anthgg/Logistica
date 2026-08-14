@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Audit the PDF download contract across the logistics backend.
 
 Reads the OpenAPI schema (from the local app by default, or from a running
