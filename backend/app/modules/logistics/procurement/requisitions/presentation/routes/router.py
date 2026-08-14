@@ -7,6 +7,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import (
     require_permission,
@@ -622,6 +627,7 @@ def list_comments(
 @router.get(
     "/{requisition_id}/document/preview",
     summary="Generate PDF preview (watermarked, non-official)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_document(
     requisition_id: UUID,
@@ -632,11 +638,25 @@ def preview_document(
     pdf_bytes = purchase_requisition_document_service.preview(
         db=db, requisition_id=requisition_id, org_id=org_id, user_id=principal.user_id
     )
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename=REQ-PREVIEW-{requisition_id}.pdf"},
+    return build_pdf_preview_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
+
+
+@router.get(
+    "/{requisition_id}/document/preview.pdf",
+    summary="Download PDF preview (watermarked, non-official)",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def download_document_preview(
+    requisition_id: UUID,
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.purchase_requisitions.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Same watermarked render as the preview, delivered as an explicit download."""
+    org_id = resolve_organization_id(principal)
+    pdf_bytes = purchase_requisition_document_service.preview(
+        db=db, requisition_id=requisition_id, org_id=org_id, user_id=principal.user_id
     )
+    return build_pdf_download_response(pdf_bytes, f"REQ-PREVIEW-{requisition_id}.pdf")
 
 
 @router.post(

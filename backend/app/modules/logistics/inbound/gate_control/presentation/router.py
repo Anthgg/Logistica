@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends, Header, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import build_pdf_download_response
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import (
     get_logistics_principal,
@@ -1822,14 +1823,7 @@ def download_cpv_document_pdf(
         document.id,
         principal.user_id,
     )
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename={artifact.filename}",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return build_pdf_download_response(pdf_bytes, artifact.filename)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -11,6 +11,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.documents.rendering.dispatch_schemas import (
@@ -20,15 +25,19 @@ from app.modules.logistics.documents.rendering.outbound_service import (
     OutboundRenderingService,
 )
 from app.modules.logistics.principal import LogisticsPrincipal
+from app.modules.logistics.documents.rendering.filenames import preview_pdf_filename
 from app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/outbound", tags=["Logistics - Outbound Documents"])
+
+PACKAGE_PDF_FILENAME = "PREVIEW-PAQUETE-SALIDA-COMBINADO.pdf"
 
 
 @router.post(
     "/documents/{document_type_code}/preview",
     response_class=Response,
     summary="Generar vista previa PDF de documento de salida (PED, ODS, PICK, PACK)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_outbound_document(
     document_type_code: str,
@@ -60,16 +69,14 @@ def preview_outbound_document(
     )
     db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="{pdf_res.filename_suggestion}"',
+    return build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
             "X-Document-Mode": "PREVIEW",
             "X-Document-Type": document_type_code.upper(),
             "X-Content-Hash": pdf_res.content_hash,
             "X-Template-Version": "1.0.0",
-            "Cache-Control": "private, no-store",
         },
     )
 
@@ -78,6 +85,7 @@ def preview_outbound_document(
     "/documents/{document_type_code}/pdf",
     response_class=Response,
     summary="Descargar PDF de documento de salida (Modo Preview Protegido)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def download_outbound_document_pdf(
     document_type_code: str,
@@ -108,17 +116,13 @@ def download_outbound_document_pdf(
     )
     db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="PREVIEW_{document_type_code.upper()}_{{}}.pdf"'.format(
-                __import__("datetime").datetime.now().strftime("%Y%m%d")
-            ),
+    return build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
             "X-Document-Mode": "PREVIEW",
             "X-Document-Type": document_type_code.upper(),
             "X-Template-Version": "1.0.0",
-            "Cache-Control": "private, no-store",
         },
     )
 
@@ -155,19 +159,17 @@ def get_outbound_package_manifest(
     return manifest
 
 
-@router.post(
-    "/document-package/preview",
-    response_class=Response,
-    summary="Generar previsualización conjunta (PDF multipágina) del paquete documental de salida",
-)
-def preview_outbound_package_combined(
+def _render_outbound_package_pdf(
     payload: dict[str, Any],
-    principal: LogisticsPrincipal = Depends(require_permission("logistics.documents.read")),
-    db: Session = Depends(get_db),
-) -> Response:
-    """Generates a combined PDF preview of all documents in the manifest.
+    principal: LogisticsPrincipal,
+    db: Session,
+    *,
+    downloaded: bool,
+):
+    """Render the combined outbound package PDF.
 
-    Phase 018 — preview only.
+    Shared by the preview and download endpoints so both always deliver exactly
+    the same bytes; only the Content-Disposition differs.
     """
     service = OutboundRenderingService(db)
     manifest = service.build_outbound_package_manifest(payload)
@@ -190,7 +192,11 @@ def preview_outbound_package_combined(
 
     AuditService().record(
         db=db,
-        event_type="logistics.outbound_document.package_preview_rendered",
+        event_type=(
+            "logistics.outbound_document.package_preview_downloaded"
+            if downloaded
+            else "logistics.outbound_document.package_preview_rendered"
+        ),
         user_id=principal.user_id,
         session_id=principal.session_id,
         resource_type="outbound_package_preview",
@@ -203,13 +209,52 @@ def preview_outbound_package_combined(
     )
     db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": 'inline; filename="PREVIEW_PAQUETE-SALIDA_COMBINED.pdf"',
+    return pdf_res, manifest
+
+
+@router.post(
+    "/document-package/preview",
+    response_class=Response,
+    summary="Generar previsualización conjunta (PDF multipágina) del paquete documental de salida",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def preview_outbound_package_combined(
+    payload: dict[str, Any],
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.documents.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Combined PDF preview of all documents in the manifest (Phase 018)."""
+    pdf_res, manifest = _render_outbound_package_pdf(payload, principal, db, downloaded=False)
+
+    return build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        PACKAGE_PDF_FILENAME,
+        extra_headers={
             "X-Document-Mode": "PREVIEW",
             "X-Package-Mode": manifest.package_mode,
-            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+@router.post(
+    "/document-package/pdf",
+    response_class=Response,
+    summary="Descargar previsualización conjunta (PDF) del paquete documental de salida",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def download_outbound_package_combined(
+    payload: dict[str, Any],
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.documents.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Same combined PDF as the preview, delivered as an explicit download."""
+    pdf_res, manifest = _render_outbound_package_pdf(payload, principal, db, downloaded=True)
+
+    return build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        PACKAGE_PDF_FILENAME,
+        extra_headers={
+            "X-Document-Mode": "PREVIEW",
+            "X-Package-Mode": manifest.package_mode,
         },
     )

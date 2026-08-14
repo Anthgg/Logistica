@@ -7,6 +7,11 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, Up
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.company_profile.address_contact_service import AddressContactService
@@ -442,13 +447,16 @@ def preview_numbering_policy(
 
 # --- Institutional Preview Endpoint ---
 
-@router.post("/document-preview", summary="Previsualizar documento con ficha y firma institucional (Fase 021)")
-def preview_institutional_document(
+def _render_institutional_document(
     req: InstitutionalPreviewRequest,
-    principal: LogisticsPrincipal = Depends(require_permission("logistics.company_profile.read")),
-    db: Session = Depends(get_db),
-) -> Response:
-    """Renders document preview merging active company profile and authorized signer without reserving numbers."""
+    principal: LogisticsPrincipal,
+    db: Session,
+) -> tuple[bytes, str]:
+    """Render the institutional document merging company profile and signer.
+
+    Shared by the preview and download endpoints so both deliver identical bytes
+    and perform the draft resolution exactly once per request.
+    """
     org_id = _resolve_org_id(principal)
     signer_srv = SignerService(db)
 
@@ -513,8 +521,30 @@ def preview_institutional_document(
 
     pdf_bytes, filename = life_srv.preview_document(draft.id, actor_id=principal.user_id)
 
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename={filename}", "Cache-Control": "no-cache"},
-    )
+    return pdf_bytes, filename
+
+
+@router.post("/document-preview", summary="Previsualizar documento con ficha y firma institucional (Fase 021)", responses=PDF_RESPONSE_SCHEMA)
+def preview_institutional_document(
+    req: InstitutionalPreviewRequest,
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.company_profile.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Renders document preview merging active company profile and authorized signer without reserving numbers."""
+    pdf_bytes, filename = _render_institutional_document(req, principal, db)
+    return build_pdf_preview_response(pdf_bytes, filename)
+
+
+@router.post(
+    "/document-preview.pdf",
+    summary="Descargar documento con ficha y firma institucional (Fase 021)",
+    responses=PDF_RESPONSE_SCHEMA,
+)
+def download_institutional_document(
+    req: InstitutionalPreviewRequest,
+    principal: LogisticsPrincipal = Depends(require_permission("logistics.company_profile.read")),
+    db: Session = Depends(get_db),
+) -> Response:
+    """Same institutional render as the preview, delivered as an explicit download."""
+    pdf_bytes, filename = _render_institutional_document(req, principal, db)
+    return build_pdf_download_response(pdf_bytes, filename)

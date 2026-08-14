@@ -6,6 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import PDF_RESPONSE_SCHEMA, build_pdf_download_response
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.principal import LogisticsPrincipal
@@ -400,7 +401,7 @@ def resolve_location_qr(
     return service.resolve_public_qr(organization_id=org_id, public_reference=public_reference)
 
 
-@router.get("/locations/{location_id}/label.pdf")
+@router.get("/locations/{location_id}/label.pdf", responses=PDF_RESPONSE_SCHEMA)
 def download_location_label_pdf(
     location_id: UUID,
     paper_size: str = Query("A6"),
@@ -412,14 +413,10 @@ def download_location_label_pdf(
     pdf_bytes, filename = service.render_single_label_pdf(
         organization_id=org_id, location_id=location_id, paper_size=paper_size, actor_id=principal.user_id
     )
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return build_pdf_download_response(pdf_bytes, filename)
 
 
-@router.post("/locations/labels/export")
+@router.post("/locations/labels/export", responses=PDF_RESPONSE_SCHEMA)
 def export_batch_labels_pdf(
     location_ids: list[UUID],
     paper_size: str = Query("A6"),
@@ -431,8 +428,4 @@ def export_batch_labels_pdf(
     pdf_bytes, filename = service.export_batch_labels_pdf(
         organization_id=org_id, location_ids=location_ids, paper_size=paper_size, actor_id=principal.user_id
     )
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return build_pdf_download_response(pdf_bytes, filename)

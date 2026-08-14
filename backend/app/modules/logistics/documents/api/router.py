@@ -10,6 +10,11 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 # Import authorization dependency from logistics auth_dependencies module
 from app.modules.logistics.auth_dependencies import require_permission
@@ -356,6 +361,7 @@ def get_document_history(
 @router.get(
     "/{document_id}/preview",
     summary="Generar o previsualizar PDF del documento (Fase 020)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_document(
     document_id: UUID,
@@ -364,15 +370,8 @@ def preview_document(
 ) -> Response:
     service = DocumentLifecycleService(db)
     pdf_bytes, filename = service.preview_document(document_id, principal.user_id)
-    
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"inline; filename={filename}",
-            "Cache-Control": "private, no-store",
-        },
-    )
+
+    return build_pdf_preview_response(pdf_bytes, filename)
 
 
 @router.get(
@@ -418,14 +417,7 @@ def download_document_pdf(
         original=original,
     )
 
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename={artifact.filename}",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return build_pdf_download_response(pdf_bytes, artifact.filename)
 
 
 @router.post(

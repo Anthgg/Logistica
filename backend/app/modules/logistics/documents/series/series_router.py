@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import PDF_RESPONSE_SCHEMA, build_pdf_download_response
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.documents.series.series_schemas import (
@@ -312,6 +313,7 @@ from app.modules.logistics.documents.application.export_service import DocumentE
 @router.get(
     "/{series_id}/talonario.pdf",
     summary="Generar PDF del talonario asociado a una serie (Fase 020)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def get_series_talonario_pdf(
     series_id: UUID,
@@ -328,19 +330,13 @@ def get_series_talonario_pdf(
 
     service = DocumentExportService(db)
     pdf_bytes, filename = service.generate_talonario_pdf(tal.id, principal.user_id)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return build_pdf_download_response(pdf_bytes, filename)
 
 
 @talonarios_router.get(
     "/{talonario_id}/pdf",
     summary="Generar PDF de talonario específico (Fase 020)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def get_talonario_pdf(
     talonario_id: UUID,
@@ -349,14 +345,7 @@ def get_talonario_pdf(
 ) -> Response:
     service = DocumentExportService(db)
     pdf_bytes, filename = service.generate_talonario_pdf(talonario_id, principal.user_id)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}",
-            "Cache-Control": "private, no-store",
-        },
-    )
+    return build_pdf_download_response(pdf_bytes, filename)
 
 
 @talonarios_router.post(

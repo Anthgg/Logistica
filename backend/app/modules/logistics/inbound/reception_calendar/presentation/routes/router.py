@@ -7,6 +7,11 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import (
     require_permission,
@@ -594,7 +599,7 @@ def get_gate_preparation(
     )
 
 
-@router.get("/reception-appointments/{appointment_id}/preview")
+@router.get("/reception-appointments/{appointment_id}/preview", responses=PDF_RESPONSE_SCHEMA)
 def preview_reception_appointment_cit(
     appointment_id: UUID,
     principal: LogisticsPrincipal = Depends(
@@ -606,11 +611,23 @@ def preview_reception_appointment_cit(
         appointment_id, resolve_organization_id(principal), principal.user_id
     )
     db.commit()
-    return Response(
-        pdf,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    return build_pdf_preview_response(pdf, filename)
+
+
+@router.get("/reception-appointments/{appointment_id}/preview.pdf", responses=PDF_RESPONSE_SCHEMA)
+def download_reception_appointment_cit(
+    appointment_id: UUID,
+    principal: LogisticsPrincipal = Depends(
+        require_permission("logistics.reception_appointments.download")
+    ),
+    db: Session = Depends(get_db),
+):
+    """Same CIT render as the preview, delivered as an explicit download."""
+    pdf, filename = ReceptionAppointmentDocumentService(db).preview(
+        appointment_id, resolve_organization_id(principal), principal.user_id
     )
+    db.commit()
+    return build_pdf_download_response(pdf, filename)
 
 
 @router.post("/reception-appointments/{appointment_id}/issue")

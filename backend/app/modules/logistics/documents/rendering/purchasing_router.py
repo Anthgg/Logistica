@@ -6,8 +6,14 @@ from typing import Any
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
+from app.core.pdf_response import (
+    PDF_RESPONSE_SCHEMA,
+    build_pdf_download_response,
+    build_pdf_preview_response,
+)
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import require_permission
+from app.modules.logistics.documents.rendering.filenames import preview_pdf_filename
 from app.modules.logistics.documents.rendering.purchasing_service import PurchasingRenderingService
 from app.modules.logistics.principal import LogisticsPrincipal
 from app.services.audit_service import AuditService
@@ -19,6 +25,7 @@ router = APIRouter(prefix="/purchasing/documents", tags=["Logistics - Purchasing
     "/{document_type_code}/preview",
     response_class=Response,
     summary="Generar vista previa PDF de documento de compras (REQ, SCOT, CCO, OC, APC, CEP)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def preview_purchasing_document(
     document_type_code: str,
@@ -46,11 +53,10 @@ def preview_purchasing_document(
     )
     db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'inline; filename="{pdf_res.filename_suggestion}"',
+    return build_pdf_preview_response(
+        pdf_res.pdf_bytes,
+        pdf_res.filename_suggestion,
+        extra_headers={
             "X-Document-Mode": "PREVIEW",
             "X-Document-Type": document_type_code.upper(),
             "X-Content-Hash": pdf_res.content_hash,
@@ -62,6 +68,7 @@ def preview_purchasing_document(
     "/{document_type_code}/pdf",
     response_class=Response,
     summary="Descargar archivo PDF renderizado de compras (Modo Preview Protegido)",
+    responses=PDF_RESPONSE_SCHEMA,
 )
 def download_purchasing_document_pdf(
     document_type_code: str,
@@ -87,11 +94,10 @@ def download_purchasing_document_pdf(
     )
     db.commit()
 
-    return Response(
-        content=pdf_res.pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="PREVIEW_{document_type_code.upper()}_2026.pdf"',
+    return build_pdf_download_response(
+        pdf_res.pdf_bytes,
+        preview_pdf_filename(document_type_code),
+        extra_headers={
             "X-Document-Mode": "PREVIEW",
             "X-Document-Type": document_type_code.upper(),
         },
