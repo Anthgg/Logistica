@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -87,10 +88,64 @@ def probe(base_url: str, method: str, path: str) -> str:
         return f"UNREACHABLE ({exc.reason})"
 
 
+def routes_returning_pdf(app_root: str) -> int:
+    """Count route handlers that build a PDF response, straight from the source.
+
+    Compared against the OpenAPI declarations so a PDF route can never be added
+    without also advertising ``application/pdf``.
+    """
+    import ast
+
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(app_root):
+        dirnames[:] = [d for d in dirnames if d != "__pycache__"]
+        for fn in filenames:
+            if not fn.endswith(".py"):
+                continue
+            path = os.path.join(dirpath, fn)
+            with open(path, encoding="utf-8") as handle:
+                src = handle.read()
+            if "build_pdf_" not in src:
+                continue
+            tree = ast.parse(src)
+            for node in ast.walk(tree):
+                if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    continue
+                body = ast.get_source_segment(src, node) or ""
+                if "build_pdf_download_response(" not in body and (
+                    "build_pdf_preview_response(" not in body
+                ):
+                    continue
+                for dec in node.decorator_list:
+                    if (
+                        isinstance(dec, ast.Call)
+                        and isinstance(dec.func, ast.Attribute)
+                        and dec.func.attr in ("get", "post", "put", "patch")
+                    ):
+                        total += 1
+    return total
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", help="Probe a running instance instead of importing the app")
     parser.add_argument("--probe", action="store_true", help="Issue unauthenticated requests")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Exit non-zero on any preview without a download or undeclared PDF route",
+    )
+    parser.add_argument(
+        "--min-operations",
+        type=int,
+        default=0,
+        help="Fail if fewer than this many PDF operations are declared",
+    )
+    parser.add_argument(
+        "--app-root",
+        default="app",
+        help="Source root scanned to cross-check declarations (default: app)",
+    )
     args = parser.parse_args()
 
     schema = load_schema(args.base_url)
@@ -133,7 +188,33 @@ def main() -> int:
         if summary:
             print(f"           {summary}")
 
-    return 1 if missing else 0
+    failures = []
+    if missing:
+        failures.append(f"PREVIEW_WITHOUT_DOWNLOAD={len(missing)}")
+
+    if args.check:
+        in_source = routes_returning_pdf(args.app_root)
+        undeclared = in_source - len(operations)
+        print()
+        print(f"PDF routes in source     : {in_source}")
+        print(f"PDF operations declared  : {len(operations)}")
+        print(f"INVALID_PDF_OPENAPI      : {max(undeclared, 0)}")
+        if undeclared > 0:
+            failures.append(f"INVALID_PDF_OPENAPI={undeclared}")
+        if args.min_operations and len(operations) < args.min_operations:
+            failures.append(
+                f"PDF_OPERATIONS={len(operations)} < min {args.min_operations}"
+            )
+
+    if failures:
+        print()
+        for failure in failures:
+            print("FAIL:", failure, file=sys.stderr)
+        return 1
+
+    print()
+    print("PDF audit: OK")
+    return 0
 
 
 if __name__ == "__main__":

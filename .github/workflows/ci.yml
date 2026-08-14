@@ -274,6 +274,73 @@ jobs:
           fi
 
       # -----------------------------------------------------------------------
+      # PDF DOWNLOAD HARDENING — lint, tests and contract gate
+      # -----------------------------------------------------------------------
+      - name: Run Linter (Ruff) — PDF modules
+        working-directory: backend
+        run: |
+          ruff check \
+            app/core/pdf_response.py \
+            app/modules/logistics/documents/rendering/filenames.py \
+            tests/test_pdf_download_response.py \
+            tests/test_pdf_download_http.py \
+            tests/test_pdf_download_audit.py \
+            scripts/audit_pdf_downloads.py \
+            --output-format=github
+
+      - name: Run PDF Download Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest \
+            tests/test_pdf_download_response.py \
+            tests/test_pdf_download_http.py \
+            tests/test_pdf_download_audit.py \
+            --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_pdf.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_pdf.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_pdf.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_pdf.log | tail -1 || true)
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
+          SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "PDF DOWNLOAD SUITE"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: PDF suite terminó con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: $FAILED test(s) PDF fallido(s)."
+            exit 1
+          fi
+          # Un PDF test saltado esconde exactamente el tipo de regresión que
+          # esta suite existe para detectar.
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $SKIPPED test(s) PDF SKIPPED. SKIP=0 es requerido."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 57 ]; then
+            echo "FAIL: sólo $PASSED tests PDF ejecutados; se esperan >= 57."
+            exit 1
+          fi
+          echo "PASS: suite PDF completa sin fallos ni skips."
+
+      - name: Verify PDF Download Contract (OpenAPI)
+        working-directory: backend
+        run: |
+          # Offline: importa la app local, sin red ni credenciales.
+          python scripts/audit_pdf_downloads.py --check --min-operations 33
+
+      # -----------------------------------------------------------------------
       # OPENAPI / IMPORT SMOKE
       # -----------------------------------------------------------------------
       - name: Verify OpenAPI Schema and Import
