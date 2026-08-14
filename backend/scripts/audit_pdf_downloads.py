@@ -32,10 +32,18 @@ PDF_MEDIA_TYPE = "application/pdf"
 DOWNLOAD_SUFFIXES = ("/pdf", ".pdf", "/download")
 
 
+BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 def load_schema(base_url: str | None) -> dict:
     if base_url:
         with urllib.request.urlopen(f"{base_url.rstrip('/')}/openapi.json", timeout=30) as r:
             return json.loads(r.read().decode("utf-8"))
+
+    # Running a script puts scripts/ on sys.path, not the backend root, so make
+    # the import work regardless of the working directory the caller used.
+    if BACKEND_ROOT not in sys.path:
+        sys.path.insert(0, BACKEND_ROOT)
     from app.main import app  # imported lazily so --base-url works without deps
 
     return app.openapi()
@@ -142,8 +150,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--app-root",
-        default="app",
-        help="Source root scanned to cross-check declarations (default: app)",
+        default=os.path.join(BACKEND_ROOT, "app"),
+        help="Source root scanned to cross-check declarations (default: <backend>/app)",
     )
     args = parser.parse_args()
 
