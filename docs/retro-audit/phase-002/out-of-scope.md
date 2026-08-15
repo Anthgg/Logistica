@@ -1,14 +1,14 @@
 # Exclusiones de Alcance · Fase 002
 
-Este documento establece formalmente los límites del sistema para el **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**, diferenciando con total claridad las exclusiones oficiales confirmadas por el Plan Maestro de aquellas propuestas derivadas del análisis técnico que se encuentran pendientes de decisión por el usuario.
+Este documento establece formalmente los límites del sistema para el **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**, registrando las exclusiones oficiales confirmadas por el Plan Maestro y aquellas propuestas aprobadas formalmente por el usuario.
 
 ---
 
-## 1. Exclusiones Oficiales del Primer Lanzamiento (OFFICIAL_OUT_OF_SCOPE_V1)
+## 1. Exclusión Oficial Confirmada por el Plan Maestro (OFFICIAL_OUT_OF_SCOPE_V1)
 
 ### 1.1. Facturación Tributaria Automática (AUTOMATIC_TAX_BILLING)
 - **Clasificación:** `OFFICIAL_OUT_OF_SCOPE_V1`
-- **Estado de Decisión:** `CONFIRMED_BY_MASTER_PLAN`
+- **Estado de Decisión:** `APPROVED` (Confirmado por Plan Maestro y Usuario)
 - **Definición:** Emisión directa, validación contable y timbrado fiscal automático de comprobantes de pago tributarios (Facturas electrónicas, Boletas de venta electrónicas, Notas de crédito/débito fiscales ante la SUNAT u homólogos de administración tributaria).
 - **Justificación Oficial:** El sistema T1 es un **Sistema de Gestión Logística, Almacenes y Trazabilidad Operativa (WMS/TMS)**. Las obligaciones fiscales y contables de facturación tributaria corresponden exclusivamente a los sistemas ERP contables, de facturación electrónica o plataformas OSE autorizadas de la organización.
 - **Frontera de Interfaz:**
@@ -18,47 +18,47 @@ Este documento establece formalmente los límites del sistema para el **Proyecto
 
 ---
 
-## 2. Exclusiones Propuestas Pendientes de Decisión (PROPOSED_OUT_OF_SCOPE_V1)
+## 2. Exclusiones Aprobadas por el Usuario (APPROVED_OUT_OF_SCOPE_V1)
 
-Las siguientes exclusiones corresponden a recomendaciones técnicas y de frontera funcional formuladas durante la retro-auditoría. No constituyen decisiones aprobadas del proyecto hasta que sean validadas formalmente por el usuario.
+Las siguientes exclusiones fueron propuestas en la retro-auditoría y han sido ratificadas formalmente por el usuario:
 
 ### 2.1. Procesamiento de Pasarelas de Pago Bancario (PAYMENT_GATEWAY_PROCESSING)
-- **Clasificación:** `PROPOSED_OUT_OF_SCOPE_V1`
-- **Estado de Decisión:** `PENDING_USER_SCOPE_DECISION`
+- **Clasificación:** `APPROVED_OUT_OF_SCOPE_V1`
+- **Estado de Decisión:** `APPROVED` (Votación del Usuario: `YES`)
 - **Descripción:** Procesamiento de cobros monetarios directos mediante tarjetas de crédito, débito, transferencias bancarias en línea o pasarelas de pago externas (Stripe, PayPal, Niubiz, etc.).
-- **Racional Propuesto:** Las liquidaciones comerciales y cobranzas suelen gestionarse en el sistema de ventas/ERP comercial externo.
+- **Racional:** Las liquidaciones comerciales y cobranzas son gestionadas en el sistema de ventas/ERP comercial externo.
 
 ### 2.2. Contabilidad General y Libros Contables Tributarios (FINANCIAL_ACCOUNTING)
-- **Clasificación:** `PROPOSED_OUT_OF_SCOPE_V1`
-- **Estado de Decisión:** `PENDING_USER_SCOPE_DECISION`
+- **Clasificación:** `APPROVED_OUT_OF_SCOPE_V1`
+- **Estado de Decisión:** `APPROVED` (Votación del Usuario: `YES`)
 - **Descripción:** Mantenimiento de Libro Mayor, Libro Diario y generación de balances financieros de pérdidas y ganancias.
-- **Racional Propuesto:** El libro de inventario (`inventory_ledger`) opera estrictamente a nivel de **unidades físicas y movimientos de existencias**, delegando la contabilidad financiera al sistema corporativo.
+- **Racional:** El libro de inventario (`inventory_ledger`) opera estrictamente a nivel de **unidades físicas y movimientos de existencias**, delegando la contabilidad financiera al sistema corporativo.
 
 ### 2.3. Planillas y Recursos Humanos (PAYROLL_AND_HR)
-- **Clasificación:** `PROPOSED_OUT_OF_SCOPE_V1`
-- **Estado de Decisión:** `PENDING_USER_SCOPE_DECISION`
+- **Clasificación:** `APPROVED_OUT_OF_SCOPE_V1`
+- **Estado de Decisión:** `APPROVED` (Votación del Usuario: `YES`)
 - **Descripción:** Cálculo de remuneraciones, horas extras, beneficios sociales y procesamiento de nómina de personal.
-- **Racional Propuesto:** La gestión de conductores y almacenistas en T1 se restringe a sus atributos operativos, permisos y turnos de asignación en rutas/muelles.
+- **Racional:** La gestión de conductores y personal de almacén en T1 se restringe a sus atributos operativos, permisos y turnos de asignación en rutas/muelles.
 
 ### 2.4. Mantenimiento Mecánico Mayor de Vehículos (FLEET_HEAVY_MAINTENANCE)
-- **Clasificación:** `PROPOSED_OUT_OF_SCOPE_V1`
-- **Estado de Decisión:** `PENDING_USER_SCOPE_DECISION`
+- **Clasificación:** `APPROVED_OUT_OF_SCOPE_V1`
+- **Estado de Decisión:** `APPROVED` (Votación del Usuario: `YES`)
 - **Descripción:** Gestión de talleres mecánicos, compras de repuestos automotrices y mantenimiento correctivo mayor de motores pesados.
-- **Racional Propuesto:** El sistema T1 controla el estado legal y documental de la flota (SOAT, revisiones técnicas vigentes, inspecciones de garita), delegando reparaciones mecánicas a software de taller especializado.
+- **Racional:** El sistema T1 controla el estado legal y documental de la flota (SOAT, revisiones técnicas vigentes, inspecciones de garita), delegando reparaciones mecánicas a software de taller especializado.
 
 ---
 
-## 3. Exclusiones Rechazadas (REJECTED_PROPOSALS)
-*(Ninguna propuesta rechazada actualmente)*
+## 3. Propuestas Rechazadas (REJECTED_PROPOSALS)
+*(Ninguna propuesta rechazada; todas las exclusiones propuestas fueron aprobadas)*
 
 ---
 
-## 4. Cuadro Resumen de Clasificación de Exclusiones
+## 4. Cuadro Resumen de Exclusiones Aprobadas
 
-| Capacidad / Módulo | Clasificación | Estado de Decisión |
+| Capacidad / Módulo | Clasificación | Decisión del Usuario |
 | :--- | :--- | :--- |
-| **Facturación Tributaria Automática (`AUTOMATIC_TAX_BILLING`)** | `OFFICIAL_OUT_OF_SCOPE_V1` | `CONFIRMED_BY_MASTER_PLAN` |
-| **Pasarelas de Pago (`PAYMENT_GATEWAY_PROCESSING`)** | `PROPOSED_OUT_OF_SCOPE_V1` | `PENDING_USER_SCOPE_DECISION` |
-| **Contabilidad General Financiera (`FINANCIAL_ACCOUNTING`)** | `PROPOSED_OUT_OF_SCOPE_V1` | `PENDING_USER_SCOPE_DECISION` |
-| **Planillas y Recursos Humanos (`PAYROLL_AND_HR`)** | `PROPOSED_OUT_OF_SCOPE_V1` | `PENDING_USER_SCOPE_DECISION` |
-| **Mantenimiento Mecánico Pesado (`FLEET_HEAVY_MAINTENANCE`)** | `PROPOSED_OUT_OF_SCOPE_V1` | `PENDING_USER_SCOPE_DECISION` |
+| **Facturación Tributaria Automática (`AUTOMATIC_TAX_BILLING`)** | `OFFICIAL_OUT_OF_SCOPE_V1` | `APPROVED` |
+| **Pasarelas de Pago (`PAYMENT_GATEWAY_PROCESSING`)** | `APPROVED_OUT_OF_SCOPE_V1` | `APPROVED (YES)` |
+| **Contabilidad General Financiera (`FINANCIAL_ACCOUNTING`)** | `APPROVED_OUT_OF_SCOPE_V1` | `APPROVED (YES)` |
+| **Planillas y Recursos Humanos (`PAYROLL_AND_HR`)** | `APPROVED_OUT_OF_SCOPE_V1` | `APPROVED (YES)` |
+| **Mantenimiento Mecánico Pesado (`FLEET_HEAVY_MAINTENANCE`)** | `APPROVED_OUT_OF_SCOPE_V1` | `APPROVED (YES)` |

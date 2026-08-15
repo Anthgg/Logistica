@@ -21,7 +21,7 @@ Este documento contiene el registro de estado maestro de las 100 fases del **Pro
 | Fase | Título oficial | Bloque | Estado | README | UAT |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **F001** | Congelar la línea base del proyecto | Base e integración | PASSED | YES | PASS |
-| **F002** | Definir el alcance logístico | Base e integración | IN_PROGRESS | YES | PENDING_USER_REVIEW |
+| **F002** | Definir el alcance logístico | Base e integración | APPROVED_FOR_MERGE | YES | PASS |
 | **F003** | Diseñar la arquitectura modular | Base e integración | BLOCKED | NO | NOT_STARTED |
 | **F004** | Definir organización, sedes y almacenes | Base e integración | BLOCKED | NO | NOT_STARTED |
 | **F005** | Definir roles logísticos | Base e integración | BLOCKED | NO | NOT_STARTED |

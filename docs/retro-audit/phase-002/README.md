@@ -3,7 +3,7 @@
 ---
 
 ## 1. Objetivo Oficial
-El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance funcional del **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**, estableciendo con precisión las fronteras operativas entre los 12 dominios logísticos, identificando las inclusiones del primer lanzamiento (`IN_SCOPE_V1`), las exclusiones oficiales confirmadas por el Plan Maestro (`OFFICIAL_OUT_OF_SCOPE_V1`), las exclusiones técnicas propuestas (`PROPOSED_OUT_OF_SCOPE_V1`) y asignando el modelo de gobernanza por roles.
+El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance funcional del **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**, estableciendo con precisión las fronteras operativas entre los 12 dominios logísticos, identificando las inclusiones del primer lanzamiento (`IN_SCOPE_V1`), las exclusiones oficiales confirmadas por el Plan Maestro (`OFFICIAL_OUT_OF_SCOPE_V1`), las exclusiones aprobadas por el usuario (`APPROVED_OUT_OF_SCOPE_V1`) y asignando el modelo de gobernanza por roles.
 
 ---
 
@@ -22,15 +22,15 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
   11. KPIs y Analítica (Analytics)
   12. Integraciones Externas (Integrations)
 - Exclusión oficial explícita de la facturación tributaria automática para el primer lanzamiento.
-- Identificación de exclusiones adicionales propuestas para decisión del usuario.
+- Ratificación de exclusiones operativas de pasarelas de pago, contabilidad financiera, planillas y mantenimiento mecánico pesado.
 - Establecimiento del modelo de responsabilidades en tres niveles: Governance Owner, Current RBAC Mapping y Human Owner.
 
 ---
 
 ## 3. Criterio de Cierre
-- Documento de alcance formalizado que contenga la matriz de 12 dominios, inclusiones oficiales, exclusiones oficiales y propuestas, y matriz de responsabilidades.
+- Documento de alcance formalizado que contenga la matriz de 12 dominios, inclusiones oficiales, exclusiones aprobadas y matriz de responsabilidades.
 - Verificación en código de que no existe invasión de alcance por facturación tributaria automática de venta.
-- Revisión y decisión del alcance por parte del usuario (`SCOPE_ACCEPTANCE: PENDING_USER_REVIEW`).
+- Aprobación explícita del alcance por parte del usuario (`SCOPE_ACCEPTANCE: PASS`).
 
 ---
 
@@ -72,7 +72,7 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 
 ---
 
-## 8. Dominios Incluidos (IN_SCOPE_V1)
+## 8. Dominios Incluidos (IN_SCOPE_V1) — APROBADO
 1. **Compras:** Requerimientos, cotizaciones, evaluación de proveedores, OCs y aprobaciones.
 2. **Recepción:** Avisos de llegada, garita, muelles, recepción física, diferencias y control de calidad/cuarentena.
 3. **Almacenes:** Modelado de almacenes, zonificación, ubicaciones jerárquicas y putaway.
@@ -88,17 +88,16 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 
 ---
 
-## 9. Dominios Excluidos (Exclusiones Oficiales vs Propuestas)
+## 9. Dominios Excluidos Oficiales y Aprobados (OUT_OF_SCOPE_V1)
 
-### 9.1. Exclusiones Oficiales del Plan Maestro (OFFICIAL_OUT_OF_SCOPE_V1)
-- **Facturación Tributaria Automática (`AUTOMATIC_TAX_BILLING`):** No se emiten facturas ni boletas fiscales de venta electrónicas ante SUNAT desde el sistema T1. Delegada a ERPs/sistemas contables externos.
+### 9.1. Exclusión Oficial del Plan Maestro (OFFICIAL_OUT_OF_SCOPE_V1)
+- **Facturación Tributaria Automática (`AUTOMATIC_TAX_BILLING`):** No se emiten facturas ni boletas fiscales de venta electrónicas ante SUNAT desde el sistema T1. Delegada a ERPs/sistemas contables externos. *(Aprobado)*
 
-### 9.2. Exclusiones Propuestas Pendientes de Decisión (PROPOSED_OUT_OF_SCOPE_V1)
-*(Propuestas técnicas formuladas en la retro-auditoría; estado: `PENDING_USER_SCOPE_DECISION`)*
-1. **Pasarelas de Pago (`PAYMENT_GATEWAY_PROCESSING`):** Cobros directos con tarjetas/transferencias bancarias en línea.
-2. **Contabilidad General Financiera (`FINANCIAL_ACCOUNTING`):** Libros mayores y balances tributarios.
-3. **Planillas y Recursos Humanos (`PAYROLL_AND_HR`):** Pago de haberes y nóminas.
-4. **Mantenimiento Mecánico Pesado (`FLEET_HEAVY_MAINTENANCE`):** Talleres mecánicos y mantenimiento de motores pesados.
+### 9.2. Exclusiones Aprobadas por el Usuario (APPROVED_OUT_OF_SCOPE_V1)
+1. **Pasarelas de Pago (`PAYMENT_GATEWAY_PROCESSING`):** Cobros directos con tarjetas/transferencias bancarias en línea. *(Aprobado por el usuario)*
+2. **Contabilidad General Financiera (`FINANCIAL_ACCOUNTING`):** Libros mayores y balances tributarios. *(Aprobado por el usuario)*
+3. **Planillas y Recursos Humanos (`PAYROLL_AND_HR`):** Pago de haberes y nóminas. *(Aprobado por el usuario)*
+4. **Mantenimiento Mecánico Pesado (`FLEET_HEAVY_MAINTENANCE`):** Talleres mecánicos y mantenimiento de motores pesados. *(Aprobado por el usuario)*
 
 ---
 
@@ -120,7 +119,7 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 
 ---
 
-## 12. Matriz de Responsabilidades y Gobierno (3 Niveles)
+## 12. Matriz de Responsabilidades y Gobierno (3 Niveles) — APROBADO
 
 | Dominio | Governance Owner (Conceptual) | Current RBAC Mapping (Real) | Human Owner |
 | :--- | :--- | :--- | :--- |
@@ -186,7 +185,7 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 
 ## 18. Riesgos de Scope Creep Mitigados
 - **Riesgo:** Confundir exclusiones oficiales con propuestas del análisis.
-  - **Mitigación:** Separación explícita de `OFFICIAL_OUT_OF_SCOPE_V1` (`AUTOMATIC_TAX_BILLING`) y `PROPOSED_OUT_OF_SCOPE_V1` en la documentación.
+  - **Mitigación:** Separación explícita de `OFFICIAL_OUT_OF_SCOPE_V1` (`AUTOMATIC_TAX_BILLING`) y `APPROVED_OUT_OF_SCOPE_V1` ratificadas por el usuario.
 - **Riesgo:** Confundir Governance Owners conceptuales con roles RBAC de software.
   - **Mitigación:** Implementación del modelo en tres niveles (Governance Owner, Current RBAC Mapping, Human Owner).
 - **Riesgo:** Refactorizar prematuramente módulos en F002.
@@ -197,14 +196,14 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 ## 19. Evidencia Técnica
 - `docs/retro-audit/phase-002/scope-matrix.md`: Matriz de los 12 dominios con sus módulos, tablas, rutas, governance owners y mapeo RBAC.
 - `docs/retro-audit/phase-002/in-scope.md`: Detalle de inclusiones funcionales del primer lanzamiento.
-- `docs/retro-audit/phase-002/out-of-scope.md`: Detalle de exclusiones oficiales y propuestas.
+- `docs/retro-audit/phase-002/out-of-scope.md`: Detalle de exclusiones oficiales y aprobadas.
 - `docs/retro-audit/phase-002/responsibility-matrix.md`: Asignación de gobernanza en tres niveles.
 - `docs/retro-audit/phase-002/current-module-map.md`: Mapeo granular de componentes existentes.
 
 ---
 
 ## 20. Tests y CI Aplicables
-- **Verificación de Integridad Documental:** Comprobación programática de la matriz de 12 dominios, inclusiones, exclusiones oficiales/propuestas y responsabilidades.
+- **Verificación de Integridad Documental:** Comprobación programática de la matriz de 12 dominios, inclusiones, exclusiones oficiales/aprobadas y responsabilidades.
 - **Git Scope Gate:** `git diff --name-only` estrictamente contenido en `docs/retro-audit/**`.
 - **CI Pipeline Oficial:** Ejecución y validación remota en GitHub Actions sobre el commit exacto.
 
@@ -218,21 +217,20 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 ---
 
 ## 22. Correcciones Realizadas
-- Separación formal de exclusiones oficiales (`AUTOMATIC_TAX_BILLING`) vs exclusiones propuestas pendientes de decisión.
-- Delimitación estricta entre Governance Owners conceptuales, roles RBAC reales (`catalog.py`) y Human Owners (`ROLE_TO_BE_ASSIGNED`).
-- Actualización de estados maestros en `docs/retro-audit/README.md` (F001: `PASSED`, F002: `IN_PROGRESS`).
+- Registro formal de las decisiones de alcance aprobadas por el usuario (`SCOPE_ACCEPTANCE: PASS`).
+- Ratificación de `IN_SCOPE_V1`, `OFFICIAL_OUT_OF_SCOPE_V1` y `APPROVED_OUT_OF_SCOPE_V1`.
+- Actualización de estados maestros en `docs/retro-audit/README.md`.
 
 ---
 
 ## 23. Aceptación por el Usuario
 - **Prueba UAT de Navegador:** `N/A` (Fase de gobierno documental sin cambios en UI).
-- **Revisión de Alcance:** `SCOPE_ACCEPTANCE: PENDING_USER_REVIEW`.
+- **Revisión de Alcance:** `SCOPE_ACCEPTANCE: PASS` (Aprobado explícitamente por el usuario).
 
 ---
 
 ## 24. Estado Final de la Fase 002
 ```
-PHASE_002_READY_FOR_USER_ACCEPTANCE
-SCOPE_ACCEPTANCE: PENDING_USER_REVIEW
-F003: BLOCKED
+PHASE_002_APPROVED_FOR_MERGE
+SCOPE_ACCEPTANCE: PASS
 ```
