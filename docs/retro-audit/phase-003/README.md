@@ -324,8 +324,13 @@ Ver análisis exhaustivo por componente en [./frontend-coverage.md](./frontend-c
 
 ## 31. Aceptación de Usuario (User Acceptance)
 
-- **Browser UAT:** `N/A` (Fase estrictamente arquitectónica y documental sin cambios visuales).
-- **Architecture Acceptance:** `PENDING_USER_REVIEW` (Sometida a revisión formal del usuario).
+Ver detalles y protocolos en:
+- [./browser-capability-matrix.md](./browser-capability-matrix.md): Matriz de capacidades funcionales y registro vinculante de 16 gaps asignados a sus fases propietarias (`MANDATORY_AT_OWNER_PHASE = TRUE`).
+- [./browser-acceptance.md](./browser-acceptance.md): Protocolo específico de 6 pruebas de arquitectura y navegación en navegador.
+
+- **Tipo de Evaluación:** `BROWSER_ARCHITECTURE_REVIEW`
+- **Browser Acceptance:** `PENDING_USER_REVIEW` (Sometida a revisión y ejecución interactiva por el usuario).
+- **User Acceptance Gate:** Requiere dictamen explícito del usuario (`USER_ACCEPTANCE = PASS`).
 
 ---
 
