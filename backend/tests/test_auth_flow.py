@@ -165,7 +165,7 @@ def test_invalid_login_increments_attempts_and_is_generic(client, database) -> N
     register(client, email, password, headers)
     response = login(client, email, "incorrecta", headers)
     assert response.status_code == 401
-    assert response.json()["error"]["message"] == "Correo o contraseña incorrectos."
+    assert response.json()["error"]["code"] == "INVALID_CREDENTIALS"
     user = database.scalar(select(User).where(User.email == email))
     database.refresh(user)
     assert user.failed_login_attempts == 1
