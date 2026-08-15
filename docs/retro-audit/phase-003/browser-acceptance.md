@@ -1,120 +1,82 @@
-# F003 · Plan de Aceptación en Navegador · Retest Ronda 2 (Browser Architecture Review)
+# F003 · Plan de Aceptación en Navegador · Protocolo de Retest Ronda 3
 
 ## 1. Entorno de Ejecución
 
 - **Frontend URL:** `http://localhost:5173`
 - **Backend URL:** `http://localhost:8000`
 - **Swagger / OpenAPI UI:** `http://localhost:8000/docs`
-- **Backend Candidate SHA:** `CANDIDATE_HEAD_SHA` *(Coincidente con el HEAD de PR #8)*
+- **Backend Runtime Mount:** `backend/app` (direct worktree mount)
 - **Frontend Candidate SHA:** `699cbfbfc86a7378bac2a4d28fdc3f7285a13564`
-- **Database:** PostgreSQL `postgres` (Esquema `public`, 339 tablas base)
-- **Tipo de Evaluación:** `BROWSER_ARCHITECTURE_REVIEW` (Auditoría de Arquitectura Modular, Navegabilidad y Superficies Reales)
+- **Database:** PostgreSQL `postgres` (Esquema `public`)
+- **Tipo de Evaluación:** `FOCUSED_RETEST_ROUND_3`
 
 ---
 
-## 2. Protocolo de Pruebas en Navegador (Rutas Reales Verificadas)
+## 2. Contexto de Ronda 3
 
-### TEST 01 · HEALTH CHECK DEL DOMINIO MODULAR
+En la Ronda 2, todas las superficies de navegación modular fueron validadas satisfactoriamente (`PASS`). El único fallo reportado fue el retorno de HTTP 500 en `/logistics/audit-events`, originado por una desalineación de runtime (`STALE_RUNTIME`), la cual fue resuelta y verificada.
 
-- **URL:** `http://localhost:8000/api/logistics/health`
-- **Método:** `GET`
+Por tanto, **la Ronda 3 se enfoca exclusivamente en la confirmación del endpoint corregido y la consola del navegador**, sin requerir la repetición de las 14 pantallas previas.
+
+---
+
+## 3. Casos de Prueba Focalizados (Ronda 3)
+
+### TEST 01 · EVENTOS DE AUDITORÍA (HOTFIX & RUNTIME VERIFIED)
+
+- **URL:** `http://localhost:5173/logistics/audit-events`
 - **Pasos:**
-  1. Abrir en el navegador la URL del endpoint.
-  2. Verificar la respuesta JSON oficial del runtime logístico.
-- **Resultado Esperado:** HTTP 200 con payload `{ "status": "ok", "domain": "logistics", "version": "phase-003" }`.
+  1. Con sesión activa (`usuario@example.com` / `Admin123!`), abrir la vista de eventos de auditoría.
+  2. Verificar que la tabla renderiza los eventos de auditoría registrados.
+  3. Comprobar en DevTools (F12) Network que la petición `GET /api/logistics/audit-events?page=1&page_size=20` responde `HTTP 200 OK`.
+- **Resultado Esperado:** Tabla de eventos visible con paginación, 0 errores 500.
 - **Network:** Status 200 OK.
-- **Console:** Sin errores.
+- **Console:** Sin errores no capturados.
 
 ---
 
-### TEST 02 · SWAGGER / OPENAPI SPECIFICATION
-
-- **URL:** `http://localhost:8000/docs`
-- **Método:** `GET`
-- **Pasos:**
-  1. Acceder a Swagger UI.
-  2. Verificar que los tags del dominio logístico `/api/logistics/*` están agrupados y documentados.
-- **Resultado Esperado:** Carga interactiva y fluida de Swagger UI sin errores en `GET /openapi.json`.
-- **Network:** `GET /openapi.json` con HTTP 200 OK.
-- **Console:** Sin errores de serialización.
-
----
-
-### TEST 03 · AUTENTICACIÓN Y CONTEXTO DE SESIÓN
-
-- **URL:** `http://localhost:5173/login`
-- **Pasos:**
-  1. Iniciar sesión con el usuario operador / administrador.
-  2. Verificar redirección al área autenticada (`/dashboard`).
-  3. Presionar `F5` para validar la persistencia de la cookie de sesión HTTP-only `access_token` y el contexto de seguridad.
-- **Resultado Esperado:** Sesión activa y persistente tras recarga.
-- **Network:** `GET /api/auth/me` con HTTP 200 OK.
-- **Console:** Limpia de excepciones.
-
----
-
-### TEST 04 · NAVEGACIÓN MODULAR POR RUTAS REALES (APP ROUTER)
-
-- **URL Base:** `http://localhost:5173`
-- **Pasos:**
-  1. Navegar por las rutas reales registradas en `AppRouter.tsx`:
-     - `/logistics/warehouses` (Almacenes y Sedes)
-     - `/logistics/products` (Catálogo de Productos - Ruta Real)
-     - `/logistics/units` (Unidades y Conversiones - Ruta Real)
-     - `/logistics/catalog/cost-centers` (Centros de Costo - Ruta Real)
-     - `/logistics/purchasing/requisitions` (Requisiciones de Compra)
-     - `/logistics/purchasing/purchase-orders` (Órdenes de Compra - Ruta Real)
-     - `/logistics/inbound/docks` (Muelles de Recepción)
-     - `/logistics/inventory/ledger` (Kárdex y Movimientos)
-     - `/logistics/inventory/stock` (Saldos de Stock - Ruta Real)
-     - `/logistics/vehicles` (Flota Vehicular)
-     - `/logistics/drivers` (Conductores)
-     - `/logistics/files` (Repositorio de Archivos)
-     - `/logistics/audit-events` (Eventos de Auditoría - Hotfix 500 Aplicado)
-     - `/logistics/permissions` (Catálogo de Permisos)
-- **Resultado Esperado:** Las 14 rutas cargan sus vistas base sin pantallas en blanco (`White Screen`), sin errores 404 ni caídas de React.
-- **Network:** Sin peticiones 404 ni 500 no controladas.
-- **Console:** Sin excepciones no capturadas.
-
----
-
-### TEST 05 · LOGISTICS PRINCIPAL Y PERMISOS RBAC
+### TEST 02 · CATÁLOGO DE PERMISOS (PERMISSIONS CATALOG)
 
 - **URL:** `http://localhost:5173/logistics/permissions`
 - **Pasos:**
-  1. Abrir la página del catálogo de permisos.
-  2. Verificar la consulta al endpoint `/api/logistics/me` y el renderizado de permisos activos.
+  1. Navegar a la página del catálogo de permisos.
+  2. Verificar que la tabla carga los permisos asignados desde `/api/logistics/me`.
 - **Resultado Esperado:** Tabla de permisos cargada vía API sin errores.
 - **Network:** `GET /api/logistics/me` y `GET /api/logistics/rbac/permissions` con HTTP 200 OK.
 - **Console:** Sin errores.
 
 ---
 
-### TEST 06 · VALIDACIÓN DE RED Y CONSOLA (F12) TRAS HOTFIX DE AUDITORÍA
+### TEST 03 · CONSOLA DEVTOOLS (F12 CONSOLE AUDIT)
 
 - **Pasos:**
-  1. Abrir `/logistics/audit-events` con la consola DevTools (F12) abierta.
-  2. Verificar que `GET /api/logistics/audit-events?page=1&page_size=20` responde HTTP 200 OK (sin error 500).
-- **Resultado Esperado:** Petición HTTP 200 OK y tabla de eventos renderizada.
-- **Network:** 0 errores 500.
-- **Console:** 0 errores bloqueantes.
+  1. Revisar los logs en la pestaña Consola de DevTools.
+  2. Confirmar que no existen excepciones de React (`Uncaught Error`, `React Crash`, `AppErrorBoundary`).
+- **Resultado Esperado:** 0 errores bloqueantes. *(Avisos de React DevTools o Permissions-Policy unload son informativos y no bloqueantes).*
 
 ---
 
-## 3. Registro de Resultados del Retest (Ronda 2)
+### TEST 04 · RED DEVTOOLS (F12 NETWORK AUDIT)
+
+- **Pasos:**
+  1. Revisar la pestaña Red (Network) de DevTools.
+  2. Confirmar que todas las peticiones a la API responden con códigos de éxito (200 / 201) y no hay respuestas 500 no controladas.
+- **Resultado Esperado:** 0 respuestas HTTP 500 inesperadas.
+
+---
+
+## 4. Registro de Resultados del Retest (Ronda 3)
 
 | Caso de Prueba | Resultado Esperado | Resultado Usuario | Comentarios / Observaciones |
 | :--- | :--- | :---: | :--- |
-| **TEST 01 · Health Check** | Status ok, domain logistics, version phase-003 | `[ PASS / FAIL ]` | |
-| **TEST 02 · Swagger / OpenAPI** | Carga fluida y tags agrupados | `[ PASS / FAIL ]` | |
-| **TEST 03 · Autenticación / F5** | Sesión persistente y cookie reconocida | `[ PASS / FAIL ]` | |
-| **TEST 04 · Navegación Modular (14 Rutas Reales)** | 0 errores 404 en las 14 rutas auditadas | `[ PASS / FAIL ]` | |
-| **TEST 05 · Permisos RBAC** | Consulta exitosa a `/logistics/me` | `[ PASS / FAIL ]` | |
-| **TEST 06 · Eventos Auditoría (Hotfix 500)** | Status 200 OK en `/api/logistics/audit-events` | `[ PASS / FAIL ]` | |
+| **TEST 01 · Audit Events** | HTTP 200 OK y tabla de eventos renderizada | `[ PASS / FAIL ]` | |
+| **TEST 02 · Permissions** | HTTP 200 OK y permisos cargados | `[ PASS / FAIL ]` | |
+| **TEST 03 · Consola F12** | 0 excepciones de React / AppErrorBoundary | `[ PASS / FAIL ]` | |
+| **TEST 04 · Red F12** | 0 peticiones 500 no controladas | `[ PASS / FAIL ]` | |
 
 ---
 
-## 4. Dictamen de Aceptación Arquitectónica
+## 5. Dictamen de Aceptación
 
 ```
 BROWSER_ARCHITECTURE_REVIEW: [ PASS / FAIL ]
