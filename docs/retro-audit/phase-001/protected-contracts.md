@@ -8,7 +8,7 @@ Todas las cookies de autenticación cumplen con las siguientes directivas de seg
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `session_token` | `True` | Dinámico (`secure` en prod) | `Lax` | 15 minutos (900 s) | Token JWT de acceso para llamadas a la API |
 | `refresh_token` | `True` | Dinámico (`secure` en prod) | `Lax` | 30 días (con remember_me) / 8 horas | Token JWT para rotación y renovación de sesión |
-| `device_token` | `True` | Dinámico (`secure` en prod) | `Lax` | 365 días | Identificación criptográfica de dispositivo conocido |
+| `device_token` | `True` | Dinámico (`secure` en prod) | `Lax` | 30 días (`REMEMBER_SESSION_EXPIRE_DAYS`) | Identificación criptográfica de dispositivo conocido |
 | `csrf_token` | `False` | Dinámico (`secure` en prod) | `Lax` | 1 hora (3600 s) | Doble envío CSRF, legible por cliente Frontend |
 
 ---

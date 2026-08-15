@@ -3,7 +3,7 @@
 ---
 
 ## 1. Objetivo de la Fase 001 y Declaración de Congelamiento de Línea Base
-El objetivo primordial de la **Fase 001** es auditar exhaustivamente, verificar en tiempo de ejecución, corregir defectos fundacionales y congelar de manera inmutable la línea base del sistema logístico con autenticación continua. Esta fase establece la infraestructura de pruebas, contratos de seguridad, modelos de persistencia y canales de comunicación entre el frontend (React 19) y el backend (FastAPI), garantizando que las fases subsiguientes (Fases 002 a 046) se construyan sobre cimientos estables y verificados.
+El objetivo primordial de la **Fase 001** es auditar exhaustivamente, verificar en tiempo de ejecución, corregir defectos fundacionales y congelar de manera inmutable la línea base del sistema logístico con autenticación continua. Esta fase establece la infraestructura de pruebas, contratos de seguridad, modelos de persistencia y canales de comunicación entre el frontend (React 19) y el backend (FastAPI), garantizando que las fases subsiguientes (F002 a F100 del Plan Maestro) se construyan sobre cimientos estables y verificados.
 
 ---
 
@@ -12,15 +12,15 @@ El objetivo primordial de la **Fase 001** es auditar exhaustivamente, verificar 
   - **Rama Base:** `origin/main`
   - **Commit SHA Base:** `d55e7f2b64ea6d8ce278fb626046c12d3dab1286`
   - **Rama de Auditoría:** `audit/retro-phase-001-backend`
-  - **Commit SHA Auditoría (HEAD):** `101b5b783651e73bf7ffd01ff15dfebef431cd2c`
+  - **Snapshot de Implementación de Auditoría:** `101b5b783651e73bf7ffd01ff15dfebef431cd2c`
+  - **HEAD Final de Rama & CI:** Gestionados y rastreados en tiempo real en la metadata del PR y GitHub Actions.
   - **Pull Request:** [#5](https://github.com/Anthgg/Logistica/pull/5)
-  - **GitHub Actions CI Run ID:** `31875182200` (Status: `completed`, Conclusion: `success`)
 - **Repositorio Frontend:** `https://github.com/Anthgg/LogisticaF.git`
   - **Rama Base:** `origin/main`
   - **Commit SHA Base:** `699cbfbfc86a7378bac2a4d28fdc3f7285a13564`
-  - **Rama de Auditoría:** `audit/retro-phase-001-frontend`
-  - **Commit SHA Auditoría (HEAD):** `699cbfbfc86a7378bac2a4d28fdc3f7285a13564`
-  - **Cambios Requeridos en Frontend:** `NONE` (PR: `N/A`, CI: `Local Suite Baseline PASS`)
+  - **Rama de Auditoría:** `N/A`
+  - **Pull Request:** `N/A`
+  - **Cambios Requeridos en Frontend:** `NONE` (Suite local 100% verde sobre el baseline).
 
 ---
 
@@ -68,10 +68,10 @@ El objetivo primordial de la **Fase 001** es auditar exhaustivamente, verificar 
 - **Hashing de Contraseñas:** Argon2id (`argon2-cffi`) con dummy password verification en tiempo constante contra ataques de enumeración de usuarios.
 - **Protección CSRF:** Double Submit Cookie pattern (`csrf_token` cookie + header `X-CSRF-Token` en métodos mutables `POST`, `PUT`, `PATCH`, `DELETE`).
 - **Seguridad de Cookies:**
-  - `session_token`: `HttpOnly=True`, `SameSite=Lax`, Max-Age=15m.
-  - `refresh_token`: `HttpOnly=True`, `SameSite=Lax`, Max-Age=30d / 8h.
-  - `device_token`: `HttpOnly=True`, `SameSite=Lax`, Max-Age=365d.
-  - `csrf_token`: `HttpOnly=False`, `SameSite=Lax`, Max-Age=1h.
+  - `session_token`: `HttpOnly=True`, `SameSite=Lax`, Max-Age=15m (`ACCESS_TOKEN_EXPIRE_MINUTES`).
+  - `refresh_token`: `HttpOnly=True`, `SameSite=Lax`, Max-Age=30d (`REMEMBER_SESSION_EXPIRE_DAYS`) / 480 min (8h estándar `SESSION_EXPIRE_MINUTES`).
+  - `device_token`: `HttpOnly=True`, `SameSite=Lax`, Max-Age=30d (`REMEMBER_SESSION_EXPIRE_DAYS`).
+  - `csrf_token`: `HttpOnly=False`, `SameSite=Lax`, Max-Age=1h (3600 s).
 - **Detección de Reutilización de Refresh Tokens:** Revocación inmediata de sesión ante detección de replay attack.
 
 ---
@@ -98,6 +98,11 @@ Pruebas ejecutadas en vivo contra el backend:
 - `GET /ready` -> `200 OK` (`{"status":"ok"}`)
 - `GET /api/health` -> `200 OK` (`{"status":"ok","environment":"development","version":"0.9.1","database":{"status":"connected"}}`)
 
+**Parámetros de Versión:**
+- `CODE_DEFAULT_APP_VERSION`: `0.9.8` (`backend/app/core/config.py`)
+- `COMPOSE_DEVELOPMENT_DEFAULT`: `0.9.1` (`compose.yaml`)
+- `VERIFIED_RUNTIME_VERSION`: `0.9.1` (Configuración inyectada en entorno de desarrollo)
+
 ---
 
 ## 11. Inspección de CORS, Orígenes Permitidos y Manejo de Credenciales
@@ -105,8 +110,8 @@ Pruebas ejecutadas en vivo contra el backend:
 - **Headers Verificados:**
   - `Access-Control-Allow-Origin: http://localhost:5173`
   - `Access-Control-Allow-Credentials: true`
-  - `Access-Control-Allow-Methods: *`
-  - `Access-Control-Allow-Headers: *`
+  - `Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS`
+  - `Access-Control-Allow-Headers: Authorization, Content-Type, X-CSRF-Token, X-Request-ID, Accept-Language`
 
 ---
 
@@ -154,7 +159,7 @@ Pruebas ejecutadas en vivo contra el backend:
 ---
 
 ## 17. Correcciones Aplicadas en la Fase 001 (Frontend)
-- El repositorio frontend `Anthgg/LogisticaF` se encuentra en perfecto estado, con 0 errores de compilación, 0 errores de linter y el 100% de las pruebas pasando limpiamente.
+- El repositorio frontend `Anthgg/LogisticaF` se encuentra en perfecto estado, con 0 errores de compilación, 0 errores de linter y el 100% de las pruebas pasando limpiamente (`FRONTEND_PHASE001_CHANGES: NONE`).
 
 ---
 
@@ -234,8 +239,8 @@ El usuario realizará una verificación manual funcional de los flujos críticos
 
 ## 26. Estado de Ramas Git y Estrategia de Merge
 - **Rama Backend:** `audit/retro-phase-001-backend`
-- **Rama Frontend:** `audit/retro-phase-001-frontend`
-- Las ramas quedan listas con los cambios de auditoría y documentación archivada para revisión y merge por parte del usuario.
+- **Rama Frontend:** `N/A` (Sin modificaciones)
+- La rama de backend queda lista con los cambios de auditoría y documentación archivada para revisión y merge por parte del usuario.
 
 ---
 
@@ -259,4 +264,4 @@ PHASE_001_READY_FOR_USER_ACCEPTANCE
 USER_ACCEPTANCE: PENDING_USER_TEST
 ```
 
-> **BLOQUEO ESTRICTO:** La **Fase 002** y todas las fases posteriores (003 a 046) permanecen en estado **`BLOCKED`**. Queda terminantemente prohibido iniciar trabajos o auditorías de la Fase 002 hasta que el usuario complete la prueba de aceptación funcional, otorgue su aprobación formal y se realice el merge de la Fase 001.
+> **BLOQUEO ESTRICTO:** La **Fase F002** y todas las fases posteriores (F003 a F100) permanecen en estado **`BLOCKED`**. Queda terminantemente prohibido iniciar trabajos o auditorías de la Fase F002 hasta que el usuario complete la prueba de aceptación funcional, otorgue su aprobación formal y se realice el merge de la Fase 001.
