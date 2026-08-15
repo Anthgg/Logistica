@@ -10,14 +10,14 @@ Diseñar la arquitectura modular del sistema logístico, creando el dominio `/ap
 
 - Crear el dominio `/api/logistics` y estructurar submódulos independientes.
 - Definir como componentes reutilizables: documentos, rutas, archivos, auditoría, integraciones.
-- Establecer fronteras de dominio y capas internas de aplicación.
+- Establecer fronteras de dominio, contratos internos reales y capas internas de aplicación.
 
 ---
 
 ## 3. Criterio de Cierre Oficial
 
-- Mapa de módulos formalizado.
-- Contratos internos y matrices de ownership de datos documentados.
+- Mapa de módulos formalizado y diferenciado.
+- Contratos internos reales y matrices de ownership de datos documentados.
 - Estructura del repositorio backend y frontend verificada.
 
 ---
@@ -35,7 +35,7 @@ Diseñar la arquitectura modular del sistema logístico, creando el dominio `/ap
 - **Backend Base SHA:** `6677e2fa9f3875377e9378e43a7160933e5dba4b`
 - **Frontend Base SHA:** `699cbfbfc86a7378bac2a4d28fdc3f7285a13564`
 - **Rama de Trabajo:** `audit/retro-phase-003-backend`
-- **Worktree Aislado:** `C:/Users/anthg/Logistica-F003`
+- **Worktree Aislado:** `Logistica-F003 (directorio de trabajo aislado)`
 
 ---
 
@@ -45,7 +45,7 @@ El backend adopta una arquitectura de **Modular Monolith** estructurada en `back
 - **Presentation:** Enrutadores FastAPI (`router.py` o `presentation/routes/`).
 - **Application:** Servicios de orquestación de casos de uso (`services/` o `application/services/`).
 - **Domain:** Entidades de negocio, value objects y reglas de dominio (`domain/` o `models.py`).
-- **Infrastructure:** Repositorios, clientes externos y almacenamiento (`infrastructure/`).
+- **Infrastructure:** Repositorios, clientes externos y persistencia (`infrastructure/`).
 
 ---
 
@@ -53,26 +53,30 @@ El backend adopta una arquitectura de **Modular Monolith** estructurada en `back
 
 El frontend (`frontend/src/`) se organiza en torno a:
 - **Features (`src/features/`):** 16 módulos funcionales encapsulados con sus propios hooks, tipos, componentes y páginas.
-- **API Clients (`src/api/`):** Adaptadores tipados que consumen el backend a través del cliente unificado `api-client.ts`.
+- **API Clients (`src/api/`):** 20 clientes adaptadores tipados que consumen el backend a través del cliente canónico `api-client.ts` (con soporte unificado de CSRF, Step-Up y renovación de sesiones).
 - **Shared Contexts (`src/contexts/`):** Autenticación (`AuthContext`), verificación continua (`ContinuousAuthProvider`), e internacionalización (`I18nProvider`).
 - **Design Primitives (`src/components/ui/`):** Componentes visuales desacoplados de la lógica de negocio.
 
 ---
 
-## 8. Montaje del Dominio `/api/logistics`
+## 8. Montaje del Dominio `/api/logistics` y Conteo Reproducible de Endpoints
 
 - **Enrutador Raíz:** Instanciado mediante `create_logistics_router()` en `app/modules/logistics/router.py`.
 - **Punto de Inclusión:** `app/api/router.py` incluye el router con prefijo `/api` + `/logistics` -> `/api/logistics`.
-- **Endpoint de Salud:** `GET /api/logistics/health` reporta estado operacional y versión del dominio.
-- **Rutas Totales en Submódulos:** 909 endpoints bajo `/api/logistics/*`.
-- **Rutas Fuera de `/api/logistics`:** 76 rutas compartidas (auth, health, dashboard, reports, shipments histórico).
+- **Endpoint de Diagnóstico:** `GET /api/logistics/health` reporta estado operacional y versión del dominio.
+- **Conteo de Endpoints (Metodología Reproducible de Inspección de Rutas):**
+  - **Total de Endpoints en Codebase:** `991`
+  - **Endpoints Logísticos (`backend/app/modules/logistics/**`):** `912`
+  - **Endpoints Fuera de Logística (`backend/app/api/routes/**`):** `79`
+  - **Verificación de Suma:** `912 + 79 = 991` (`SUM MATCHES TOTAL: TRUE`).
+- **Rutas Fuera de `/api/logistics`:** 79 rutas de infraestructura compartida bajo `/api` (autenticación, sesiones, reportes, dashboard, envíos legacy).
 
 ---
 
 ## 9. Inventario de Submódulos (24 Submódulos)
 
-Ver catálogo detallado en [module-map.md](file:///C:/Users/anthg/Logistica-F003/docs/retro-audit/phase-003/module-map.md).
-Los submódulos auditados son:
+Ver catálogo detallado en [./module-map.md](./module-map.md).
+Los 24 submódulos logísticos auditados son:
 1. `audit`
 2. `company_profile`
 3. `cost_centers`
@@ -98,34 +102,36 @@ Los submódulos auditados son:
 23. `vehicles`
 24. `warehouses`
 
+Adicionalmente, coexisten módulos raíz/legacy (`shipments`, `incidents`, `reports`, `dashboard`, `inventory legacy`, `warehouses legacy`, `routes legacy`) montados directamente bajo `/api/*`.
+
 ---
 
 ## 10. Fronteras de Dominio (Domain Boundaries)
 
-Los 24 submódulos mapean directamente a los 12 dominios aprobados en F002:
-- **Compras:** `procurement`, `purchase_orders`, `cost_centers`
-- **Recepción:** `inbound`, `gate_control`
-- **Almacenes:** `warehouses`, `organization`, `company_profile`
-- **Inventario:** `inventory`, `products`, `units`
-- **Trazabilidad:** `audit`
-- **Salida:** `shipments` (rutas api), rendering de guías de salida
-- **Transporte:** `vehicles`, `vehicle_verifications`, `drivers`, `routes_module`
-- **Entrega:** rendering de comprobantes de entrega, POD
-- **Devoluciones:** `incidents`, diferencias de recepción
-- **Documentos:** `documents`
-- **KPIs:** `dashboard`, `reports`
-- **Integraciones:** `integrations`, `ruc`, `partners`
+Los 24 submódulos y los módulos raíz mapean a los 12 dominios aprobados en F002:
+- **1. Compras:** `procurement`, `purchase_orders`, `cost_centers`
+- **2. Recepción:** `inbound`, `gate_control`
+- **3. Almacenes:** `warehouses`, `organization`, `company_profile` (+ `warehouses legacy`)
+- **4. Inventario:** `inventory`, `products`, `units` (+ `inventory legacy`)
+- **5. Trazabilidad:** `audit`
+- **6. Salida:** `documents/rendering/outbound_router`, `dispatch_router`, `/api/shipments`
+- **7. Transporte:** `vehicles`, `vehicle_verifications`, `drivers`, `routes_module` (+ `routes legacy`)
+- **8. Entrega:** `documents/rendering/delivery_router`, `/api/shipments`
+- **9. Devoluciones:** `/api/incidents`, `inbound/reception_differences`
+- **10. Documentos:** `documents`
+- **11. KPIs:** `/api/dashboard`, `/api/reports`
+- **12. Integraciones:** `integrations`, `ruc`, `partners`
 
 ---
 
 ## 11. Servicios Transversales Reutilizables
 
 Se auditaron 5 componentes transversales obligatorios definidos en el Plan Maestro:
-1. **Documents:** Motor documental unificado.
-2. **Files:** Repositorio binario y evidencias con SHA-256.
-3. **Audit:** Registro desacoplado de eventos y trazabilidad.
-4. **Routes:** Cálculo y persistencia de rutas logísticas.
-5. **Integraciones:** Gateway desacoplado para servicios externos (RUC, validaciones).
+1. **Documents:** Motor documental unificado para emisión, plantillas y foliado.
+2. **Files:** Custodia segura de binarios y evidencias con cálculo de hash SHA-256.
+3. **Audit:** Registro desacoplado de eventos y trazabilidad con sanitización.
+4. **Routes:** Cálculo y persistencia de rutas logísticas y manifiestos.
+5. **Integraciones:** Gateway desacoplado para servicios externos (padrón RUC SUNAT) con cache local y modo offline.
 
 ---
 
@@ -149,14 +155,14 @@ Se auditaron 5 componentes transversales obligatorios definidos en el Plan Maest
 
 - **Ubicación:** `backend/app/modules/logistics/audit/` y `app/services/audit_service.py`
 - **Componentes:** `AuditEventService`, `AuditSanitizer`, `catalog.py`.
-- **Aislamiento:** Recibe eventos de contexto, actor, IP, timestamp y payload sanitizado, desacoplando la auditoría de la lógica transaccional. *(La unificación completa de esquemas corresponde a F007)*.
+- **Aislamiento:** Recibe eventos de contexto, actor, IP, timestamp y payload sanitizado, desacoplando la auditoría de la lógica transaccional. *(La unificación formal de esquemas corresponde a F007)*.
 
 ---
 
 ## 15. Routes Architecture
 
 - **Ubicación:** `backend/app/modules/logistics/routes_module/` y `app/services/route_service.py`
-- **Componentes:** Interfaces de cálculo de distancia, tiempos estimados, waypoints y persistencia de manifiestos. *(La integración de mapas y GPS corresponde a F061-F070)*.
+- **Componentes:** Interfaces de cálculo de distancia, tiempos estimados, waypoints y persistencia de manifiestos. *(La integración de mapas interactivos y GPS corresponde a F061-F070)*.
 
 ---
 
@@ -167,20 +173,20 @@ Se auditaron 5 componentes transversales obligatorios definidos en el Plan Maest
 
 ---
 
-## 17. Contratos Internos
+## 17. Contratos Internos Reales
 
-Ver especificación completa en [internal-contracts.md](file:///C:/Users/anthg/Logistica-F003/docs/retro-audit/phase-003/internal-contracts.md).
-Documenta los 10 flujos principales inter-dominio:
-- Purchasing -> Receiving
-- Receiving -> Inventory
-- Inventory -> Outbound
-- Outbound -> Transport
-- Transport -> Delivery
-- Delivery -> Returns
-- All Domains -> Documents
-- All Domains -> Audit
-- All Domains -> Files
-- Domain -> Integrations
+Ver especificación detallada en [./internal-contracts.md](./internal-contracts.md).
+Los 10 flujos principales inter-dominio se basan en contratos reales en el código:
+- **Purchasing → Receiving:** `PurchaseOrderDetailResponse` / `PurchaseOrderModel` (`EXPLICIT_PYDANTIC_SCHEMA` + `PERSISTED_RESOURCE`).
+- **Receiving → Inventory:** `PostInventoryMovementRequest` / `InventoryLedgerService.post_movement()` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`; `NO_EXPLICIT_EVENT`).
+- **Inventory → Outbound:** `ShipmentCreate` / `Shipment` (`PERSISTED_RESOURCE`).
+- **Outbound → Transport:** `VehicleModel` / `DriverModel` (`PERSISTED_RESOURCE`).
+- **Transport → Delivery:** `DeliveryDocumentRenderRequest` / `DeliverySignatureSnapshot` (`EXPLICIT_PYDANTIC_SCHEMA`).
+- **Delivery → Returns:** `IncidentCreate` / `Incident` (`PERSISTED_RESOURCE`).
+- **Todos → Documents:** `DocumentLifecycleService` / `DocumentCreateRequestSchema` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
+- **Todos → Audit:** `AuditContextProvider` / `AuditEventService` (`SERVICE_METHOD` + `PERSISTED_RESOURCE`).
+- **Todos → Files:** `FileStorageService` / `FileUploadResponse` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
+- **Maestros → Integrations:** `RucLookupService` / `RucLookupResponseSchema` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
 
 ---
 
@@ -198,44 +204,58 @@ Cada tabla y entidad posee un único dominio responsable de mutaciones y consist
 
 ---
 
-## 20. Análisis de Ciclos
+## 20. Análisis de Ciclos de Dependencia
 
-Ver matriz en [dependency-matrix.md](file:///C:/Users/anthg/Logistica-F003/docs/retro-audit/phase-003/dependency-matrix.md).
-- Ciclo 1: `company_profile` <-> `documents` (resuelto con lazy imports a nivel de función).
-- Ciclo 2: `cost_centers` <-> `procurement` (validación de borrado vs validación de creación).
-
----
-
-## 21. Mapeo Backend ↔ Frontend
-
-- 20 clientes de API en `frontend/src/api/` mapean 1:1 a los enrutadores del backend.
-- 16 features modulares en `frontend/src/features/` implementan la interacción de usuario correspondiente.
-- Estado de contratos: **MATCH** (consistente en todos los flujos productivos).
+Ver matriz y evidencia estricta en [./dependency-matrix.md](./dependency-matrix.md).
+- **Ciclo 1:** `company_profile` ↔ `documents` (`company_profile/asset_service.py` importa storage de documentos; `documents/application/lifecycle_service.py` importa modelo de perfil; resuelto en runtime vía lazy import).
+- **Ciclo 2:** `cost_centers` ↔ `procurement` (`cost_centers/service.py` importa modelo de requisiciones para borrado seguro; `procurement/.../requisition_service.py` importa modelo de centros de costo para validación).
 
 ---
 
-## 22. Seguridad Arquitectónica
+## 21. Mapeo Backend ↔ Frontend Grounded
 
-- **Autenticación Unificada:** Reutiliza el sistema de sesión principal mediante cookies seguras HTTP-only y tokens JWT.
-- **LogisticsPrincipal:** Objeto de identidad contextual inyectado en todos los endpoints de `/api/logistics/*`.
-- **RBAC:** Matriz de 20 roles y resolución de permisos integrada (`app/modules/logistics/rbac/`).
+- **MATCH (16 Features / Dominios):** `gate-control`, `inbound-docks`, `inbound-receiving`, `inventory-balances`, `inventory-ledger`, `procurement-approvals`, `purchase-orders`, `putaway`, `quality-inspection-plans`, `quarantine`, `reception-differences`, `supplier-evaluation`, `vehicles`, `drivers`, `ruc`, `partners`.
+- **BACKEND_ONLY (Superficies documentadas):**
+  - Generación por lote de etiquetas de almacén (`/api/logistics/warehouses/locations/labels/batch`).
+  - Administración de Talonarios y Series (`/api/logistics/documents/series`, `/talonarios`).
+  - Plantillas de Documentos generales (`/api/logistics/documents/templates`).
+  - Endpoints de renderizado HTML/PDF de documentos por dominio (`/documents/rendering/*`).
+  - Empaquetado documental (`/api/logistics/documents/packages`).
+- **PARTIAL:** `shipments` (tracking básico y cambios de estado integrados; asignación avanzada de despacho y POD en desarrollo).
+- **LEGACY:** Endpoints raíz `/api/shipments`, `/api/inventory`, `/api/warehouses`, `/api/routes` mantenidos para compatibilidad.
+- **FRONTEND_ONLY:** 0.
+- **STALE:** 0.
+- **UNKNOWN:** 0.
+
+---
+
+## 22. Seguridad Arquitectónica: Uso y Excepciones de LogisticsPrincipal
+
+- **LogisticsPrincipal Canónico:** Inyectado en los submódulos logísticos modernos (`inbound`, `procurement`, `inventory`, `vehicles`, `files`, `rbac`, `security`) para transportar contexto de sesión, roles RBAC y control de acceso.
+- **Excepciones Documentadas:**
+  - `GET /api/logistics/health`: Utiliza `Depends(get_logistics_current_user)` (sin requerir permisos RBAC específicos).
+  - Routers de utilidades y catálogos (`company_profile`, `cost_centers`, `documents/codes`, `documents/rendering`): Utilizan `Depends(get_current_user)` o `Depends(get_db)`.
+  - *(La unificación integral de la autenticación y permisos será auditada formalmente en F008 y F009)*.
 - **CSRF Protection:** Validación obligatoria en mutaciones HTTP (`POST`, `PUT`, `PATCH`, `DELETE`).
-- **Step-Up Authentication:** Soporte para re-autenticación ante operaciones críticas.
+- **Step-Up Authentication:** Políticas de re-autenticación ante operaciones sensibles configuradas en `security/`.
 
 ---
 
-## 23. Database Architecture
+## 23. Database Architecture y Conteo Reproducible de Tablas
 
-- 391 tablas identificadas organizadas por dominio.
-- Claves foráneas e integridad referencial mantenida en PostgreSQL.
-- Naming consistente (`snake_case`, prefijos modulares).
+- **Total de Tablas Declaradas en Modelos SQLAlchemy:** `390` tablas relacionales.
+  - Tablas de Submódulos Logísticos (`backend/app/modules/logistics/**`): `368` tablas.
+  - Tablas Core / Compartidas (`backend/app/models/**`): `22` tablas.
+  - **Tabla de Versionado Alembic:** `1` tabla (`alembic_version` en PostgreSQL).
+  - **Total de Tablas en Esquema PostgreSQL:** `391` tablas.
+- **Exclusiones:** Vistas de base de datos, índices, tablas temporales y modelos base abstractos.
 
 ---
 
 ## 24. Alembic Impact
 
 - **Estado:** N/A
-- **Razón:** La arquitectura modular ya se encuentra respaldada por las migraciones existentes. No se requieren cambios en DDL.
+- **Razón:** La arquitectura modular se encuentra respaldada por las migraciones existentes (33 versiones de migración en `alembic/versions/`). No se requieren cambios en DDL.
 
 ---
 
@@ -245,10 +265,10 @@ Ver matriz en [dependency-matrix.md](file:///C:/Users/anthg/Logistica-F003/docs/
 - **P1 (Bloqueante):** 0
 - **P2 (Acoplamiento Grave):** 0
 - **P3 (Deuda Arquitectónica):**
-  1. Acoplamiento bidireccional leve `company_profile` ↔ `documents`.
-  2. Acoplamiento bidireccional leve `cost_centers` ↔ `procurement`.
+  1. Acoplamiento bidireccional leve `company_profile` ↔ `documents` (resuelto en runtime vía lazy import).
+  2. Acoplamiento bidireccional leve `cost_centers` ↔ `procurement` (validación cruzada de integridad antes de borrado).
   3. Coexistencia de endpoints legacy (`/api/shipments`, `/api/inventory`) junto a los endpoints modulares (`/api/logistics/*`).
-- **INFO:** Arquitectura modular sólida, desacoplada y alineada con el Plan Maestro.
+- **INFO:** Arquitectura modular desacoplada y operativa con 24 submódulos y 390 tablas relacionales modeladas.
 
 ---
 
@@ -258,7 +278,8 @@ Ver matriz en [dependency-matrix.md](file:///C:/Users/anthg/Logistica-F003/docs/
 - **Frontend:** 0 modificaciones.
 - **Base de Datos:** 0 modificaciones.
 - **Alembic:** 0 modificaciones.
-- **Documentación Creada:**
+- **Documentación Actualizada y Aterrizada:**
+  - `docs/retro-audit/README.md`
   - `docs/retro-audit/phase-003/README.md`
   - `docs/retro-audit/phase-003/module-map.md`
   - `docs/retro-audit/phase-003/internal-contracts.md`
@@ -269,29 +290,29 @@ Ver matriz en [dependency-matrix.md](file:///C:/Users/anthg/Logistica-F003/docs/
 
 ## 27. Pruebas de Arquitectura y Regresión
 
-- Análisis estático de dependencias (AST import graph): 24 submódulos verificados.
-- Validación de OpenAPI: 909 operaciones logísticas registradas.
+- Análisis estático de importaciones (AST): 24 submódulos verificados y 2 ciclos documentados.
+- Validación de OpenAPI: 912 operaciones logísticas y 79 no logísticas verificadas.
 - Suite de regresión en CI: 100% pruebas de backend, integración PostgreSQL y seguridad superadas.
 
 ---
 
 ## 28. Integración Continua (CI)
 
-- **PR:** Por crear contra `main`.
+- **PR:** #8 (`audit(phase-003): verify modular logistics architecture`)
 - **Pipeline:** Lint (Ruff), Unit Tests, Integration Tests, Security Tests, OpenAPI Verification.
 
 ---
 
 ## 29. Deuda Técnica Registrada
 
-- Refactorizar en fases posteriores las comprobaciones cruzadas directas de ORM (`cost_centers` -> `procurement`) hacia un servicio de dominio o DTO anti-corrupción.
+- Refactorizar en fases posteriores las comprobaciones directas de integridad referencial (`cost_centers` -> `procurement`) hacia un servicio de dominio o DTO anti-corrupción.
 - Migrar gradualmente las rutas legacy raíz (`/api/shipments`) hacia `/api/logistics/shipments` preservando compatibilidad.
 
 ---
 
 ## 30. Evidencia Técnica
 
-- Extracción AST de 24 submódulos y 391 tablas relacionales.
+- Extracción AST de 24 submódulos, 991 endpoints y 390 tablas relacionales modeladas.
 - Verificación del montaje en `app/main.py` y `app/api/router.py`.
 - Cobertura de los 12 dominios de negocio de F002.
 
@@ -299,8 +320,8 @@ Ver matriz en [dependency-matrix.md](file:///C:/Users/anthg/Logistica-F003/docs/
 
 ## 31. Aceptación de Usuario (User Acceptance)
 
-- **Browser UAT:** N/A (Fase estrictamente arquitectónica y documental sin cambios visuales).
-- **Architecture Acceptance:** PENDING_USER_REVIEW (Sometida a revisión formal del usuario).
+- **Browser UAT:** `N/A` (Fase estrictamente arquitectónica y documental sin cambios visuales).
+- **Architecture Acceptance:** `PENDING_USER_REVIEW` (Sometida a revisión formal del usuario).
 
 ---
 
