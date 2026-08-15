@@ -286,6 +286,7 @@ jobs:
             tests/test_pdf_download_http.py \
             tests/test_pdf_download_audit.py \
             tests/test_pdf_download_audit_postgres.py \
+            tests/test_pdf_signature_layout.py \
             scripts/audit_pdf_downloads.py \
             --output-format=github
 
@@ -297,6 +298,7 @@ jobs:
             tests/test_pdf_download_response.py \
             tests/test_pdf_download_http.py \
             tests/test_pdf_download_audit.py \
+            tests/test_pdf_signature_layout.py \
             --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_pdf.log
           PYTEST_EXIT=${PIPESTATUS[0]}
           set -e
@@ -329,8 +331,8 @@ jobs:
             echo "FAIL: $SKIPPED test(s) PDF SKIPPED. SKIP=0 es requerido."
             exit 1
           fi
-          if [ "$PASSED" -lt 57 ]; then
-            echo "FAIL: sólo $PASSED tests PDF ejecutados; se esperan >= 57."
+          if [ "$PASSED" -lt 77 ]; then
+            echo "FAIL: sólo $PASSED tests PDF ejecutados; se esperan >= 77."
             exit 1
           fi
           echo "PASS: suite PDF completa sin fallos ni skips."
