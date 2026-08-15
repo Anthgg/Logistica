@@ -5,7 +5,7 @@
 - **Frontend URL:** `http://localhost:5173`
 - **Backend URL:** `http://localhost:8000`
 - **Swagger / OpenAPI UI:** `http://localhost:8000/docs`
-- **Backend Candidate SHA:** `3f22f3dd97aa31cbcb137ca1049173bf19266fa7`
+- **Backend Candidate SHA:** `CANDIDATE_HEAD_SHA` *(Coincidente con el HEAD de PR #8)*
 - **Frontend Candidate SHA:** `699cbfbfc86a7378bac2a4d28fdc3f7285a13564`
 - **Database:** PostgreSQL `postgres` (Esquema `public`, 339 tablas base)
 - **Tipo de Evaluación:** `BROWSER_ARCHITECTURE_REVIEW` (Auditoría de Arquitectura Modular, Navegabilidad y Superficies)
@@ -19,9 +19,9 @@
 - **URL:** `http://localhost:8000/api/logistics/health`
 - **Método:** `GET`
 - **Pasos:**
-  1. Abrir en el navegador la URL del endpoint.
-  2. Verificar la respuesta JSON con estado `healthy` y versión modular.
-- **Resultado Esperado:** HTTP 200 con `{ "status": "healthy", "module": "logistics" }`.
+  1. Abrir en el navegador la URL del endpoint de diagnóstico.
+  2. Verificar la respuesta JSON oficial del módulo.
+- **Resultado Esperado:** HTTP 200 con payload `{ "status": "ok", "domain": "logistics", "version": "phase-045" }`.
 - **Network:** Status 200 OK.
 - **Console:** Sin errores.
 
@@ -33,9 +33,9 @@
 - **Método:** `GET`
 - **Pasos:**
   1. Acceder a la interfaz interactiva de Swagger UI.
-  2. Comprobar que el tag `logistics` y los 24 submódulos están agrupados bajo el prefijo `/api/logistics/*`.
-  3. Comprobar que existen 973 operaciones HTTP registradas (894 logísticas + 79 compartidas).
-- **Resultado Esperado:** Carga fluida de Swagger UI sin errores de parseo de esquemas OpenAPI.
+  2. Comprobar que el tag `logistics` y los submódulos están debidamente agrupados bajo el prefijo `/api/logistics/*`.
+  3. Verificar que la especificación OpenAPI carga sin advertencias de parseo.
+- **Resultado Esperado:** Carga interactiva y fluida de Swagger UI.
 - **Network:** `GET /openapi.json` con HTTP 200 OK.
 - **Console:** Sin errores de serialización.
 
@@ -45,9 +45,9 @@
 
 - **URL:** `http://localhost:5173/login`
 - **Pasos:**
-  1. Iniciar sesión con el usuario administrador.
+  1. Iniciar sesión con el usuario operador / administrador.
   2. Verificar redirección al área autenticada (`/dashboard`).
-  3. Presionar `F5` para validar la persistencia de la cookie de sesión HTTP-only `access_token` y `csrf_token`.
+  3. Presionar `F5` para validar la persistencia de la cookie de sesión HTTP-only `access_token` y el contexto de seguridad.
 - **Resultado Esperado:** Sesión activa y reconocida sin redirecciones en bucle hacia `/login`.
 - **Network:** `GET /api/auth/me` con HTTP 200 OK.
 - **Console:** Limpia de excepciones.
@@ -58,7 +58,7 @@
 
 - **URL:** `http://localhost:5173`
 - **Pasos:**
-  1. Navegar a través de la barra lateral (Sidebar) por los módulos principales:
+  1. Navegar a través de la barra lateral (Sidebar) por las vistas de los dominios logísticos:
      - `/logistics/organizations` (Organizaciones y Sedes)
      - `/logistics/warehouses` (Almacenes y Ubicaciones)
      - `/logistics/catalog/products` (Catálogo de Productos)
@@ -95,7 +95,7 @@
 
 - **Pasos:**
   1. Mantener abierta la pestaña `Network` de DevTools (F12).
-  2. Comprobar que las peticiones a `/api/logistics/*` incluyen la cabecera `X-CSRF-Token` en operaciones mutantes.
+  2. Verificar que las peticiones a endpoints mutantes autenticados utilizan el flujo de seguridad estándar (CSRF / Step-Up si aplica).
   3. Revisar la pestaña `Console` para descartar `Unhandled TypeError`, `ReferenceError` o fallos de renderizado React.
 - **Resultado Esperado:** Peticiones HTTP conformes a la arquitectura, ausencia de errores bloqueantes en consola.
 
@@ -105,8 +105,8 @@
 
 | Caso de Prueba | Resultado Esperado | Resultado Usuario | Comentarios / Observaciones |
 | :--- | :--- | :---: | :--- |
-| **TEST 01 · Health Check** | Status healthy HTTP 200 | `[ PASS / FAIL ]` | |
-| **TEST 02 · Swagger / OpenAPI** | 973 operaciones listadas sin errores | `[ PASS / FAIL ]` | |
+| **TEST 01 · Health Check** | Status ok, domain logistics, version phase-045 | `[ PASS / FAIL ]` | |
+| **TEST 02 · Swagger / OpenAPI** | Carga fluida y tags /api/logistics agrupados | `[ PASS / FAIL ]` | |
 | **TEST 03 · Autenticación / F5** | Sesión persistente y cookie reconocida | `[ PASS / FAIL ]` | |
 | **TEST 04 · Navegación Modular** | Carga de las 14 rutas principales | `[ PASS / FAIL ]` | |
 | **TEST 05 · Permisos RBAC** | Consulta exitosa a `/logistics/me` | `[ PASS / FAIL ]` | |
