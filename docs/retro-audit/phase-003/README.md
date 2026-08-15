@@ -217,18 +217,19 @@ Ver matriz y evidencia estricta en [./dependency-matrix.md](./dependency-matrix.
 
 ## 21. Mapeo Backend ↔ Frontend Grounded
 
-- **MATCH (16 Features / Dominios):** `gate-control`, `inbound-docks`, `inbound-receiving`, `inventory-balances`, `inventory-ledger`, `procurement-approvals`, `purchase-orders`, `putaway`, `quality-inspection-plans`, `quarantine`, `reception-differences`, `supplier-evaluation`, `vehicles`, `drivers`, `ruc`, `partners`.
-- **BACKEND_ONLY (Superficies documentadas):**
-  - Generación por lote de etiquetas de almacén (`/api/logistics/warehouses/locations/labels/batch`).
-  - Administración de Talonarios y Series (`/api/logistics/documents/series`, `/talonarios`).
-  - Plantillas de Documentos generales (`/api/logistics/documents/templates`).
-  - Endpoints de renderizado HTML/PDF de documentos por dominio (`/documents/rendering/*`).
-  - Empaquetado documental (`/api/logistics/documents/packages`).
-- **PARTIAL:** `shipments` (tracking básico y cambios de estado integrados; asignación avanzada de despacho y POD en desarrollo).
-- **LEGACY:** Endpoints raíz `/api/shipments`, `/api/inventory`, `/api/warehouses`, `/api/routes` mantenidos para compatibilidad.
-- **FRONTEND_ONLY:** 0.
-- **STALE:** 0.
-- **UNKNOWN:** 0.
+Ver análisis exhaustivo por componente en [./frontend-coverage.md](./frontend-coverage.md).
+
+- **INTEGRATED_FEATURE (8 Dominios con Feature Modules y Sub-Páginas Dedicadas):** `gate_control` (garita), `inbound` (docks, escaneo, cuarentena, inspección, diferencias), `inventory` (balances, ledger, kárdex), `procurement` (requisiciones, aprobaciones), `purchase_orders` (órdenes y enmiendas), `security` (continuous-auth y step-up), `supplier-evaluation` (evaluación de proveedores), `putaway` (almacenamiento asistido).
+- **INTEGRATED_PAGE (14 Dominios con Vistas y Formularios en `src/pages/`):** `audit` (`AuditEventsPage`), `company_profile` (`CompanyProfileSettingsPage`), `cost_centers` (`CostCentersPage`), `drivers` (`DriversPage`, `DriverDetailPage`, etc.), `files` (`FilesRepositoryPage`, `FileUploadPage`, etc.), `integrations` (`RucIntegrationPage`), `organization` (`OrganizationsPage`, `BranchesPage`), `partners` (`BusinessPartnersPage`, `BusinessPartnerDetailPage`), `products` (`ProductsPage`, `ProductDetailPage`), `rbac` (`RolesPage`, `PermissionsCatalogPage`), `routes_module` (`RoutesPage`, `RouteDetailPage`), `ruc` (`RucIntegrationPage`), `units` (`UnitsAndConversionsPage`), `vehicles` (`VehiclesPage`, `VehicleDetailPage`), `vehicle_verifications` (`VehicleVerificationsPage`), `incidents` (`IncidentsPage`), `dashboard/reports` (`DashboardPage`, `ReportsPage`).
+- **INTEGRATED_PAGE_AND_BACKEND_ONLY_SURFACES (2 Dominios con Superficies Específicas Backend-Only):**
+  - `documents`: Visores y descarga de PDFs integrados en modales de negocio; administración general de plantillas y talonarios en batch es `BACKEND_ONLY`.
+  - `warehouses`: Modelado de almacenes y ubicaciones integrado; generación masiva de etiquetas QR en batch (`/locations/labels/batch`) es `BACKEND_ONLY`.
+- **PARTIAL_INTEGRATION (1 Dominio):** `shipments` (listado y tracking de estados integrados; asignación de despacho avanzada y POD digital en desarrollo).
+- **SHARED_CORE_LIBRARY (1 Módulo):** `shared` (`api-client.ts` con manejo de CSRF, autenticación continua y Step-Up).
+- **Páginas Frontend Totales Auditadas:** `64` páginas React y `16` features estructuradas.
+- **FRONTEND_ONLY / ORPHAN PAGES:** `0`
+- **STALE:** `0`
+- **UNKNOWN:** `0`
 
 ---
 
