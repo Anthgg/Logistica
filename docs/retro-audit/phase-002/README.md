@@ -3,7 +3,7 @@
 ---
 
 ## 1. Objetivo Oficial
-El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance funcional del **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**, estableciendo con precisión las fronteras operativas entre los 12 dominios logísticos, identificando las inclusiones del primer lanzamiento (`IN_SCOPE_V1`), las exclusiones obligatorias (`OUT_OF_SCOPE_V1`) y asignando los roles responsables de cada área.
+El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance funcional del **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**, estableciendo con precisión las fronteras operativas entre los 12 dominios logísticos, identificando las inclusiones del primer lanzamiento (`IN_SCOPE_V1`), las exclusiones oficiales confirmadas por el Plan Maestro (`OFFICIAL_OUT_OF_SCOPE_V1`), las exclusiones técnicas propuestas (`PROPOSED_OUT_OF_SCOPE_V1`) y asignando el modelo de gobernanza por roles.
 
 ---
 
@@ -21,15 +21,16 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
   10. Documentos (Documents)
   11. KPIs y Analítica (Analytics)
   12. Integraciones Externas (Integrations)
-- Exclusión explícita de la facturación tributaria automática para el primer lanzamiento.
-- Establecimiento de la matriz de responsabilidades por rol funcional y técnico.
+- Exclusión oficial explícita de la facturación tributaria automática para el primer lanzamiento.
+- Identificación de exclusiones adicionales propuestas para decisión del usuario.
+- Establecimiento del modelo de responsabilidades en tres niveles: Governance Owner, Current RBAC Mapping y Human Owner.
 
 ---
 
 ## 3. Criterio de Cierre
-- Documento de alcance formalizado que contenga la matriz de 12 dominios, inclusiones oficiales, exclusiones oficiales y matriz de responsabilidades por rol.
-- Verificación en código de que no existe invasión de alcance por facturación tributaria automática ni pasarelas de cobro no autorizadas.
-- Aprobación conceptual por parte del usuario (`SCOPE_ACCEPTANCE: PENDING_USER_REVIEW`).
+- Documento de alcance formalizado que contenga la matriz de 12 dominios, inclusiones oficiales, exclusiones oficiales y propuestas, y matriz de responsabilidades.
+- Verificación en código de que no existe invasión de alcance por facturación tributaria automática de venta.
+- Revisión y decisión del alcance por parte del usuario (`SCOPE_ACCEPTANCE: PENDING_USER_REVIEW`).
 
 ---
 
@@ -77,7 +78,7 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 3. **Almacenes:** Modelado de almacenes, zonificación, ubicaciones jerárquicas y putaway.
 4. **Inventario:** Ledger inmutable, cálculo de saldos disponibles/reservados/bloqueados, conteos y transferencias.
 5. **Trazabilidad:** Auditoría inmutable de eventos, lotes/series y ciclo de vida documental.
-6. **Salida:** Pedidos de salida, reserva de existencias, picking, packing y autorización de despacho.
+6. **Salida:** Pedidos de salida, reserva preventiva de existencias, picking, packing y autorización de despacho.
 7. **Transporte:** Vehículos, conductores, verificación de placas/licencias y rutas de transporte.
 8. **Entrega:** Despacho, prueba de entrega (POD), firmas digitales y gestión de rechazos.
 9. **Devoluciones:** Logística inversa, solicitudes RMA, inspección de devolución e incidencias.
@@ -87,17 +88,22 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 
 ---
 
-## 9. Dominios Excluidos (OUT_OF_SCOPE_V1)
-1. **Facturación Tributaria Automática (`AUTOMATIC_TAX_BILLING`):** No se emiten facturas ni boletas fiscales de venta electrónicas ante SUNAT.
-2. **Pasarelas de Pago (`PAYMENT_GATEWAY_PROCESSING`):** No se procesan pagos directos con tarjeta de crédito/débito.
-3. **Contabilidad General (`FINANCIAL_ACCOUNTING`):** No se generan libros mayores ni balances financieros impositivos.
-4. **Planillas y Nómina (`PAYROLL_AND_HR`):** No se gestionan pagos salariales ni beneficios laborales.
-5. **Mantenimiento Pesado de Motores (`FLEET_HEAVY_MAINTENANCE`):** No se administran talleres mecánicos ni órdenes de reparación compleja.
+## 9. Dominios Excluidos (Exclusiones Oficiales vs Propuestas)
+
+### 9.1. Exclusiones Oficiales del Plan Maestro (OFFICIAL_OUT_OF_SCOPE_V1)
+- **Facturación Tributaria Automática (`AUTOMATIC_TAX_BILLING`):** No se emiten facturas ni boletas fiscales de venta electrónicas ante SUNAT desde el sistema T1. Delegada a ERPs/sistemas contables externos.
+
+### 9.2. Exclusiones Propuestas Pendientes de Decisión (PROPOSED_OUT_OF_SCOPE_V1)
+*(Propuestas técnicas formuladas en la retro-auditoría; estado: `PENDING_USER_SCOPE_DECISION`)*
+1. **Pasarelas de Pago (`PAYMENT_GATEWAY_PROCESSING`):** Cobros directos con tarjetas/transferencias bancarias en línea.
+2. **Contabilidad General Financiera (`FINANCIAL_ACCOUNTING`):** Libros mayores y balances tributarios.
+3. **Planillas y Recursos Humanos (`PAYROLL_AND_HR`):** Pago de haberes y nóminas.
+4. **Mantenimiento Mecánico Pesado (`FLEET_HEAVY_MAINTENANCE`):** Talleres mecánicos y mantenimiento de motores pesados.
 
 ---
 
 ## 10. Facturación Tributaria: Verificación de Fronteras
-- **Auditoría de Código:** Se ejecutó un análisis estático exhaustivo de términos (`invoice`, `factura`, `billing`, `tax`, `comprobante`, `boleta`) en backend y frontend.
+- **Auditoría de Código:** Análisis estático de términos (`invoice`, `factura`, `billing`, `tax`, `comprobante`, `boleta`) en backend y frontend.
 - **Hallazgos:**
   - `tax_id_value` / `tax_total`: Campos informativos en socios de negocio y desglose de impuestos en Órdenes de Compra con proveedores (`LOGISTICS_DOCUMENT`).
   - `comprobante`: Referencias en frontend a "Comprobante de Garita" (slip de control de ingreso) y "Comprobante Step-Up" (prueba de autenticación reforzada).
@@ -114,26 +120,30 @@ El objetivo de la **Fase 002** es definir, delimitar y formalizar el alcance fun
 
 ---
 
-## 12. Matriz de Responsabilidades
-- **Compras:** `PURCHASING_OWNER`
-- **Recepción:** `RECEIVING_OWNER`
-- **Almacenes:** `WAREHOUSE_OWNER`
-- **Inventario:** `INVENTORY_OWNER`
-- **Trazabilidad:** `TRACEABILITY_OWNER`
-- **Salida:** `OUTBOUND_OWNER`
-- **Transporte:** `TRANSPORT_OWNER`
-- **Entrega:** `DELIVERY_OWNER`
-- **Devoluciones:** `RETURNS_OWNER`
-- **Documentos:** `DOCUMENT_CONTROL_OWNER`
-- **KPIs:** `ANALYTICS_OWNER`
-- **Integraciones:** `INTEGRATION_OWNER`
-- **Técnico / Arquitectura:** `TECHNICAL_OWNER`
-- **Seguridad / Autenticación:** `SECURITY_OWNER`
+## 12. Matriz de Responsabilidades y Gobierno (3 Niveles)
+
+| Dominio | Governance Owner (Conceptual) | Current RBAC Mapping (Real) | Human Owner |
+| :--- | :--- | :--- | :--- |
+| **Compras** | `PURCHASING_OWNER` | `PURCHASING`, `PURCHASING_APPROVER` | `ROLE_TO_BE_ASSIGNED` |
+| **Recepción** | `RECEIVING_OWNER` | `GATE_CONTROL`, `RECEIVING`, `QUALITY` | `ROLE_TO_BE_ASSIGNED` |
+| **Almacenes** | `WAREHOUSE_OWNER` | `WAREHOUSE_OPERATOR` | `ROLE_TO_BE_ASSIGNED` |
+| **Inventario** | `INVENTORY_OWNER` | `INVENTORY_CONTROLLER`, `INVENTORY_OPERATOR`, `INVENTORY_AUDITOR`, `LEDGER_ADMIN` | `ROLE_TO_BE_ASSIGNED` |
+| **Trazabilidad** | `TRACEABILITY_OWNER` | `LOGISTICS_AUDITOR`, `QUALITY` *(Apoyo)* | `ROLE_TO_BE_ASSIGNED` |
+| **Salida** | `OUTBOUND_OWNER` | `DISPATCH` | `ROLE_TO_BE_ASSIGNED` |
+| **Transporte** | `TRANSPORT_OWNER` | `TRANSPORT_PLANNER`, `TRANSPORT_MONITOR` | `ROLE_TO_BE_ASSIGNED` |
+| **Entrega** | `DELIVERY_OWNER` | `DRIVER` | `ROLE_TO_BE_ASSIGNED` |
+| **Devoluciones** | `RETURNS_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Apoyo: `QUALITY`, `LOGISTICS_MANAGER`)* | `ROLE_TO_BE_ASSIGNED` |
+| **Documentos** | `DOCUMENT_CONTROL_OWNER` | `DOCUMENT_CONTROLLER` | `ROLE_TO_BE_ASSIGNED` |
+| **KPIs** | `ANALYTICS_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Apoyo: `LOGISTICS_MANAGER`, `LOGISTICS_ADMIN`, `LOGISTICS_VIEWER`)* | `ROLE_TO_BE_ASSIGNED` |
+| **Integraciones** | `INTEGRATION_OWNER` | `SYSTEM_INTEGRATION_SERVICE`, `LOGISTICS_ADMIN` | `ROLE_TO_BE_ASSIGNED` |
+| **Técnico / Release** | `TECHNICAL_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Gestión de arquitectura e infraestructura)* | `ROLE_TO_BE_ASSIGNED` |
+| **Seguridad / CISO** | `SECURITY_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Políticas transversales de seguridad)* | `ROLE_TO_BE_ASSIGNED` |
+
+> **Nota:** Los Governance Owners son responsabilidades conceptuales de dominio y NO representan roles RBAC implementados en software a menos que coincidan con el catálogo oficial (`backend/app/modules/logistics/rbac/catalog.py`). Los responsables nominales deberán asignarse durante la parametrización organizacional antes de la entrada a producción.
 
 ---
 
 ## 13. Dependencias Transversales
-Las siguientes capacidades operan como servicios compartidos y de infraestructura:
 - **Autenticación y Sesión:** Tokens JWT, rotación, cookies HttpOnly/SameSite.
 - **Autenticación Continua & Biometría:** Evaluación multimodal de riesgo y Step-Up.
 - **RBAC y Permisos:** Control de acceso por rol y acción sobre endpoints y vistas.
@@ -175,46 +185,47 @@ Las siguientes capacidades operan como servicios compartidos y de infraestructur
 ---
 
 ## 18. Riesgos de Scope Creep Mitigados
-- **Riesgo:** Intentar incorporar emisión de facturas electrónicas a SUNAT en este sistema.
-  - **Mitigación:** Exclusión formalizada en `OUT_OF_SCOPE_V1`; emisión delegada a ERPs contables.
-- **Riesgo:** Confundir Guías de Remisión (GRE) con Comprobantes de Pago tributarios.
-  - **Mitigación:** Definición explícita de GRE como documento de transporte logístico.
+- **Riesgo:** Confundir exclusiones oficiales con propuestas del análisis.
+  - **Mitigación:** Separación explícita de `OFFICIAL_OUT_OF_SCOPE_V1` (`AUTOMATIC_TAX_BILLING`) y `PROPOSED_OUT_OF_SCOPE_V1` en la documentación.
+- **Riesgo:** Confundir Governance Owners conceptuales con roles RBAC de software.
+  - **Mitigación:** Implementación del modelo en tres niveles (Governance Owner, Current RBAC Mapping, Human Owner).
 - **Riesgo:** Refactorizar prematuramente módulos en F002.
   - **Mitigación:** F002 es 100% de gobernanza y definición de alcance (`PRODUCTION_CODE_CHANGES = NONE`). El diseño arquitectónico modular corresponde a F003.
 
 ---
 
 ## 19. Evidencia Técnica
-- `docs/retro-audit/phase-002/scope-matrix.md`: Matriz de los 12 dominios con sus módulos, tablas, rutas y responsables.
+- `docs/retro-audit/phase-002/scope-matrix.md`: Matriz de los 12 dominios con sus módulos, tablas, rutas, governance owners y mapeo RBAC.
 - `docs/retro-audit/phase-002/in-scope.md`: Detalle de inclusiones funcionales del primer lanzamiento.
-- `docs/retro-audit/phase-002/out-of-scope.md`: Detalle de exclusiones oficiales.
-- `docs/retro-audit/phase-002/responsibility-matrix.md`: Asignación de gobernanza por rol funcional y técnico.
+- `docs/retro-audit/phase-002/out-of-scope.md`: Detalle de exclusiones oficiales y propuestas.
+- `docs/retro-audit/phase-002/responsibility-matrix.md`: Asignación de gobernanza en tres niveles.
 - `docs/retro-audit/phase-002/current-module-map.md`: Mapeo granular de componentes existentes.
 
 ---
 
 ## 20. Tests y CI Aplicables
-- **Verificación de Integridad Documental:** Comprobación programática de la matriz de 12 dominios, inclusiones, exclusiones y responsabilidades.
+- **Verificación de Integridad Documental:** Comprobación programática de la matriz de 12 dominios, inclusiones, exclusiones oficiales/propuestas y responsabilidades.
 - **Git Scope Gate:** `git diff --name-only` estrictamente contenido en `docs/retro-audit/**`.
 - **CI Pipeline Oficial:** Ejecución y validación remota en GitHub Actions sobre el commit exacto.
 
 ---
 
 ## 21. Hallazgos
-- `INFO-001`: La delimitación de los 12 dominios es coherente con el Plan Maestro en 100 Fases.
+- `INFO-001`: La delimitación de los 12 dominios concuerda al 100% con el Plan Maestro en 100 Fases.
 - `INFO-002`: No existe código invasivo de facturación tributaria automática en la base de código auditada.
-- `INFO-003`: Los módulos documentales operan adecuadamente como servicios transversales de soporte.
+- `INFO-003`: El catálogo RBAC real contiene 20 roles del sistema que se mapean formalmente contra los 12 Governance Owners.
 
 ---
 
 ## 22. Correcciones Realizadas
-- Generación del paquete completo de gobernanza y alcance para la Fase 002.
+- Separación formal de exclusiones oficiales (`AUTOMATIC_TAX_BILLING`) vs exclusiones propuestas pendientes de decisión.
+- Delimitación estricta entre Governance Owners conceptuales, roles RBAC reales (`catalog.py`) y Human Owners (`ROLE_TO_BE_ASSIGNED`).
 - Actualización de estados maestros en `docs/retro-audit/README.md` (F001: `PASSED`, F002: `IN_PROGRESS`).
 
 ---
 
 ## 23. Aceptación por el Usuario
-- **Prueba UAT de Navegador:** `N/A` (Fase de gobierno/documental sin cambios en UI).
+- **Prueba UAT de Navegador:** `N/A` (Fase de gobierno documental sin cambios en UI).
 - **Revisión de Alcance:** `SCOPE_ACCEPTANCE: PENDING_USER_REVIEW`.
 
 ---

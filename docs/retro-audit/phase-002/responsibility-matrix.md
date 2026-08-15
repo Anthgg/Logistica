@@ -1,37 +1,64 @@
-# Matriz de Responsabilidades por Rol · Fase 002
+# Matriz de Responsabilidades y Gobierno · Fase 002
 
-Este documento formaliza los roles funcionales, técnicos y de seguridad que ejercen gobernanza sobre cada uno de los 12 dominios del **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**.
+Este documento formaliza el modelo de responsabilidades del **Proyecto T1: Sistema Logístico, Trazabilidad y Rutas Reales**, estableciendo una estricta separación conceptual entre los tres niveles de responsabilidad:
+
+1. **Governance Owner:** Responsable funcional/conceptual del dominio de negocio.
+2. **Current RBAC Mapping:** Roles técnicos de software realmente implementados en el catálogo RBAC del backend (`backend/app/modules/logistics/rbac/catalog.py`).
+3. **Human Owner:** Asignación nominal humana (`ROLE_TO_BE_ASSIGNED`).
+
+> **Regla de Gobernanza:** Los Governance Owners son responsabilidades conceptuales de dominio y NO deben confundirse con roles técnicos de RBAC. Cuando existe correspondencia funcional, se documentan los roles RBAC técnicos actualmente implementados por separado. Los responsables nominales deberán asignarse durante la parametrización organizacional antes de la entrada a producción.
 
 ---
 
-## 1. Matriz de Responsables de Dominio Funcional
+## 1. Matriz de Responsabilidad por Dominio Logístico
 
-| Dominio Logístico | Código de Rol Responsable | Definición del Rol Funcional | Atribuciones y Responsabilidades Clave |
-| :--- | :--- | :--- | :--- |
-| **1. Compras** | `PURCHASING_OWNER` | Jefe / Responsable de Compras y Aprovisionamiento | Definición de flujos de requerimientos, evaluación de proveedores, aprobación de OCs y políticas de precios de compra. |
-| **2. Recepción** | `RECEIVING_OWNER` | Supervisor de Recepción y Control de Muelles | Control de garita, citas de descarga, asignación de muelles, conteo por escaneo y resolución de diferencias de llegada. |
-| **3. Almacenes** | `WAREHOUSE_OWNER` | Jefe de Almacén y Distribución | Modelado físico de almacenes, zonificación, jerarquía de racks/bins y reglas de ubicación dirigida (putaway). |
-| **4. Inventario** | `INVENTORY_OWNER` | Responsable de Control de Inventarios | Integridad del libro de movimientos (ledger), conciliación de saldos de stock, conteos cíclicos y ajustes justificados. |
-| **5. Trazabilidad** | `TRACEABILITY_OWNER` | Oficial de Calidad y Trazabilidad | Gobierno de lotes, series, unidades logísticas, eventos de auditoría inmutables y cadena de custodia de mercancías. |
-| **6. Salida** | `OUTBOUND_OWNER` | Supervisor de Despacho y Preparación de Pedidos | Asignación de pedidos de salida, consolidación de olas de picking, control de packing y liberación de órdenes con Step-Up. |
-| **7. Transporte** | `TRANSPORT_OWNER` | Jefe de Transporte y Gestión de Flota | Mantenimiento del maestro de vehículos y conductores, verificación de placas/licencias y asignación de rutas. |
-| **8. Entrega** | `DELIVERY_OWNER` | Coordinador de Última Milla y Entregas | Supervisión de rutas en tránsito, validación de pruebas de entrega (POD), firmas digitales y resolución de entregas fallidas. |
-| **9. Devoluciones** | `RETURNS_OWNER` | Responsable de Logística Inversa y Reclamos | Gestión de solicitudes RMA, inspección técnica de devoluciones, clasificación de destino y planes de acción correctiva. |
-| **10. Documentos** | `DOCUMENT_CONTROL_OWNER` | Administrador de Control Documental | Catálogo de tipos documentales, correlatividad de talonarios, plantillas institucionales, firmas digitales y repositorio seguro. |
-| **11. KPIs** | `ANALYTICS_OWNER` | Analista de Inteligencia de Negocios y Operaciones | Definición de fórmulas de cálculo de KPIs, dashboards gerenciales, reportes de rendimiento y exportaciones operativas. |
-| **12. Integraciones** | `INTEGRATION_OWNER` | Ingeniero de Integraciones y Servicios Externos | Mantenimiento de conectores con SUNAT/RUC, servicios de placas, proveedores de mapas/ruteo y gestión de fallbacks. |
+| Dominio | Governance Owner (Conceptual) | Current RBAC Mapping (Implementado en Software) | Human Owner | Estado |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Compras** | `PURCHASING_OWNER` | `PURCHASING`, `PURCHASING_APPROVER` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **2. Recepción** | `RECEIVING_OWNER` | `GATE_CONTROL`, `RECEIVING`, `QUALITY` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **3. Almacenes** | `WAREHOUSE_OWNER` | `WAREHOUSE_OPERATOR` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **4. Inventario** | `INVENTORY_OWNER` | `INVENTORY_CONTROLLER`, `INVENTORY_OPERATOR`, `INVENTORY_AUDITOR`, `LEDGER_ADMIN` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **5. Trazabilidad** | `TRACEABILITY_OWNER` | Roles de apoyo: `LOGISTICS_AUDITOR`, `QUALITY` *(Sin rol RBAC único exclusivo)* | `ROLE_TO_BE_ASSIGNED` | `SUPPORTING_ROLES` |
+| **6. Salida** | `OUTBOUND_OWNER` | `DISPATCH` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **7. Transporte** | `TRANSPORT_OWNER` | `TRANSPORT_PLANNER`, `TRANSPORT_MONITOR` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **8. Entrega** | `DELIVERY_OWNER` | `DRIVER` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **9. Devoluciones** | `RETURNS_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Roles de apoyo: `QUALITY`, `LOGISTICS_MANAGER`)* | `ROLE_TO_BE_ASSIGNED` | `NO_DIRECT_RBAC` |
+| **10. Documentos** | `DOCUMENT_CONTROL_OWNER` | `DOCUMENT_CONTROLLER` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
+| **11. KPIs** | `ANALYTICS_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Roles de apoyo: `LOGISTICS_MANAGER`, `LOGISTICS_ADMIN`, `LOGISTICS_VIEWER`)* | `ROLE_TO_BE_ASSIGNED` | `NO_DIRECT_RBAC` |
+| **12. Integraciones** | `INTEGRATION_OWNER` | `SYSTEM_INTEGRATION_SERVICE`, `LOGISTICS_ADMIN` | `ROLE_TO_BE_ASSIGNED` | `ACTIVE_MAPPING` |
 
 ---
 
 ## 2. Responsabilidades Técnicas y de Seguridad Transversales
 
-| Rol Transversal | Código de Rol | Responsabilidades |
-| :--- | :--- | :--- |
-| **Arquitectura y Release** | `TECHNICAL_OWNER` | Arquitectura del backend (FastAPI) y frontend (React), diseño de modelos relacionales, migraciones Alembic y pipelines de CI/CD. |
-| **Seguridad de la Información** | `SECURITY_OWNER` | Gobernanza de autenticación continua, RBAC granular, políticas de tokens/cookies, protección anti-CSRF y encriptación de datos. |
+| Rol Transversal | Governance Owner | Current RBAC Mapping | Human Owner | Estado |
+| :--- | :--- | :--- | :--- | :--- |
+| **Arquitectura y Release** | `TECHNICAL_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Gestión de infraestructura, DevOps y repositorio Git fuera de RBAC logístico)* | `ROLE_TO_BE_ASSIGNED` | `INFRASTRUCTURE` |
+| **Seguridad de la Información** | `SECURITY_OWNER` | `NO_DIRECT_RBAC_EQUIVALENT` *(Políticas de CISO, autenticación continua y criptografía fuera de RBAC logístico)* | `ROLE_TO_BE_ASSIGNED` | `INFRASTRUCTURE` |
 
 ---
 
-## 3. Estado de Asignación Organizacional
+## 3. Catálogo Real de Roles RBAC en Backend (`SYSTEM_ROLES`)
 
-> **Nota de Gobernanza:** En la línea base de desarrollo actual, las atribuciones de los roles funcionales están mapeadas a los catálogos de permisos y roles del sistema RBAC (`ROLE_LOGISTICS_ADMIN`, `ROLE_WAREHOUSE_SUPERVISOR`, `ROLE_PURCHASER`, `ROLE_DRIVER`, `ROLE_AUDITOR`, etc.). Los responsables nominales humanos específicos serán asignados por la administración de la organización durante la etapa de parametrización de producción (Fases F097-F100).
+Los 20 roles del sistema implementados en `backend/app/modules/logistics/rbac/catalog.py` son:
+
+1. `LOGISTICS_ADMIN` — Administrador logístico
+2. `LOGISTICS_MANAGER` — Gerencia logística
+3. `PURCHASING` — Compras
+4. `PURCHASING_APPROVER` — Aprobador de compras
+5. `GATE_CONTROL` — Control de puerta
+6. `RECEIVING` — Recepción
+7. `QUALITY` — Control de calidad
+8. `WAREHOUSE_OPERATOR` — Operador de almacén
+9. `INVENTORY_CONTROLLER` — Control de inventario
+10. `INVENTORY_OPERATOR` — Operador del libro de inventario
+11. `INVENTORY_AUDITOR` — Auditor del libro de inventario
+12. `SYSTEM_INTEGRATION_SERVICE` — Servicio de integración logística
+13. `LEDGER_ADMIN` — Administrador del libro de inventario
+14. `DISPATCH` — Despacho
+15. `TRANSPORT_PLANNER` — Planificador de transporte
+16. `TRANSPORT_MONITOR` — Monitor de transporte
+17. `DRIVER` — Conductor
+18. `DOCUMENT_CONTROLLER` — Control documental
+19. `LOGISTICS_AUDITOR` — Auditor logístico
+20. `LOGISTICS_VIEWER` — Consulta logística
