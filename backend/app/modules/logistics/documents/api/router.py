@@ -352,7 +352,12 @@ def get_document_history(
 ) -> DocumentHistoryResponse:
     service = DocumentLifecycleService(db)
     inst = service.get_document(document_id)
-    if inst.organization_id != principal.organization_id:
+    # `LogisticsPrincipal` publica los ambitos autorizados como `organization_ids`
+    # y los evalua con `can_access_organization`, igual que el resto de este
+    # router. Comparar contra un `organization_id` que no existe lanzaba
+    # AttributeError, y ese 500 salia fuera del middleware CORS: el navegador lo
+    # reportaba como error de CORS aunque la configuracion fuera correcta.
+    if not principal.can_access_organization(inst.organization_id):
         raise HTTPException(status_code=403, detail="No tiene permiso para acceder a este documento.")
 
     history = service.get_history(document_id)
