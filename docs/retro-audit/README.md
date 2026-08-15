@@ -10,8 +10,8 @@ Este documento contiene el registro de estado maestro de las 100 fases del **Pro
 
 - **Fase F001 (Congelar la línea base del proyecto):** PHASE_001_RETRO_AUDIT_PASSED (Merge SHA: 46b9c5d, CI: 31877992541)
 - **Fase F002 (Definir el alcance logístico):** PHASE_002_RETRO_AUDIT_PASSED (Merge SHA: 8919724, CI: 31902976116)
-- **Fase en Curso:** NONE / F003 AUTHORIZED BUT NOT STARTED
-- **Fase F003 (Diseñar la arquitectura modular):** AUTHORIZED (Pendiente de inicio)
+- **Fase en Curso:** F003 — Diseñar la arquitectura modular (IN_PROGRESS)
+- **Fase F003 (Diseñar la arquitectura modular):** IN_PROGRESS
 - **Fases F004 a F100:** BLOCKED
 
 ---
@@ -22,7 +22,7 @@ Este documento contiene el registro de estado maestro de las 100 fases del **Pro
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **F001** | Congelar la línea base del proyecto | Base e integración | PASSED | YES | PASS |
 | **F002** | Definir el alcance logístico | Base e integración | PASSED | YES | PASS |
-| **F003** | Diseñar la arquitectura modular | Base e integración | AUTHORIZED | NO | NOT_STARTED |
+| **F003** | Diseñar la arquitectura modular | Base e integración | IN_PROGRESS | YES | PENDING_REVIEW |
 | **F004** | Definir organización, sedes y almacenes | Base e integración | BLOCKED | NO | NOT_STARTED |
 | **F005** | Definir roles logísticos | Base e integración | BLOCKED | NO | NOT_STARTED |
 | **F006** | Definir permisos por acción | Base e integración | BLOCKED | NO | NOT_STARTED |
