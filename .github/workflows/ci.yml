@@ -133,10 +133,15 @@ jobs:
       # servicio: el fallo que cubre estaba en la comprobación de tenant del
       # router, no en la consulta.
       #
-      # Este fichero todavía no entra en ningún paso de Ruff: los pasos de lint
-      # de este workflow enumeran rutas concretas. Añadirlo exige antes corregir
-      # UP035 en el propio test, que queda fuera del alcance de este cambio.
+      # Los pasos de lint de este workflow enumeran rutas concretas, así que el
+      # fichero se linta aquí de forma explícita en vez de ampliar Ruff a todo
+      # el repositorio.
       # -----------------------------------------------------------------------
+      - name: Lint Documents History Regression Test
+        working-directory: backend
+        run: |
+          ruff check tests/test_logistics_documents_history_http.py --output-format=github
+
       - name: Run Documents History HTTP Regression Tests
         working-directory: backend
         run: |

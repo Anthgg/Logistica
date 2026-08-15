@@ -13,8 +13,8 @@ comprobacion de tenant del router, no en la consulta.
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import UTC, datetime
-from typing import Generator
 from uuid import UUID, uuid4
 
 import pytest
