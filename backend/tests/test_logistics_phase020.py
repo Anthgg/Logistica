@@ -61,6 +61,16 @@ def client(app):
 
 
 @pytest.fixture(scope="module", autouse=True)
+def _guard_isolated_database(isolated_database) -> None:
+    """Esta suite hace COMMIT contra SessionLocal(): exige base de test."""
+
+
+@pytest.fixture(autouse=True)
+def _guard_isolated_storage(isolated_document_storage) -> None:
+    """Los PDF de la suite van a un temporal, no al storage del usuario."""
+
+
+@pytest.fixture(scope="module", autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
 

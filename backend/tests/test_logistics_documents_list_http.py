@@ -46,6 +46,16 @@ from app.modules.logistics.principal import LogisticsPrincipal
 
 pytestmark = [pytest.mark.http, pytest.mark.security]
 
+@pytest.fixture(scope="module", autouse=True)
+def _guard_isolated_database(isolated_database) -> None:
+    """Estos casos hacen COMMIT: exigen una base de test aislada."""
+
+
+@pytest.fixture(autouse=True)
+def _guard_isolated_storage(isolated_document_storage) -> None:
+    """Los PDF generados van a un temporal, no al storage del usuario."""
+
+
 DOCUMENTS_BASE = "/api/logistics/documents"
 READ = "logistics.documents.read"
 CANCEL = "logistics.documents.cancel"

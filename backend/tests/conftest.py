@@ -10,6 +10,12 @@ from app.database.session import get_db
 from app.main import app
 from fastapi.testclient import TestClient
 
+# Guardas de aislamiento disponibles para toda la suite.
+from tests.isolation import (  # noqa: F401
+    isolated_database,
+    isolated_document_storage,
+)
+
 
 @pytest.fixture(scope="session")
 def test_engine():

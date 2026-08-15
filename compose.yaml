@@ -72,6 +72,10 @@ services:
       - ./data/processed:/app/data/processed:ro
       - ./data/captures:/app/data/captures
       - ./backend/tests:/app/tests:ro
+      # Los PDF emitidos, reimpresos y anulados sobreviven a la recreacion del
+      # contenedor. Sin este volumen viven en su capa escribible y se pierden,
+      # dejando filas de artifact en base de datos sin binario detras.
+      - document_storage:/app/data/documents
     depends_on:
       postgres:
         condition: service_healthy
@@ -118,6 +122,7 @@ services:
 
 volumes:
   postgres_data:
+  document_storage:
 
 networks:
   app_network:
