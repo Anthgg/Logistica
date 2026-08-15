@@ -11,7 +11,7 @@ from app.core.security import (
     validate_password_strength,
     verify_password,
 )
-from app.database.base import utc_now
+from app.database.base import ensure_utc, utc_now
 from app.models.session import UserSession
 from app.models.user import User
 from app.repositories.session_repository import SessionRepository
@@ -111,7 +111,8 @@ class AuthService:
             )
             database.commit()
             raise ApplicationError("ACCOUNT_DISABLED", "La cuenta está desactivada.", 403)
-        if user.locked_until and user.locked_until > now:
+        locked_until = ensure_utc(user.locked_until)
+        if locked_until and locked_until > now:
             raise ApplicationError(
                 "ACCOUNT_TEMPORARILY_LOCKED",
                 "La cuenta está bloqueada temporalmente.",

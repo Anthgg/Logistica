@@ -12,7 +12,7 @@ from app.core.security import (
     hash_refresh_token,
     hash_session_token,
 )
-from app.database.base import utc_now
+from app.database.base import ensure_utc, utc_now
 from app.models.device import Device
 from app.models.session import UserSession
 from app.models.user import User
@@ -86,7 +86,9 @@ class SessionService:
             raise ApplicationError("SESSION_REVOKED", "La sesión fue revocada.", 401)
 
         now = utc_now()
-        if user_session.expires_at <= now:
+        expires_at = ensure_utc(user_session.expires_at)
+        last_activity_at = ensure_utc(user_session.last_activity_at)
+        if expires_at and expires_at <= now:
             user_session.revoked_at = now
             self.audit.record(
                 database,
@@ -97,7 +99,7 @@ class SessionService:
             database.commit()
             raise ApplicationError("SESSION_EXPIRED", "La sesión expiró.", 401)
         idle_limit = timedelta(minutes=settings.SESSION_IDLE_TIMEOUT_MINUTES)
-        if user_session.last_activity_at + idle_limit <= now:
+        if last_activity_at and last_activity_at + idle_limit <= now:
             user_session.revoked_at = now
             self.audit.record(
                 database,
@@ -115,7 +117,7 @@ class SessionService:
             raise ApplicationError("DEVICE_BLOCKED", "El dispositivo está bloqueado.", 403)
 
         update_interval = timedelta(seconds=settings.SESSION_ACTIVITY_UPDATE_SECONDS)
-        if user_session.last_activity_at + update_interval <= now:
+        if last_activity_at and last_activity_at + update_interval <= now:
             user_session.last_activity_at = now
             database.commit()
         return user_session
@@ -156,10 +158,11 @@ class SessionService:
                 "Se detectó reutilización del refresh token. La sesión fue revocada.",
                 401,
             )
+        refresh_expires_at = ensure_utc(user_session.refresh_expires_at)
         if (
             user_session.revoked_at
-            or not user_session.refresh_expires_at
-            or user_session.refresh_expires_at <= now
+            or not refresh_expires_at
+            or refresh_expires_at <= now
         ):
             raise ApplicationError(
                 "REFRESH_TOKEN_EXPIRED", "El refresh token expiró.", 401
