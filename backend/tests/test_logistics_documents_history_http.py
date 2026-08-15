@@ -152,7 +152,7 @@ def document_context(db_session: Session):
         id=uuid4(),
         email=f"auditor-{uuid4().hex[:8]}@example.com",
         full_name="Auditor Documental",
-        hashed_password="x" * 60,
+        password_hash="x" * 60,
         role="user",
         is_active=True,
         is_verified=True,
@@ -229,8 +229,12 @@ def test_history_returns_events_for_authorized_organization(
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["document_id"] == str(document.id)
-    assert len(body["history"]) == 1
-    entry = body["history"][0]
+    # `create_draft` ya deja su propio evento, asi que la emision es la segunda.
+    assert [e["event_type"] for e in body["history"]] == [
+        "logistics.document.draft_created",
+        "logistics.document.issued",
+    ]
+    entry = body["history"][1]
     assert entry["event_type"] == "logistics.document.issued"
     assert entry["actor_user_id"] == str(actor.id)
     # Sin snapshot de nombre, se resuelve contra el usuario real.
@@ -245,6 +249,11 @@ def test_history_without_events_returns_empty_list(
 ) -> None:
     """Un documento sin eventos responde 200 con lista vacia, no 500."""
     document = document_context["document"]
+    db_session.query(LogisticsAuditEvent).filter_by(
+        resource_type="document_instance", resource_id=str(document.id)
+    ).delete()
+    db_session.commit()
+
     principal = _make_principal(
         [document_context["org"].id], document_context["actor"].id
     )
@@ -261,24 +270,28 @@ def test_history_tolerates_missing_actor(
 ) -> None:
     """Un actor nulo o borrado no debe convertir el historial en un 500."""
     document = document_context["document"]
+    actor = document_context["actor"]
+    org_id = document_context["org"].id
     _add_event(db_session, document.id, actor_user_id=None, actor_snapshot=None)
     _add_event(
-        db_session,
-        document.id,
-        actor_user_id=uuid4(),  # usuario inexistente
-        actor_snapshot=None,
+        db_session, document.id, actor_user_id=actor.id, actor_snapshot="Nombre Congelado"
     )
 
-    principal = _make_principal(
-        [document_context["org"].id], document_context["actor"].id
-    )
+    # Al borrar al usuario, la FK ON DELETE SET NULL deja el actor sin id: es el
+    # escenario real de "usuario eliminado", no un id colgante.
+    db_session.delete(actor)
+    db_session.commit()
+
+    principal = _make_principal([org_id], uuid4())
     client = _client(db_session, principal)
 
     response = client.get(f"{DOCUMENTS_BASE}/{document.id}/history")
 
     assert response.status_code == 200, response.text
     names = [entry["actor_name"] for entry in response.json()["history"]]
-    assert names == [None, "Usuario Logistico"]
+    # El evento con snapshot conserva el nombre; los demas quedan sin actor.
+    assert "Nombre Congelado" in names
+    assert all(name in (None, "Nombre Congelado") for name in names)
 
 
 def test_history_rejects_other_organization_with_403(
