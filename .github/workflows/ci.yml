@@ -146,15 +146,27 @@ jobs:
           ruff check \
             tests/test_logistics_documents_history_http.py \
             tests/test_logistics_documents_list_http.py \
+            tests/test_logistics_documents_pdf_http.py \
             --output-format=github
 
-      - name: Run Documents HTTP Regression Tests (list + history)
+      - name: Compile Documents Production Modules
+        working-directory: backend
+        run: |
+          # El router y el servicio arrastran hallazgos de Ruff anteriores a
+          # este hotfix, asi que no se lintan aqui; pero un modulo productivo
+          # tocado no debe quedar sin ninguna comprobacion.
+          python -m py_compile \
+            app/modules/logistics/documents/api/router.py \
+            app/modules/logistics/documents/application/lifecycle_service.py
+
+      - name: Run Documents HTTP Regression Tests (list + history + pdf)
         working-directory: backend
         run: |
           set +e
           pytest \
             tests/test_logistics_documents_history_http.py \
             tests/test_logistics_documents_list_http.py \
+            tests/test_logistics_documents_pdf_http.py \
             --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_history.log
           PYTEST_EXIT=${PIPESTATUS[0]}
           set -e
@@ -168,7 +180,7 @@ jobs:
           SKIPPED=${SKIPPED:-0}
 
           echo "==================================="
-          echo "DOCUMENTS HTTP REGRESSION SUMMARY (list + history)"
+          echo "DOCUMENTS HTTP REGRESSION SUMMARY (list + history + pdf)"
           echo "PASSED : $PASSED"
           echo "FAILED : $FAILED"
           echo "SKIPPED: $SKIPPED"
@@ -187,8 +199,8 @@ jobs:
             echo "FAIL: $SKIPPED test(s) de la regresión HTTP de Documents fueron SKIPPED."
             exit 1
           fi
-          if [ "$PASSED" -lt 10 ]; then
-            echo "FAIL: se esperaban al menos 10 casos y se ejecutaron $PASSED."
+          if [ "$PASSED" -lt 16 ]; then
+            echo "FAIL: se esperaban al menos 16 casos y se ejecutaron $PASSED."
             exit 1
           fi
 

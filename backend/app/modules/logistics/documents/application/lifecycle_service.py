@@ -281,6 +281,23 @@ class DocumentLifecycleService:
             raise DocumentServiceException(404, "DOCUMENT_NOT_FOUND", "Documento no encontrado.")
         return inst
 
+    def _read_artifact_bytes(self, artifact: DocumentArtifactModel) -> bytes:
+        """Lee el binario del artifact traduciendo la ausencia del fichero.
+
+        La fila puede existir en base de datos y el fichero no estar en el
+        storage: el binario vive fuera de la transaccion. Sin esta traduccion el
+        FileNotFoundError escapa como 500 sin cuerpo util, y quien lo recibe no
+        puede distinguir "el PDF no esta" de "el servidor se rompio".
+        """
+        try:
+            return self.storage.get(artifact.storage_key)
+        except FileNotFoundError as exc:
+            raise DocumentServiceException(
+                404,
+                "DOCUMENT_PDF_FILE_MISSING",
+                "El archivo PDF del documento no esta disponible en el almacenamiento.",
+            ) from exc
+
     def get_downloadable_pdf(
         self,
         document_id: UUID,
@@ -326,7 +343,7 @@ class DocumentLifecycleService:
 
         # Fail closed before the endpoint constructs a response or records a
         # successful delivery.
-        pdf_bytes = assert_pdf_bytes(self.storage.get(artifact.storage_key))
+        pdf_bytes = assert_pdf_bytes(self._read_artifact_bytes(artifact))
         return inst, artifact, pdf_bytes
 
     def record_preview(self, inst: DocumentInstanceModel, actor_id: UUID | None) -> None:
@@ -365,7 +382,7 @@ class DocumentLifecycleService:
         if inst.status == "ISSUED" and inst.authoritative_artifact_id:
             art = self.db.get(DocumentArtifactModel, inst.authoritative_artifact_id)
             if art:
-                return self.storage.get(art.storage_key), art.filename
+                return self._read_artifact_bytes(art), art.filename
 
         # If cancelled, return the cancelled artifact
         if inst.status == "CANCELLED":
@@ -380,7 +397,7 @@ class DocumentLifecycleService:
                 )
             ).first()
             if art:
-                return self.storage.get(art.storage_key), art.filename
+                return self._read_artifact_bytes(art), art.filename
 
         # For drafts or other statuses, render preview dynamically from last snapshot
         if not inst.current_snapshot_id:
