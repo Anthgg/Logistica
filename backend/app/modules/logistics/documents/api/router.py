@@ -144,10 +144,14 @@ def list_documents(
         br = db.get(Branch, it.branch_id)
         wh = db.get(Warehouse, it.warehouse_id) if it.warehouse_id else None
 
-        # Resolve actions permission flags based on backend rules
-        # Platform admin bypasses, otherwise evaluate permissions
-        can_cancel = (it.status == "ISSUED") and (principal.role == "admin" or "logistics.documents.cancel" in principal.permissions)
-        can_reprint = (it.status in ("ISSUED", "CANCELLED")) and (principal.role == "admin" or "logistics.documents.reprint" in principal.permissions)
+        # Resolve actions permission flags based on backend rules.
+        # `has_permission` ya concede el bypass de platform admin y consulta
+        # `permission_codes`; `LogisticsPrincipal` no expone `role` ni
+        # `permissions`, y leerlos rompia el listado entero con AttributeError.
+        can_cancel = it.status == "ISSUED" and principal.has_permission("logistics.documents.cancel")
+        can_reprint = it.status in ("ISSUED", "CANCELLED") and principal.has_permission(
+            "logistics.documents.reprint"
+        )
 
         summaries.append(
             DocumentSummaryResponse(
@@ -407,7 +411,7 @@ def download_document_pdf(
     elevated_original = inst.status == "CANCELLED" and original
     if elevated_original:
         # Check permissions
-        if principal.role != "admin" and "logistics.audit.read_sensitive" not in principal.permissions:
+        if not principal.has_permission("logistics.audit.read_sensitive"):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso de auditoría elevado para descargar el original de un documento anulado."

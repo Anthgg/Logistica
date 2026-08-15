@@ -127,7 +127,7 @@ jobs:
           echo "Security tests: DONE"
 
       # -----------------------------------------------------------------------
-      # DOCUMENTS HISTORY — regresión HTTP del endpoint /documents/{id}/history
+      # DOCUMENTS — regresión HTTP del listado y del historial
       #
       # Corre contra el PostgreSQL del job, no contra SQLite, y no mockea el
       # servicio: el fallo que cubre estaba en la comprobación de tenant del
@@ -137,16 +137,24 @@ jobs:
       # fichero se linta aquí de forma explícita en vez de ampliar Ruff a todo
       # el repositorio.
       # -----------------------------------------------------------------------
-      - name: Lint Documents History Regression Test
+      - name: Lint Documents Regression Tests
         working-directory: backend
         run: |
-          ruff check tests/test_logistics_documents_history_http.py --output-format=github
+          # El router arrastra hallazgos de Ruff anteriores a este hotfix
+          # (imports sin usar y sin ordenar). Lintarlo aquí haría fallar el
+          # gate por deuda ajena al cambio, así que se limita a los tests.
+          ruff check \
+            tests/test_logistics_documents_history_http.py \
+            tests/test_logistics_documents_list_http.py \
+            --output-format=github
 
-      - name: Run Documents History HTTP Regression Tests
+      - name: Run Documents HTTP Regression Tests (list + history)
         working-directory: backend
         run: |
           set +e
-          pytest tests/test_logistics_documents_history_http.py \
+          pytest \
+            tests/test_logistics_documents_history_http.py \
+            tests/test_logistics_documents_list_http.py \
             --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_history.log
           PYTEST_EXIT=${PIPESTATUS[0]}
           set -e
@@ -160,27 +168,27 @@ jobs:
           SKIPPED=${SKIPPED:-0}
 
           echo "==================================="
-          echo "DOCUMENTS HISTORY REGRESSION SUMMARY"
+          echo "DOCUMENTS HTTP REGRESSION SUMMARY (list + history)"
           echo "PASSED : $PASSED"
           echo "FAILED : $FAILED"
           echo "SKIPPED: $SKIPPED"
           echo "==================================="
 
           if [ "$PYTEST_EXIT" -ne 0 ]; then
-            echo "FAIL: la regresión de Documents History terminó con código $PYTEST_EXIT"
+            echo "FAIL: la regresión HTTP de Documents terminó con código $PYTEST_EXIT"
             exit "$PYTEST_EXIT"
           fi
           if [ "$FAILED" -gt 0 ]; then
-            echo "FAIL: $FAILED test(s) de Documents History fallaron."
+            echo "FAIL: $FAILED test(s) de la regresión HTTP de Documents fallaron."
             exit 1
           fi
           # Un skip aquí significa que el gate no protegió nada.
           if [ "$SKIPPED" -gt 0 ]; then
-            echo "FAIL: $SKIPPED test(s) de Documents History fueron SKIPPED."
+            echo "FAIL: $SKIPPED test(s) de la regresión HTTP de Documents fueron SKIPPED."
             exit 1
           fi
-          if [ "$PASSED" -lt 5 ]; then
-            echo "FAIL: se esperaban al menos 5 casos y se ejecutaron $PASSED."
+          if [ "$PASSED" -lt 10 ]; then
+            echo "FAIL: se esperaban al menos 10 casos y se ejecutaron $PASSED."
             exit 1
           fi
 
