@@ -8,11 +8,10 @@ Este documento contiene el registro de estado maestro de las 100 fases del **Pro
 
 ## 1. Resumen Ejecutivo de Estado
 
-- **Fase en Curso:** F001 — Congelar la línea base del proyecto
-- **Estado de la Fase F001:** READY_FOR_UAT
-- **Estado de Aceptación de Usuario (F001):** PENDING_USER_TEST
-- **Fase F002:** BLOCKED (No autorizada hasta que F001 sea completada, aceptada por el usuario y mergeada)
-- **Fases F003 a F100:** BLOCKED
+- **Fase F001 (Congelar la línea base del proyecto):** PASSED (Merge SHA: 46b9c5d, CI: 31877992541)
+- **Fase F002 (Definir el alcance logístico):** PASSED (Merge SHA: 8919724, CI: 31902976116)
+- **Próxima Fase Autorizada:** F003 — Diseñar la arquitectura modular
+- **Fases F004 a F100:** BLOCKED
 
 ---
 
@@ -21,7 +20,7 @@ Este documento contiene el registro de estado maestro de las 100 fases del **Pro
 | Fase | Título oficial | Bloque | Estado | README | UAT |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **F001** | Congelar la línea base del proyecto | Base e integración | PASSED | YES | PASS |
-| **F002** | Definir el alcance logístico | Base e integración | APPROVED_FOR_MERGE | YES | PASS |
+| **F002** | Definir el alcance logístico | Base e integración | PASSED | YES | PASS |
 | **F003** | Diseñar la arquitectura modular | Base e integración | BLOCKED | NO | NOT_STARTED |
 | **F004** | Definir organización, sedes y almacenes | Base e integración | BLOCKED | NO | NOT_STARTED |
 | **F005** | Definir roles logísticos | Base e integración | BLOCKED | NO | NOT_STARTED |
