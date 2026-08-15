@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.core.exceptions import ApplicationError
 from app.core.rate_limit import enforce_auth_rate_limit
 from app.core.security import generate_csrf_token
-from app.database.base import utc_now
+from app.database.base import ensure_utc, utc_now
 from app.database.session import get_db
 from app.dependencies.auth import get_current_session
 from app.dependencies.csrf import verify_csrf
@@ -194,8 +194,9 @@ def refresh_session(
         settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         httponly=True,
     )
+    refresh_expires_at = ensure_utc(user_session.refresh_expires_at) or utc_now()
     remaining_seconds = max(
-        1, int((user_session.refresh_expires_at - utc_now()).total_seconds())
+        1, int((refresh_expires_at - utc_now()).total_seconds())
     )
     _set_cookie(
         response,
