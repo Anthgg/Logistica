@@ -171,3 +171,15 @@ def test_phase006_endpoints_still_registered(app: FastAPI) -> None:
     paths = set(schema["paths"].keys())
     assert "/api/logistics/permissions" in paths
     assert "/api/logistics/me/permissions" in paths
+
+
+def test_audit_service_list_signature_compatibility() -> None:
+    from app.modules.logistics.audit.service import audit_service
+    import inspect
+    sig = inspect.signature(audit_service.list)
+    params = sig.parameters
+    assert "category" in params
+    assert "event_category" in params
+    assert "organization_id" in params
+    assert "branch_id" in params
+    assert "warehouse_id" in params

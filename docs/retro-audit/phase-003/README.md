@@ -325,17 +325,19 @@ Ver análisis exhaustivo por componente en [./frontend-coverage.md](./frontend-c
 ## 31. Aceptación de Usuario (User Acceptance)
 
 Ver detalles y protocolos en:
-- [./browser-capability-matrix.md](./browser-capability-matrix.md): Matriz de capacidades funcionales y registro vinculante de 16 gaps asignados a sus fases propietarias (`MANDATORY_AT_OWNER_PHASE = TRUE`).
-- [./browser-acceptance.md](./browser-acceptance.md): Protocolo específico de 6 pruebas de arquitectura y navegación en navegador.
+- [./user-acceptance-round-1.md](./user-acceptance-round-1.md): Registro forense de los resultados de la Ronda 1 de User Browser Acceptance (`USER_ACCEPTANCE = FAIL`).
+- [./browser-capability-matrix.md](./browser-capability-matrix.md): Matriz de capacidades funcionales y registro vinculante de 22 gaps de UAT asignados a sus fases propietarias con requerimientos de prueba en navegador (`MANDATORY_AT_OWNER_PHASE = TRUE`).
+- [./browser-acceptance.md](./browser-acceptance.md): Protocolo de Retest (Ronda 2) con las 14 rutas reales verificadas en `AppRouter.tsx` y validación del hotfix del endpoint de auditoría.
 
 - **Tipo de Evaluación:** `BROWSER_ARCHITECTURE_REVIEW`
-- **Browser Acceptance:** `PENDING_USER_REVIEW` (Sometida a revisión y ejecución interactiva por el usuario).
-- **User Acceptance Gate:** Requiere dictamen explícito del usuario (`USER_ACCEPTANCE = PASS`).
+- **User Acceptance Ronda 1:** `FAIL` (Registrado formalmente)
+- **Hotfix Audit 500:** Aplicado en `app/modules/logistics/audit/service.py` con test de regresión en `tests/test_logistics_phase007.py`.
+- **Browser Retest Ronda 2:** `PENDING_USER_REVIEW` (Listo para re-evaluación del usuario).
 
 ---
 
 ## 32. Estado Final
 
 ```
-PHASE_003_READY_FOR_USER_ACCEPTANCE
+PHASE_003_READY_FOR_USER_RETEST
 ```
