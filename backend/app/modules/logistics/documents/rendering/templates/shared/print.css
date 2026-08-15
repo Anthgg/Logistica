@@ -15,6 +15,25 @@ body {
     background-color: #ffffff;
 }
 
+/* Shared final-page composition. The signature zone stays in normal flow,
+   appears once, and uses the remaining height on short documents. */
+.document-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 252mm;
+}
+
+.document-content {
+    flex: 0 0 auto;
+}
+
+.document-signature-zone {
+    margin-top: auto;
+    padding-top: 8mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+}
+
 .watermark {
     position: fixed;
     top: 40%;
@@ -205,7 +224,7 @@ body {
     background-color: #f8fafc;
     padding: 6px 8px;
     border-radius: 2px;
-    margin-bottom: 15px;
+    margin-bottom: 0;
 }
 
 .obs-title {
@@ -223,7 +242,8 @@ body {
 
 /* 6. Signatures */
 .signatures-wrapper {
-    margin-top: 15px;
+    margin-top: 0;
+    break-inside: avoid;
     page-break-inside: avoid;
 }
 
@@ -236,13 +256,18 @@ body {
     width: 50%;
     text-align: center;
     vertical-align: top;
-    padding: 4px 15px;
+    padding: 0 15px;
+}
+
+.sig-signing-space {
+    height: 18mm;
 }
 
 .sig-line {
-    color: #cbd5e1;
-    font-size: 8pt;
-    margin-bottom: 4px;
+    width: 72%;
+    height: 0;
+    margin: 0 auto 5px;
+    border-top: 1px solid #64748b;
 }
 
 .sig-name {

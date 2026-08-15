@@ -15,6 +15,9 @@
 </div>
 {% endif %}
 
+<div class="document-layout">
+<main class="document-content">
+
 <!-- 1. Header Table -->
 <div class="document-header">
     <table class="header-table">
@@ -115,19 +118,24 @@
     </div>
 </div>
 
+</main>
+
 <!-- 6. Signatures Block -->
+<div class="document-signature-zone">
 <div class="signatures-wrapper">
     <table class="signatures-table">
         <tr>
             <td class="sig-cell">
-                <div class="sig-line">________________________________________</div>
+                <div class="sig-signing-space" aria-hidden="true"></div>
+                <div class="sig-line"></div>
                 <div class="sig-name">{{ (cmd.signature_data or {}).get('signer_name', 'CARLOS ALBERTO MENDOZA') }}</div>
                 <div class="sig-role">{{ (cmd.signature_data or {}).get('signer_role', 'Representante Legal / Apoderado') }}</div>
                 <div class="sig-dni">Doc. Identidad: {{ (cmd.signature_data or {}).get('signer_dni', '****5678') }}</div>
                 <div class="sig-badge">FIRMANTE INSTITUCIONAL AUTORIZADO</div>
             </td>
             <td class="sig-cell">
-                <div class="sig-line">________________________________________</div>
+                <div class="sig-signing-space" aria-hidden="true"></div>
+                <div class="sig-line"></div>
                 <div class="sig-name">RESPONSABLE OPERATIVO / RECEPCIÓN</div>
                 <div class="sig-role">Control y Fiscalización de Procesos</div>
                 <div class="sig-dni">Sello y Firma de Conformidad</div>
@@ -135,6 +143,8 @@
             </td>
         </tr>
     </table>
+</div>
+</div>
 </div>
 
 <!-- 7. Footer -->

@@ -36,8 +36,16 @@ except (ImportError, Exception):
 try:
     import reportlab
     from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
     from reportlab.platypus import (
-        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage, KeepTogether
+        HRFlowable,
+        Image as RLImage,
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
+        TopPadder,
     )
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib import colors
@@ -536,7 +544,8 @@ class DocumentRendererEngine:
             leftMargin=36,
             rightMargin=36,
             topMargin=36,
-            bottomMargin=45
+            # Keep the signature block 8-15 mm above the fixed footer rule.
+            bottomMargin=64,
         )
 
         styles = getSampleStyleSheet()
@@ -573,6 +582,37 @@ class DocumentRendererEngine:
             leading=11.5,
             alignment=1,
             textColor=colors.HexColor("#0f172a"),
+        )
+        signature_name_style = ParagraphStyle(
+            "SignatureName",
+            parent=title_box_style,
+            fontName="Helvetica-Bold",
+            fontSize=8,
+            leading=10,
+            textColor=colors.HexColor("#0f172a"),
+            spaceAfter=1,
+        )
+        signature_detail_style = ParagraphStyle(
+            "SignatureDetail",
+            parent=title_box_style,
+            fontName="Helvetica",
+            fontSize=7,
+            leading=9,
+            textColor=colors.HexColor("#475569"),
+        )
+        signature_badge_style = ParagraphStyle(
+            "SignatureBadge",
+            parent=title_box_style,
+            fontName="Helvetica-Bold",
+            fontSize=6.5,
+            leading=8,
+            textColor=colors.HexColor("#0369a1"),
+            spaceBefore=2,
+        )
+        signature_badge_secondary_style = ParagraphStyle(
+            "SignatureBadgeSecondary",
+            parent=signature_badge_style,
+            textColor=colors.HexColor("#64748b"),
         )
 
         # 1. Resolve Document Type Metadata
@@ -811,40 +851,104 @@ class DocumentRendererEngine:
             ("RIGHTPADDING", (0, 0), (-1, -1), 7),
         ]))
         story.append(obs_table)
-        story.append(Spacer(1, 16))
 
         # ----------------------------------------------------
-        # 6. Signatures Block (KeepTogether)
+        # 6. Signatures Block (bottom-aligned on the final page)
         # ----------------------------------------------------
-        sig_1 = Paragraph(
-            '________________________________________<br/>'
-            f'<b><font size=8 color="#0f172a">{signer_name}</font></b><br/>'
-            f'<font size=7 color="#475569">{signer_role}<br/>'
-            f'Doc. Identidad: {signer_dni}<br/>'
-            f'<b><font color="#0369a1">FIRMANTE INSTITUCIONAL AUTORIZADO</font></b></font>',
-            title_box_style
+        def signature_column(
+            *,
+            name: str,
+            role: str,
+            detail: str,
+            badge: str,
+            badge_style: ParagraphStyle,
+        ) -> list[Any]:
+            return [
+                Spacer(1, 18 * mm),
+                HRFlowable(
+                    width="72%",
+                    thickness=0.75,
+                    color=colors.HexColor("#64748b"),
+                    spaceBefore=0,
+                    spaceAfter=5,
+                    hAlign="CENTER",
+                ),
+                Paragraph(name, signature_name_style),
+                Paragraph(role, signature_detail_style),
+                Paragraph(detail, signature_detail_style),
+                Paragraph(badge, badge_style),
+            ]
+
+        sig_1 = signature_column(
+            name=signer_name,
+            role=signer_role,
+            detail=f"Doc. Identidad: {signer_dni}",
+            badge="FIRMANTE INSTITUCIONAL AUTORIZADO",
+            badge_style=signature_badge_style,
         )
-        sig_2 = Paragraph(
-            '________________________________________<br/>'
-            f'<b><font size=8 color="#0f172a">RESPONSABLE OPERATIVO / RECEPCIÓN</font></b><br/>'
-            f'<font size=7 color="#475569">Control y Fiscalización de Procesos<br/>'
-            f'Sello y Firma de Conformidad<br/>'
-            f'<b><font color="#64748b">CONFORMIDAD OPERATIVA</font></b></font>',
-            title_box_style
+        sig_2 = signature_column(
+            name="RESPONSABLE OPERATIVO / RECEPCIÓN",
+            role="Control y Fiscalización de Procesos",
+            detail="Sello y Firma de Conformidad",
+            badge="CONFORMIDAD OPERATIVA",
+            badge_style=signature_badge_secondary_style,
         )
 
-        sig_table = Table([[sig_1, sig_2]], colWidths=[261, 262])
+        # A one-row table cannot split in-row. TopPadder uses the remaining
+        # frame height, so the block is drawn at the bottom of the last page or
+        # moves intact to the next page when it cannot fit.
+        sig_table = Table(
+            [[sig_1, sig_2]],
+            colWidths=[261, 262],
+            splitByRow=1,
+            splitInRow=0,
+        )
         sig_table.setStyle(TableStyle([
             ("ALIGN", (0, 0), (-1, -1), "CENTER"),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-            ("TOPPADDING", (0, 0), (-1, -1), 4),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 15),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 15),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
         ]))
-        story.append(KeepTogether([sig_table]))
+        story.append(TopPadder(sig_table))
 
         # ----------------------------------------------------
         # 7. Canvas Background Callback (Watermark + Footer)
         # ----------------------------------------------------
+        footer_short_title = meta.get("short_title", meta["title"])
+        footer_timestamp = now_dt.strftime("%d/%m/%Y %H:%M UTC")
+
+        class NumberedCanvas(canvas.Canvas):
+            """Replay saved pages once the final page count is known."""
+
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                self._saved_page_states: list[dict[str, Any]] = []
+
+            def showPage(self) -> None:
+                self._saved_page_states.append(dict(self.__dict__))
+                self._startPage()
+
+            def save(self) -> None:
+                page_count = len(self._saved_page_states)
+                for page_state in self._saved_page_states:
+                    self.__dict__.update(page_state)
+                    self._draw_page_number(page_count)
+                    canvas.Canvas.showPage(self)
+                canvas.Canvas.save(self)
+
+            def _draw_page_number(self, page_count: int) -> None:
+                self.saveState()
+                self.setFont("Helvetica", 7)
+                self.setFillColor(colors.HexColor("#64748b"))
+                self.drawRightString(
+                    A4[0] - 36,
+                    20,
+                    f"Página {self._pageNumber} de {page_count} | Emitido: {footer_timestamp}",
+                )
+                self.restoreState()
+
         def on_page(canvas_obj, doc_obj):
             # 1. Subtle Diagonal Watermark
             canvas_obj.saveState()
@@ -857,16 +961,20 @@ class DocumentRendererEngine:
 
             # 2. Bottom Footer Rule and Text
             canvas_obj.saveState()
-            canvas_obj.setFont("Helvetica", 7.5)
+            canvas_obj.setFont("Helvetica", 7)
             canvas_obj.setFillColor(colors.HexColor("#64748b"))
             canvas_obj.setStrokeColor(colors.HexColor("#cbd5e1"))
             canvas_obj.setLineWidth(0.5)
             canvas_obj.line(36, 32, A4[0] - 36, 32)
-            canvas_obj.drawString(36, 20, f"AndesLog Operaciones — {trade_name} | {meta['title']}")
-            canvas_obj.drawRightString(A4[0] - 36, 20, f"Página 1 de 1 | Emitido: {now_dt.strftime('%d/%m/%Y %H:%M UTC')}")
+            canvas_obj.drawString(36, 20, f"{trade_name} | {footer_short_title}")
             canvas_obj.restoreState()
 
-        doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
+        doc.build(
+            story,
+            onFirstPage=on_page,
+            onLaterPages=on_page,
+            canvasmaker=NumberedCanvas,
+        )
         return buf.getvalue()
 
     def _generate_fallback_pdf(self, html_content: str, command: DocumentRenderCommand) -> bytes:
