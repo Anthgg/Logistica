@@ -35,7 +35,7 @@ Diseñar la arquitectura modular del sistema logístico, creando el dominio `/ap
 - **Backend Base SHA:** `6677e2fa9f3875377e9378e43a7160933e5dba4b`
 - **Frontend Base SHA:** `699cbfbfc86a7378bac2a4d28fdc3f7285a13564`
 - **Rama de Trabajo:** `audit/retro-phase-003-backend`
-- **Worktree Aislado:** `Logistica-F003 (directorio de trabajo aislado)`
+- **Worktree Aislado:** `Logistica-F003` (directorio de trabajo aislado)
 
 ---
 
@@ -59,17 +59,20 @@ El frontend (`frontend/src/`) se organiza en torno a:
 
 ---
 
-## 8. Montaje del Dominio `/api/logistics` y Conteo Reproducible de Endpoints
+## 8. Montaje del Dominio `/api/logistics` y Conteo Reproducible de Operaciones OpenAPI
 
 - **Enrutador Raíz:** Instanciado mediante `create_logistics_router()` en `app/modules/logistics/router.py`.
 - **Punto de Inclusión:** `app/api/router.py` incluye el router con prefijo `/api` + `/logistics` -> `/api/logistics`.
 - **Endpoint de Diagnóstico:** `GET /api/logistics/health` reporta estado operacional y versión del dominio.
-- **Conteo de Endpoints (Metodología Reproducible de Inspección de Rutas):**
-  - **Total de Endpoints en Codebase:** `991`
-  - **Endpoints Logísticos (`backend/app/modules/logistics/**`):** `912`
-  - **Endpoints Fuera de Logística (`backend/app/api/routes/**`):** `79`
-  - **Verificación de Suma:** `912 + 79 = 991` (`SUM MATCHES TOTAL: TRUE`).
-- **Rutas Fuera de `/api/logistics`:** 79 rutas de infraestructura compartida bajo `/api` (autenticación, sesiones, reportes, dashboard, envíos legacy).
+- **Conteo de Operaciones Registradas en OpenAPI (`app.openapi()`):**
+  - **REGISTERED_OPENAPI_PATHS:** `828`
+  - **REGISTERED_OPENAPI_OPERATIONS:** `973`
+  - **REGISTERED_LOGISTICS_OPERATIONS (`path.startswith('/api/logistics')`):** `894`
+  - **REGISTERED_NON_LOGISTICS_OPERATIONS:** `79`
+  - **Verificación de Suma:** `894 + 79 = 973` (`SUM MATCH: TRUE`).
+- **Métrica de Declaraciones Estáticas (AST):**
+  - **STATIC_ROUTE_DECLARATIONS:** `991` (912 en archivos logistics + 79 en api/routes).
+  - **Diferencia vs OpenAPI Registrado:** 18 declaraciones estáticas corresponden a enrutadores auxiliares/prototipos no montados en `app` (e.g. `gate_control/presentation/routes.py`).
 
 ---
 
@@ -154,7 +157,7 @@ Se auditaron 5 componentes transversales obligatorios definidos en el Plan Maest
 ## 14. Audit Architecture
 
 - **Ubicación:** `backend/app/modules/logistics/audit/` y `app/services/audit_service.py`
-- **Componentes:** `AuditEventService`, `AuditSanitizer`, `catalog.py`.
+- **Componentes:** `AuditService`, `AuditEventCommand`, `AuditContextProvider`, `AuditAction`, `LogisticsAuditEvent`.
 - **Aislamiento:** Recibe eventos de contexto, actor, IP, timestamp y payload sanitizado, desacoplando la auditoría de la lógica transaccional. *(La unificación formal de esquemas corresponde a F007)*.
 
 ---
@@ -176,23 +179,23 @@ Se auditaron 5 componentes transversales obligatorios definidos en el Plan Maest
 ## 17. Contratos Internos Reales
 
 Ver especificación detallada en [./internal-contracts.md](./internal-contracts.md).
-Los 10 flujos principales inter-dominio se basan en contratos reales en el código:
+Los 10 flujos principales inter-dominio se basan en contratos 100% reales en el código:
 - **Purchasing → Receiving:** `PurchaseOrderDetailResponse` / `PurchaseOrderModel` (`EXPLICIT_PYDANTIC_SCHEMA` + `PERSISTED_RESOURCE`).
-- **Receiving → Inventory:** `PostInventoryMovementRequest` / `InventoryLedgerService.post_movement()` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`; `NO_EXPLICIT_EVENT`).
+- **Receiving → Inventory:** `InventoryMovementPostingRequestCreate` / `InventoryMovementResponse` / `InventoryMovementModel` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`; `NO_EXPLICIT_EVENT`).
 - **Inventory → Outbound:** `ShipmentCreate` / `Shipment` (`PERSISTED_RESOURCE`).
 - **Outbound → Transport:** `VehicleModel` / `DriverModel` (`PERSISTED_RESOURCE`).
-- **Transport → Delivery:** `DeliveryDocumentRenderRequest` / `DeliverySignatureSnapshot` (`EXPLICIT_PYDANTIC_SCHEMA`).
+- **Transport → Delivery:** `DeliveryPodContext` / `DeliveryPhotoEvidenceSnapshot` / `DeliveryEvidenceValidationSnapshot` / `ReceiverSnapshot` (`EXPLICIT_PYDANTIC_SCHEMA` + `SERVICE_METHOD`).
 - **Delivery → Returns:** `IncidentCreate` / `Incident` (`PERSISTED_RESOURCE`).
-- **Todos → Documents:** `DocumentLifecycleService` / `DocumentCreateRequestSchema` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
-- **Todos → Audit:** `AuditContextProvider` / `AuditEventService` (`SERVICE_METHOD` + `PERSISTED_RESOURCE`).
-- **Todos → Files:** `FileStorageService` / `FileUploadResponse` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
-- **Maestros → Integrations:** `RucLookupService` / `RucLookupResponseSchema` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
+- **Todos → Documents:** `DocumentLifecycleService.create_draft(...)` / `DocumentLifecycleService.issue_document(...)` / `DocumentCancelRequest` / `DocumentInstanceModel` (`SERVICE_METHOD` + `PERSISTED_RESOURCE`).
+- **Todos → Audit:** `AuditContextProvider` / `AuditAction` / `AuditEventCommand` / `AuditService` / `LogisticsAuditEvent` (`SERVICE_METHOD` + `PERSISTED_RESOURCE`).
+- **Todos → Files:** `UploadSessionCreateRequest` / `UploadSessionResponse` / `FileAssetModel` / `EvidenceRegisterRequest` / `EvidenceResponse` / `EvidenceRecordModel` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
+- **Maestros → Integrations:** `RucLookupService` / `RucLookupResponseSchema` / `ApplyRucDataToPartnerSchema` (`SERVICE_METHOD` + `EXPLICIT_PYDANTIC_SCHEMA`).
 
 ---
 
 ## 18. Ownership de Datos
 
-Cada tabla y entidad posee un único dominio responsable de mutaciones y consistencia transaccional (ej: `procurement` es dueño de `purchase_requisitions`, `inventory` es dueño de `inventory_ledger_entries`). Los accesos entre dominios se realizan mediante interfaces y DTOs de lectura.
+Cada tabla y entidad posee un único dominio responsable de mutaciones y consistencia transaccional (ej: `procurement` es dueño de `purchase_requisitions`, `inventory` es dueño de `inventory_movements`). Los accesos entre dominios se realizan mediante interfaces y DTOs de lectura.
 
 ---
 
@@ -241,13 +244,12 @@ Ver matriz y evidencia estricta en [./dependency-matrix.md](./dependency-matrix.
 
 ---
 
-## 23. Database Architecture y Conteo Reproducible de Tablas
+## 23. Database Architecture y Conteo de Tablas en PostgreSQL
 
-- **Total de Tablas Declaradas en Modelos SQLAlchemy:** `390` tablas relacionales.
-  - Tablas de Submódulos Logísticos (`backend/app/modules/logistics/**`): `368` tablas.
-  - Tablas Core / Compartidas (`backend/app/models/**`): `22` tablas.
-  - **Tabla de Versionado Alembic:** `1` tabla (`alembic_version` en PostgreSQL).
-  - **Total de Tablas en Esquema PostgreSQL:** `391` tablas.
+- **Tablas Base en PostgreSQL (`information_schema.tables`, `table_schema = 'public'`, `table_type = 'BASE TABLE'`):** `339` tablas.
+  - Tablas de aplicación creadas por migraciones Alembic activas: `338` tablas.
+  - Tabla de control de versionado Alembic: `1` tabla (`alembic_version`).
+- **Modelos Declarados en Código SQLAlchemy (`__tablename__`):** `390` modelos declarados (368 en logística + 22 core/compartidos).
 - **Exclusiones:** Vistas de base de datos, índices, tablas temporales y modelos base abstractos.
 
 ---
@@ -268,7 +270,7 @@ Ver matriz y evidencia estricta en [./dependency-matrix.md](./dependency-matrix.
   1. Acoplamiento bidireccional leve `company_profile` ↔ `documents` (resuelto en runtime vía lazy import).
   2. Acoplamiento bidireccional leve `cost_centers` ↔ `procurement` (validación cruzada de integridad antes de borrado).
   3. Coexistencia de endpoints legacy (`/api/shipments`, `/api/inventory`) junto a los endpoints modulares (`/api/logistics/*`).
-- **INFO:** Arquitectura modular desacoplada y operativa con 24 submódulos y 390 tablas relacionales modeladas.
+- **INFO:** Arquitectura modular desacoplada y operativa con 24 submódulos y 973 operaciones OpenAPI registradas.
 
 ---
 
@@ -291,7 +293,7 @@ Ver matriz y evidencia estricta en [./dependency-matrix.md](./dependency-matrix.
 ## 27. Pruebas de Arquitectura y Regresión
 
 - Análisis estático de importaciones (AST): 24 submódulos verificados y 2 ciclos documentados.
-- Validación de OpenAPI: 912 operaciones logísticas y 79 no logísticas verificadas.
+- Validación de OpenAPI: 973 operaciones registradas (894 logísticas y 79 no logísticas).
 - Suite de regresión en CI: 100% pruebas de backend, integración PostgreSQL y seguridad superadas.
 
 ---
@@ -312,7 +314,8 @@ Ver matriz y evidencia estricta en [./dependency-matrix.md](./dependency-matrix.
 
 ## 30. Evidencia Técnica
 
-- Extracción AST de 24 submódulos, 991 endpoints y 390 tablas relacionales modeladas.
+- Ejecución de `app.openapi()` confirmando 973 operaciones (894 `/api/logistics/*` + 79 `/api/*`).
+- Conteo de base de datos PostgreSQL confirmando 339 tablas base públicas.
 - Verificación del montaje en `app/main.py` y `app/api/router.py`.
 - Cobertura de los 12 dominios de negocio de F002.
 
