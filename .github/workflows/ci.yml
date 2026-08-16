@@ -205,6 +205,64 @@ jobs:
           fi
 
       # -----------------------------------------------------------------------
+      # F004 — ESTRUCTURA ORGANIZACIONAL (organization / branch / warehouse)
+      # -----------------------------------------------------------------------
+      - name: Lint F004 Organization Structure Modules
+        working-directory: backend
+        run: |
+          ruff check \
+            app/modules/logistics/organization/scope.py \
+            app/modules/logistics/organization/api/router.py \
+            app/modules/logistics/organization/service.py \
+            app/modules/logistics/organization/repository.py \
+            tests/test_logistics_f004_structure_http.py \
+            --output-format=github
+
+      - name: Run F004 Organization Structure HTTP Regression Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest \
+            tests/test_logistics_f004_structure_http.py \
+            tests/test_logistics_phase004.py \
+            --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_f004.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_f004.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_f004.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_f004.log | tail -1 || true)
+
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
+          SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "F004 ORGANIZATION STRUCTURE SUMMARY"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: la regresión F004 terminó con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: $FAILED test(s) de la regresión F004 fallaron."
+            exit 1
+          fi
+          # Un skip aquí significa que el gate no protegió nada.
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $SKIPPED test(s) de la regresión F004 fueron SKIPPED."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 44 ]; then
+            echo "FAIL: se esperaban al menos 44 casos y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
       # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
       # -----------------------------------------------------------------------
       - name: Run PostgreSQL Integration Tests

@@ -12,7 +12,9 @@ if str(BACKEND_DIR) not in sys.path:
 
 from app.database.base import utc_now
 from app.database.session import SessionLocal
+from app.models.branch import Branch
 from app.models.client import Client
+from app.models.organization import Organization
 from app.models.incident import Incident
 from app.models.inventory_item import InventoryItem
 from app.models.inventory_movement import InventoryMovement
@@ -74,6 +76,36 @@ def seed(database) -> dict[str, int]:
         clients.append(client)
     database.flush()
 
+    # Los almacenes de demo nacian sin organizacion ni sede: son el origen probado de
+    # las 3 filas huerfanas que hoy resultan invisibles para la API. La semilla crea
+    # ahora su propia organizacion y sede para no volver a producirlas.
+    demo_org = database.scalar(select(Organization).where(Organization.code == "DEMO-ORG"))
+    if not demo_org:
+        demo_org = Organization(
+            code="DEMO-ORG",
+            name="Organización Demo Andina",
+            country_code="PE",
+            timezone="America/Lima",
+        )
+        database.add(demo_org)
+        database.flush()
+
+    demo_branch = database.scalar(
+        select(Branch).where(
+            Branch.organization_id == demo_org.id,
+            Branch.code == "DEMO-SEDE",
+        )
+    )
+    if not demo_branch:
+        demo_branch = Branch(
+            organization_id=demo_org.id,
+            code="DEMO-SEDE",
+            name="Sede Demo Central",
+            timezone="America/Lima",
+        )
+        database.add(demo_branch)
+        database.flush()
+
     warehouse_specs = [
         ("DEMO-LIM", "Almacén Demo Lima", "Lima"),
         ("DEMO-AQP", "Almacén Demo Arequipa", "Arequipa"),
@@ -86,6 +118,8 @@ def seed(database) -> dict[str, int]:
         )
         if not warehouse:
             warehouse = Warehouse(
+                organization_id=demo_org.id,
+                branch_id=demo_branch.id,
                 code=code,
                 name=name,
                 address="Av. Operaciones 100",

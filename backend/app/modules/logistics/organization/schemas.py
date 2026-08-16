@@ -154,14 +154,17 @@ class LogisticsWarehouseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    # Se emite para que el invariante "organization_id se deriva de la sede" sea
+    # verificable por HTTP y no solo mirando la tabla.
+    organization_id: UUID | None
     branch_id: UUID | None
     code: str
     name: str
     warehouse_type: str
-    address: str
-    district: str
-    province: str
-    department: str
+    address: str | None
+    district: str | None
+    province: str | None
+    department: str | None
     capacity: float | None
     is_default: bool
     is_active: bool

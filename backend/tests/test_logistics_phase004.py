@@ -100,9 +100,12 @@ def test_logistics_health_still_requires_auth(client: TestClient) -> None:
 def test_phase003_status_endpoints_still_registered(app: FastAPI) -> None:
     schema = app.openapi()
     paths = set(schema["paths"].keys())
-    assert "/api/logistics/documents/" in paths
+    # Documents y Files perdieron la barra final cuando sus routers se
+    # reorganizaron en fases posteriores. La asercion se habia quedado atras y
+    # fallaba tambien en main, no por los cambios de F004.
+    assert "/api/logistics/documents" in paths
     assert "/api/logistics/routes/" in paths
-    assert "/api/logistics/files/" in paths
+    assert "/api/logistics/files" in paths
     assert "/api/logistics/audit-events" in paths
     assert "/api/logistics/integrations/" in paths
 

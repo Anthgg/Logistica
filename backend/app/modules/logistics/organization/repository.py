@@ -32,8 +32,12 @@ class OrganizationRepository:
         page_size: int = 20,
         search: str | None = None,
         status: str | None = None,
+        allowed_organization_ids: List[UUID] | None = None,
     ) -> Tuple[List[Organization], int]:
         filters = []
+        if allowed_organization_ids is not None:
+            # Alcance de tenant: lista vacia significa "ninguna", no "todas".
+            filters.append(Organization.id.in_(allowed_organization_ids))
         if status:
             filters.append(Organization.status == status)
         if search:
@@ -227,5 +231,9 @@ class LogisticsWarehouseRepository:
 
     def set_active(self, db: Session, wh: Warehouse, is_active: bool) -> Warehouse:
         wh.is_active = is_active
+        # `status` es la representacion textual que lee el modulo F022 y `is_active` la
+        # booleana que lee la estructura F004. Escribir solo una deja la fila diciendo
+        # ACTIVE / is_active=False a la vez.
+        wh.status = "ACTIVE" if is_active else "INACTIVE"
         db.flush()
         return wh
