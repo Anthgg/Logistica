@@ -83,3 +83,8 @@ external-data/manifests/*.csv
 external-data/registry/licenses/*
 !external-data/registry/licenses/README.md
 !external-data/registry/licenses/*.metadata.yaml
+
+# Backups
+backups/
+schema_diff_report.json
+supabase_readonly_audit.json
