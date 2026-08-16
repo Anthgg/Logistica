@@ -53,6 +53,17 @@
 
 ---
 
+### 2.3. Auditoría de Seguridad y Control de Acceso (RBAC)
+
+| Verificación de Seguridad | Resultado Real | Diagnóstico / Estado |
+| :--- | :---: | :--- |
+| **Petición Anónima (Sin sesión)** | `401 Unauthorized` | `PASS` (FastAPI `get_current_user` rechaza requests sin cookie de sesión válida). |
+| **Usuario Autenticado con Permiso** | `200 OK` | `PASS` (Usuarios autenticados con rol administrativo/operativo reciben datos). |
+| **Usuario Autenticado Sin Permiso (`logistics.audit.read`)** | `200 OK` (Debería ser `403`) | `AUTHENTICATED_BUT_PERMISSION_NOT_ENFORCED`: El endpoint `list_audit_events` en `router.py` declara `user: User = Depends(get_current_user)`, pero aún no declara `principal: LogisticsPrincipal = Depends(require_permission("logistics.audit.read"))`. La aplicación de autorización fina por acción se encuentra diferida a la fase propietaria **F007**. |
+| **Prueba de Mutación RBAC 403** | `N/A` | `NOT_APPLICABLE_UNTIL_OWNER_PHASE` (No aplica hasta la implementación del enforcement en F007). |
+
+---
+
 ## 3. Asignación de Gaps Obligatorios a Fase Propietaria (Owner: F007)
 
 De acuerdo con la regla de retro-auditoría, estos defectos funcionales **no deben ser implementados prematuramente en F003**, sino asignados formalmente a **F007 (Unificar eventos de auditoría)** con carácter de obligatoriedad:
@@ -71,6 +82,11 @@ De acuerdo con la regla de retro-auditoría, estos defectos funcionales **no deb
      - `logistics.document.draft_created` → "Borrador creado" / Acción: "Crear borrador"
      - `logistics.document.issued` → "Documento emitido" / Acción: "Emitir documento"
    - Presentación de códigos técnicos (`event_code`) únicamente como metadato secundario o detalle colapsable.
+
+3. **`F003-UAT-GAP-031` · Audit Events Fine-Grained RBAC Enforcement (Owner: F007 / Definición: F006):**
+   - Aplicación de `require_permission("logistics.audit.read")` al enrutador de auditoría.
+   - Retorno estricto de `HTTP 403 Forbidden` para usuarios autenticados sin el permiso requerido.
+   - Ocultamiento de la pestaña o bloqueo transparente en la interfaz de usuario.
 
 ---
 

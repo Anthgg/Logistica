@@ -327,13 +327,13 @@ Ver análisis exhaustivo por componente en [./frontend-coverage.md](./frontend-c
 Ver detalles y protocolos en:
 - [./user-acceptance-round-1.md](./user-acceptance-round-1.md): Registro forense de los resultados de la Ronda 1 (`USER_ACCEPTANCE = FAIL`).
 - [./user-acceptance-round-2.md](./user-acceptance-round-2.md): Registro forense de la Ronda 2 y diagnóstico del incidente `STALE_RUNTIME`.
-- [./user-acceptance-round-3.md](./user-acceptance-round-3.md): Registro de la Ronda 3 (Carga de datos 200 OK, erradicación de 500 y análisis de gaps funcionales de filtros/acción asignados a F007).
-- [./browser-capability-matrix.md](./browser-capability-matrix.md): Matriz de capacidades funcionales con 24 gaps vinculantes asignados a sus fases propietarias canónicas (`MANDATORY_AT_OWNER_PHASE = TRUE`).
+- [./user-acceptance-round-3.md](./user-acceptance-round-3.md): Registro de la Ronda 3 (Carga de datos 200 OK, erradicación de 500 y análisis de gaps funcionales de filtros, acción y RBAC asignados a F007).
+- [./browser-capability-matrix.md](./browser-capability-matrix.md): Matriz de capacidades funcionales con 25 gaps vinculantes asignados a sus fases propietarias canónicas (`MANDATORY_AT_OWNER_PHASE = TRUE`).
 - [./browser-acceptance.md](./browser-acceptance.md): Protocolo de verificación de superficies en navegador.
 
 - **Tipo de Evaluación:** `BROWSER_ARCHITECTURE_REVIEW`
 - **Superficies Arquitectónicas F003:** `PASS` (Las 14 rutas cargan, responden HTTP 200 y conectan con la arquitectura modular).
-- **Módulo de Auditoría Funcional:** `PARTIAL` (Gaps `F003-UAT-GAP-029` y `F003-UAT-GAP-030` asignados a F007).
+- **Módulo de Auditoría Funcional:** `PARTIAL` (Gaps `F003-UAT-GAP-029`, `F003-UAT-GAP-030` y `F003-UAT-GAP-031` asignados a F007).
 - **User Acceptance Gate:** `PENDING_USER_DECISION` (Sometido a decisión formal del usuario humano).
 
 ---

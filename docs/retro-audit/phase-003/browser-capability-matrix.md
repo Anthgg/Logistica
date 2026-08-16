@@ -55,7 +55,7 @@ Esta matriz consolida la auditoría forense de rutas reales de React (`frontend/
 
 | Capacidad Backend | Métodos HTTP | Enrutador Backend | Adaptador API Frontend | Ruta Frontend Real | Estado de Integración | Desglose de Capacidades | Gap ID / Owner Phase |
 | :--- | :--- | :--- | :--- | :--- | :---: | :--- | :--- |
-| **Visor de Eventos de Auditoría** | `GET` | `/api/logistics/audit-events` | `api/logistics-api.ts` | `/logistics/audit-events` | `PARTIAL` | **LIST:** `INTEGRATED`<br>**HTTP:** `INTEGRATED` (200 OK)<br>**FILTERS:** `MISSING/BROKEN`<br>**ACTION RENDER:** `MISSING/BROKEN`<br>**HUMAN LABELS:** `MISSING`<br>**DETAIL:** `MISSING_IN_UI`<br>**PAGINATION:** `INTEGRATED` | `F003-UAT-GAP-009`, `F003-UAT-GAP-029`, `F003-UAT-GAP-030` → **F007** |
+| **Visor de Eventos de Auditoría** | `GET` | `/api/logistics/audit-events` | `api/logistics-api.ts` | `/logistics/audit-events` | `PARTIAL` | **LIST:** `INTEGRATED`<br>**HTTP:** `INTEGRATED` (200 OK)<br>**AUTHENTICATION:** `INTEGRATED` (401)<br>**FINE_GRAINED_RBAC:** `NOT_IMPLEMENTED` (403 diferido a F007)<br>**FILTERS:** `MISSING/BROKEN`<br>**ACTION RENDER:** `MISSING/BROKEN`<br>**HUMAN LABELS:** `MISSING`<br>**DETAIL:** `MISSING_IN_UI`<br>**PAGINATION:** `INTEGRATED` | `F003-UAT-GAP-009`, `F003-UAT-GAP-029`, `F003-UAT-GAP-030`, `F003-UAT-GAP-031` → **F007** |
 | **Exportación de Logs de Auditoría**| `POST` | `/api/logistics/audit/export` | *Sin cliente específico* | - | `FRONTEND_MISSING` | - | `F003-UAT-GAP-010` → **F007** |
 
 ---
@@ -169,6 +169,7 @@ Esta matriz consolida la auditoría forense de rutas reales de React (`frontend/
 | **F003-UAT-GAP-022** | Gestión de Licencias de Conductor | Solo lectura | **F029** | Crear el maestro de conductores | `TRUE` | Mantenimiento de categorías MTC y alertas de vencimiento de brevete. |
 | **F003-UAT-GAP-029** | Filtros y Búsqueda de Auditoría | Inoperativos en UI | **F007** | Unificar eventos de auditoría | `TRUE` | Búsqueda por texto libre, sincronización de severidades (`info`, `low`, etc.), reseteo de página a 1 y botón de limpiar filtros. |
 | **F003-UAT-GAP-030** | Poblado de Acción y Etiquetas | Valor NULL / Códigos crudos | **F007** | Unificar eventos de auditoría | `TRUE` | Poblado de `action` en emisores de eventos y representación en lenguaje natural español. |
+| **F003-UAT-GAP-031** | Control Fino de Acceso RBAC en Auditoría | Autenticado pero sin permiso requerido | **F007** (Definición en **F006**) | Unificar eventos de auditoría | `TRUE` | Aplicación de `logistics.audit.read` al endpoint: 200 para usuario con permiso, 403 para usuario sin permiso y 401 para anónimo. |
 
 ---
 
