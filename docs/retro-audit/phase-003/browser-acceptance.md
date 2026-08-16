@@ -69,17 +69,17 @@ Por tanto, **la Ronda 3 se enfoca exclusivamente en la confirmación del endpoin
 
 | Caso de Prueba | Resultado Esperado | Resultado Usuario | Comentarios / Observaciones |
 | :--- | :--- | :---: | :--- |
-| **TEST 01 · Audit Events** | HTTP 200 OK y tabla de eventos renderizada | `[ PASS / FAIL ]` | |
-| **TEST 02 · Permissions** | HTTP 200 OK y permisos cargados | `[ PASS / FAIL ]` | |
-| **TEST 03 · Consola F12** | 0 excepciones de React / AppErrorBoundary | `[ PASS / FAIL ]` | |
-| **TEST 04 · Red F12** | 0 peticiones 500 no controladas | `[ PASS / FAIL ]` | |
+| **TEST 01 · Audit Events** | HTTP 200 OK y tabla de eventos renderizada | `PASS` | 516 eventos en vivo cargados sin error 500. Gaps de UI diferidos a F007. |
+| **TEST 02 · Permissions** | HTTP 200 OK y permisos cargados | `PASS` | Permisos cargados correctamente desde `/api/logistics/me`. |
+| **TEST 03 · Consola F12** | 0 excepciones de React / AppErrorBoundary | `PASS` | 0 errores bloqueantes o crashes de React. |
+| **TEST 04 · Red F12** | 0 peticiones 500 no controladas | `PASS` | Peticiones HTTP 200 OK en todas las rutas modulares. |
 
 ---
 
 ## 5. Dictamen de Aceptación
 
 ```
-BROWSER_ARCHITECTURE_REVIEW: [ PASS / FAIL ]
-ARCHITECTURE_ACCEPTANCE:    [ PASS / FAIL ]
-USER_ACCEPTANCE:            [ PASS / FAIL ]
+BROWSER_ARCHITECTURE_REVIEW: PASS
+ARCHITECTURE_ACCEPTANCE:    PASS
+USER_ACCEPTANCE:            PASS
 ```

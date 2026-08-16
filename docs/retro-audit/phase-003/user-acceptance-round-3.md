@@ -116,8 +116,9 @@ En la fase F007, el gate de aceptación en navegador deberá ejecutar y aprobar:
 ```
 FASE: F003 · Diseñar la arquitectura modular
 SUPERFICIE ARQUITECTÓNICA: PASS (Rutas, API, DB y componentes conectados)
-MÓDULO DE AUDITORÍA: PARTIAL (Filtros y etiquetas humanas diferidos a F007)
-USER_ACCEPTANCE: PENDING_USER_DECISION
-MERGE: NOT AUTHORIZED
-F004: BLOCKED
+MÓDULO DE AUDITORÍA: PARTIAL (Filtros, acción y RBAC diferidos a F007)
+BROWSER_ARCHITECTURE_REVIEW: PASS
+USER_ACCEPTANCE: PASS (Aceptación formal del usuario humano - 16 Aug 2026)
+MERGE: APPROVED
+F004: PAUSED BY USER ORDER (Retorno prioritario a Documents/History)
 ```
