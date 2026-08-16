@@ -179,25 +179,36 @@ class AuditService:
         page_size: int = 20,
         event_code: str | None = None,
         event_category: str | None = None,
+        category: str | None = None,
         severity: str | None = None,
         result: str | None = None,
         actor_user_id: UUID | None = None,
+        organization_id: UUID | None = None,
+        branch_id: UUID | None = None,
+        warehouse_id: UUID | None = None,
         resource_type: str | None = None,
         resource_id: str | None = None,
         correlation_id: str | None = None,
         session_id: str | None = None,
     ) -> Tuple[List[LogisticsAuditEvent], int]:
+        cat = event_category or category
         filters = []
         if event_code:
             filters.append(LogisticsAuditEvent.event_code == event_code)
-        if event_category:
-            filters.append(LogisticsAuditEvent.event_category == event_category)
+        if cat:
+            filters.append(LogisticsAuditEvent.event_category == cat)
         if severity:
             filters.append(LogisticsAuditEvent.severity == severity)
         if result:
             filters.append(LogisticsAuditEvent.result == result)
         if actor_user_id:
             filters.append(LogisticsAuditEvent.actor_user_id == actor_user_id)
+        if organization_id:
+            filters.append(LogisticsAuditEvent.organization_id == organization_id)
+        if branch_id:
+            filters.append(LogisticsAuditEvent.branch_id == branch_id)
+        if warehouse_id:
+            filters.append(LogisticsAuditEvent.warehouse_id == warehouse_id)
         if resource_type:
             filters.append(LogisticsAuditEvent.resource_type == resource_type)
         if resource_id:
