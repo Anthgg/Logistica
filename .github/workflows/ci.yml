@@ -127,6 +127,84 @@ jobs:
           echo "Security tests: DONE"
 
       # -----------------------------------------------------------------------
+      # DOCUMENTS — regresión HTTP del listado y del historial
+      #
+      # Corre contra el PostgreSQL del job, no contra SQLite, y no mockea el
+      # servicio: el fallo que cubre estaba en la comprobación de tenant del
+      # router, no en la consulta.
+      #
+      # Los pasos de lint de este workflow enumeran rutas concretas, así que el
+      # fichero se linta aquí de forma explícita en vez de ampliar Ruff a todo
+      # el repositorio.
+      # -----------------------------------------------------------------------
+      - name: Lint Documents Regression Tests
+        working-directory: backend
+        run: |
+          # El router arrastra hallazgos de Ruff anteriores a este hotfix
+          # (imports sin usar y sin ordenar). Lintarlo aquí haría fallar el
+          # gate por deuda ajena al cambio, así que se limita a los tests.
+          ruff check \
+            tests/test_logistics_documents_history_http.py \
+            tests/test_logistics_documents_list_http.py \
+            tests/test_logistics_documents_pdf_http.py \
+            --output-format=github
+
+      - name: Compile Documents Production Modules
+        working-directory: backend
+        run: |
+          # El router y el servicio arrastran hallazgos de Ruff anteriores a
+          # este hotfix, asi que no se lintan aqui; pero un modulo productivo
+          # tocado no debe quedar sin ninguna comprobacion.
+          python -m py_compile \
+            app/modules/logistics/documents/api/router.py \
+            app/modules/logistics/documents/application/lifecycle_service.py
+
+      - name: Run Documents HTTP Regression Tests (list + history + pdf)
+        working-directory: backend
+        run: |
+          set +e
+          pytest \
+            tests/test_logistics_documents_history_http.py \
+            tests/test_logistics_documents_list_http.py \
+            tests/test_logistics_documents_pdf_http.py \
+            --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_history.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_history.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_history.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_history.log | tail -1 || true)
+
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
+          SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "DOCUMENTS HTTP REGRESSION SUMMARY (list + history + pdf)"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: la regresión HTTP de Documents terminó con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: $FAILED test(s) de la regresión HTTP de Documents fallaron."
+            exit 1
+          fi
+          # Un skip aquí significa que el gate no protegió nada.
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $SKIPPED test(s) de la regresión HTTP de Documents fueron SKIPPED."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 16 ]; then
+            echo "FAIL: se esperaban al menos 16 casos y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
       # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
       # -----------------------------------------------------------------------
       - name: Run PostgreSQL Integration Tests
@@ -236,9 +314,13 @@ jobs:
           pytest tests/logistics/inventory/balances -vv --tb=short -p no:cacheprovider
 
       # -----------------------------------------------------------------------
-      # FULL BACKEND SUITE (Phase 044 & 045)
+      # INVENTORY BALANCES & LEDGER (Phase 044 & 045)
+      #
+      # No es la suite backend completa: cubre balances y ledger. El nombre
+      # anterior, "Full Backend Suite", hacía creer que cualquier test del
+      # backend estaba protegido aquí, y no lo estaba.
       # -----------------------------------------------------------------------
-      - name: Run Full Backend Suite
+      - name: Run Inventory Balances & Ledger Regression Suite
         working-directory: backend
         run: |
           set +e
@@ -258,18 +340,18 @@ jobs:
           SKIPPED=${SKIPPED:-0}
 
           echo "==================================="
-          echo "BACKEND SUITE SUMMARY"
+          echo "INVENTORY BALANCES & LEDGER SUMMARY"
           echo "PASSED : $PASSED"
           echo "FAILED : $FAILED"
           echo "SKIPPED: $SKIPPED"
           echo "==================================="
 
           if [ "$PYTEST_EXIT" -ne 0 ]; then
-            echo "FAIL: Backend suite terminó con código $PYTEST_EXIT"
+            echo "FAIL: la suite de balances y ledger terminó con código $PYTEST_EXIT"
             exit "$PYTEST_EXIT"
           fi
           if [ "$FAILED" -gt 0 ]; then
-            echo "FAIL: Backend suite tiene $FAILED test(s) fallido(s)."
+            echo "FAIL: la suite de balances y ledger tiene $FAILED test(s) fallido(s)."
             exit 1
           fi
 

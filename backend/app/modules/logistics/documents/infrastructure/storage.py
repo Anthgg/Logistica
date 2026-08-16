@@ -17,21 +17,40 @@ BACKEND_DIR = Path(__file__).resolve().parents[5]
 LOCAL_STORAGE_DIR = BACKEND_DIR / "data" / "documents"
 
 
+def resolve_local_storage_dir() -> Path:
+    """Raiz del storage documental local.
+
+    `DOCUMENT_STORAGE_PATH` permite que Docker monte ahi un volumen con vida
+    propia y que los tests escriban en un temporal. Sin configurar se mantiene
+    la ruta derivada del backend, que es la que este modulo ya usaba.
+    """
+    configured = settings.DOCUMENT_STORAGE_PATH
+    return Path(configured) if configured else LOCAL_STORAGE_DIR
+
+
 class DocumentArtifactStorage:
     """Concrete storage adapter for document files (Phase 020)."""
 
-    def __init__(self, provider: Literal["local", "gcs", "s3"] | None = None) -> None:
+    def __init__(
+        self,
+        provider: Literal["local", "gcs", "s3"] | None = None,
+        *,
+        root: Path | str | None = None,
+    ) -> None:
         self.provider = provider or settings.STORAGE_PROVIDER
+        # La raiz se resuelve por instancia, no al importar el modulo: asi un
+        # test puede apuntarla a un temporal sin reimportar nada.
+        self.root = Path(root) if root else resolve_local_storage_dir()
         if self.provider == "local":
-            os.makedirs(LOCAL_STORAGE_DIR, exist_ok=True)
+            os.makedirs(self.root, exist_ok=True)
 
     def _resolve_local_path(self, storage_key: str) -> Path:
         # Prevent Directory Traversal / ZIP Slip by cleaning the path
         clean_key = storage_key.lstrip("/")
         # Resolve path
-        target_path = (LOCAL_STORAGE_DIR / clean_key).resolve()
-        # Verify it remains within LOCAL_STORAGE_DIR to prevent directory traversal
-        if not str(target_path).startswith(str(LOCAL_STORAGE_DIR.resolve())):
+        target_path = (self.root / clean_key).resolve()
+        # Verify it remains within the storage root to prevent directory traversal
+        if not str(target_path).startswith(str(self.root.resolve())):
             raise ValueError(f"Path traversal attempt detected: {storage_key}")
         return target_path
 

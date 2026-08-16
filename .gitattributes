@@ -1,0 +1,10 @@
+# Los scripts de shell y los ficheros que Docker ejecuta deben viajar con
+# terminaciones LF. En un checkout de Windows, git los convertia a CRLF y la
+# imagen quedaba inservible: el kernel intentaba ejecutar `/bin/sh\r`, que no
+# existe, y el contenedor entraba en bucle de reinicio con
+# "exec /app/docker-entrypoint.sh failed: No such file or directory".
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf
+Dockerfile text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf

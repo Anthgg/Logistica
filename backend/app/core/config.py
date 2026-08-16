@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     LOG_FORMAT: Literal["text", "json"] = "text"
     STORAGE_PROVIDER: Literal["local", "gcs", "s3"] = "local"
+    # Raiz del storage documental. Docker monta aqui un volumen con vida
+    # propia; sin configurar se usa la ruta derivada del backend.
+    DOCUMENT_STORAGE_PATH: str | None = None
     FRONTEND_URL: str = "http://localhost:5173"
     DEFAULT_LOCALE: Literal["es", "en", "pt"] = "es"
     SECRET_KEY: str = Field(default="development-only-change-me", min_length=16, repr=False)

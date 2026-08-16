@@ -35,7 +35,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 appgroup \
     && useradd --system --uid 10001 --gid appgroup --home-dir /app appuser \
-    && mkdir -p /app/data/captures /app/data/processed /app/models \
+    && mkdir -p /app/data/captures /app/data/processed /app/data/documents /app/models \
     && chown -R appuser:appgroup /app
 
 COPY --from=builder /opt/venv /opt/venv

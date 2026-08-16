@@ -144,10 +144,14 @@ def list_documents(
         br = db.get(Branch, it.branch_id)
         wh = db.get(Warehouse, it.warehouse_id) if it.warehouse_id else None
 
-        # Resolve actions permission flags based on backend rules
-        # Platform admin bypasses, otherwise evaluate permissions
-        can_cancel = (it.status == "ISSUED") and (principal.role == "admin" or "logistics.documents.cancel" in principal.permissions)
-        can_reprint = (it.status in ("ISSUED", "CANCELLED")) and (principal.role == "admin" or "logistics.documents.reprint" in principal.permissions)
+        # Resolve actions permission flags based on backend rules.
+        # `has_permission` ya concede el bypass de platform admin y consulta
+        # `permission_codes`; `LogisticsPrincipal` no expone `role` ni
+        # `permissions`, y leerlos rompia el listado entero con AttributeError.
+        can_cancel = it.status == "ISSUED" and principal.has_permission("logistics.documents.cancel")
+        can_reprint = it.status in ("ISSUED", "CANCELLED") and principal.has_permission(
+            "logistics.documents.reprint"
+        )
 
         summaries.append(
             DocumentSummaryResponse(
@@ -352,7 +356,12 @@ def get_document_history(
 ) -> DocumentHistoryResponse:
     service = DocumentLifecycleService(db)
     inst = service.get_document(document_id)
-    if inst.organization_id != principal.organization_id:
+    # `LogisticsPrincipal` publica los ambitos autorizados como `organization_ids`
+    # y los evalua con `can_access_organization`, igual que el resto de este
+    # router. Comparar contra un `organization_id` que no existe lanzaba
+    # AttributeError, y ese 500 salia fuera del middleware CORS: el navegador lo
+    # reportaba como error de CORS aunque la configuracion fuera correcta.
+    if not principal.can_access_organization(inst.organization_id):
         raise HTTPException(status_code=403, detail="No tiene permiso para acceder a este documento.")
 
     history = service.get_history(document_id)
@@ -402,7 +411,7 @@ def download_document_pdf(
     elevated_original = inst.status == "CANCELLED" and original
     if elevated_original:
         # Check permissions
-        if principal.role != "admin" and "logistics.audit.read_sensitive" not in principal.permissions:
+        if not principal.has_permission("logistics.audit.read_sensitive"):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tiene permiso de auditoría elevado para descargar el original de un documento anulado."
