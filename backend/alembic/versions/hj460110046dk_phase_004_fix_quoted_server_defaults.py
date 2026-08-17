@@ -12,7 +12,11 @@ literal ``'general'``, apóstrofos incluidos, que no pertenece a ningún validad
 No se modifica la revisión histórica ya aplicada: se corrige hacia delante.
 
 Revision ID: hj460110046dk
-Revises: gi450410045dk
+Revises: gj450510045vr
+
+La baseline de Supabase (``gj450510045vr``) se integró en main antes que F004, así
+que esta revisión cuelga de ella. Encadenarlas mantiene una sola cabeza de Alembic:
+con ambas colgando de ``gi450410045dk`` el grafo tendría dos.
 """
 
 from alembic import op
@@ -20,7 +24,7 @@ import sqlalchemy as sa
 
 
 revision = "hj460110046dk"
-down_revision = "gi450410045dk"
+down_revision = "gj450510045vr"
 branch_labels = None
 depends_on = None
 

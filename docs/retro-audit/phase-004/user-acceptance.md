@@ -42,7 +42,11 @@ Ninguna de las dos bloquea el cierre de la fase; quedan registradas sin decidir.
 | Corrupción de defaults | **FIXED** — migración `hj460110046dk` |
 | Huérfanos heredados | **BLOCKED** — `LEGACY_ORPHAN_REQUIRES_DATA_DECISION`, sin evidencia de propiedad |
 
-## Alcance del precheck previo
+## Alcance del precheck PRE-UAT
+
+> Evidencia **anterior** a la aceptación del usuario. Se conserva como registro
+> histórico del estado en ese momento; no describe el estado final de la fase, que
+> es `USER_ACCEPTANCE = PASS`.
 
 Sobre una sesión que el usuario ya tenía iniciada comprobé en navegador:
 organizaciones, sedes, el encadenado organización → sede → listado de almacenes,

@@ -94,10 +94,11 @@ jobs:
         run: |
           CURRENT=$(python -m alembic current 2>&1)
           echo "Alembic current: $CURRENT"
-          # La cabeza esperada avanza con cada migración real. F004 añadió
-          # hj460110046dk (corrige los server_default entrecomillados de
-          # a2f27fd9a6c0 y normaliza warehouse_type).
-          if ! echo "$CURRENT" | grep -q "hj460110046dk\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
+          # La cabeza esperada avanza con cada migración real. La cadena vigente
+          # es gi450410045dk -> gj450510045vr (baseline Supabase) -> hj460110046dk
+          # (F004: corrige los server_default entrecomillados de a2f27fd9a6c0 y
+          # normaliza warehouse_type).
+          if ! echo "$CURRENT" | grep -q "hj460110046dk\|gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
             echo "FAIL: Alembic current no muestra la cabeza esperada."
             echo "Expected: hj460110046dk (o revisiones anteriores conocidas)"
             echo "Got: $CURRENT"
