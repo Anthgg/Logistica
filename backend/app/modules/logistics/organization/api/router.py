@@ -17,11 +17,18 @@ from app.database.session import get_db
 from app.dependencies.csrf import verify_csrf
 from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.organization.schemas import (
-    BranchCreate, BranchResponse, BranchStatusUpdate, BranchUpdate,
-    LogisticsWarehouseCreate, LogisticsWarehouseResponse,
-    LogisticsWarehouseSetDefault, LogisticsWarehouseStatusUpdate,
-    OrganizationCreate, OrganizationResponse,
-    OrganizationStatusUpdate, OrganizationUpdate,
+    BranchCreate,
+    BranchResponse,
+    BranchStatusUpdate,
+    BranchUpdate,
+    LogisticsWarehouseCreate,
+    LogisticsWarehouseResponse,
+    LogisticsWarehouseSetDefault,
+    LogisticsWarehouseStatusUpdate,
+    OrganizationCreate,
+    OrganizationResponse,
+    OrganizationStatusUpdate,
+    OrganizationUpdate,
 )
 from app.modules.logistics.organization.scope import (
     allowed_organization_ids,

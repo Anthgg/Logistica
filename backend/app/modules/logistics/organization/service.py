@@ -33,7 +33,6 @@ from app.modules.logistics.organization.schemas import (
 )
 from app.schemas.common import PaginatedResponse
 
-
 # ---------------------------------------------------------------------------
 # Validation helpers
 # ---------------------------------------------------------------------------

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Tuple
 from uuid import UUID
 
 from sqlalchemy import func, or_, select
@@ -32,8 +31,8 @@ class OrganizationRepository:
         page_size: int = 20,
         search: str | None = None,
         status: str | None = None,
-        allowed_organization_ids: List[UUID] | None = None,
-    ) -> Tuple[List[Organization], int]:
+        allowed_organization_ids: list[UUID] | None = None,
+    ) -> tuple[list[Organization], int]:
         filters = []
         if allowed_organization_ids is not None:
             # Alcance de tenant: lista vacia significa "ninguna", no "todas".
@@ -107,7 +106,7 @@ class BranchRepository:
         page_size: int = 20,
         search: str | None = None,
         status: str | None = None,
-    ) -> Tuple[List[Branch], int]:
+    ) -> tuple[list[Branch], int]:
         filters = [Branch.organization_id == org_id]
         if status:
             filters.append(Branch.status == status)
@@ -192,7 +191,7 @@ class LogisticsWarehouseRepository:
         status: str | None = None,
         warehouse_type: str | None = None,
         is_default: bool | None = None,
-    ) -> Tuple[List[Warehouse], int]:
+    ) -> tuple[list[Warehouse], int]:
         filters = [Warehouse.branch_id == branch_id]
         if status == "active":
             filters.append(Warehouse.is_active.is_(True))
