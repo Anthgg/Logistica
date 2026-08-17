@@ -8,12 +8,12 @@
 
 ---
 
-## 2. Auditoría de Seguridad PostgreSQL & RLS
+## 2. Auditoría de Seguridad PostgreSQL & RLS Post-Reconciliación
 
 Auditoría ejecutada en vivo contra Supabase PostgreSQL 17.6 (`public` schema):
 
-- **TOTAL_APPLICATION_TABLES:** 370
-- **RLS_ENABLED_COUNT:** 370 (100% de las tablas tienen `relrowsecurity = true`)
+- **TOTAL_APPLICATION_TABLES:** 380
+- **RLS_ENABLED_COUNT:** 380 (100% de las tablas tienen `relrowsecurity = true`)
 - **RLS_DISABLED_COUNT:** 0
 - **RLS_FORCED_COUNT:** 0
 
@@ -22,7 +22,7 @@ Auditoría ejecutada en vivo contra Supabase PostgreSQL 17.6 (`public` schema):
 - **Estado de Seguridad:** `DATA_API_EXPOSED_BUT_SECURED`
 - **Grants para roles Supabase (`anon`, `authenticated`, `service_role`):**
   - Los roles heredan privilegios estándar a través de `pg_default_acl` en el esquema `public`.
-  - **Mecanismo de Protección:** Al estar RLS habilitado en el 100% de las tablas (370/370) sin políticas permisivas para clientes anónimos o autenticados de Supabase, cualquier intento de acceso directo vía Data API/PostgREST devuelve 0 registros o acceso denegado.
+  - **Mecanismo de Protección:** Al estar RLS habilitado en el 100% de las tablas (380/380) sin políticas permisivas para clientes anónimos o autenticados de Supabase, cualquier intento de acceso directo vía Data API/PostgREST devuelve 0 registros o acceso denegado.
   - **Rol de Aplicación Cloud Run:** El backend se conecta mediante el rol directo de base de datos (`postgres`), el cual opera como propietario sobre las tablas gestionadas y no es bloqueado por RLS.
 
 ---
