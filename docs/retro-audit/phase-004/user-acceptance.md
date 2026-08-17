@@ -1,9 +1,27 @@
 # F004 · Aceptación de usuario
 
-## USER_ACCEPTANCE = PENDING
+## USER_ACCEPTANCE = PASS
 
-No se ha ejecutado ninguna ronda de UAT y no se declara ningún PASS en nombre del
-usuario.
+Aceptada por el usuario tras probar la fase en su navegador, sobre el runtime
+servido desde los worktrees F004 (identidad en [browser-acceptance.md](browser-acceptance.md)).
+
+Durante la prueba el usuario ejerció además el botón «Nueva sede» recién
+habilitado, creando la sede `DDFF / prueba` en la organización PRUBEBA.
+
+### Mejoras propuestas por el usuario — fuera del alcance de F004
+
+Ninguna de las dos bloquea el cierre de la fase; quedan registradas sin decidir.
+
+1. **Código de almacén generado por el sistema según la organización**, en vez de
+   texto libre. La tabla ya impone un UNIQUE global sobre `code`, lo que empuja en
+   esa dirección. Existe `modules/logistics/warehouses/code_service.py`, que es
+   territorio F022: habría que decidir primero dónde vive el generador.
+
+2. **Departamento / provincia / distrito desde catálogo en base de datos.** Hoy son
+   texto libre y nada impide cinco grafías del mismo distrito. Implica un catálogo
+   geográfico compartido que afectaría también a direcciones de organización, sedes
+   y socios de negocio, no solo a almacenes. El usuario lo dejó explícitamente
+   **pendiente de consultar** antes de decidir.
 
 ## Estado del gate técnico previo
 
@@ -93,4 +111,4 @@ El código debe ser **globalmente único**: la tabla tiene un UNIQUE global sobr
 
 | Ronda | Fecha | Resultado | Defectos |
 |---|---|---|---|
-| — | — | no ejecutada | — |
+| 1 | 2026-08-17 | **PASS** | ninguno bloqueante; dos mejoras propuestas, listadas arriba |

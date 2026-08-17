@@ -1,6 +1,6 @@
 # F004 · Retro-auditoría · Definir organización, sedes y almacenes
 
-Estado: **PHASE_004_REQUIRES_ADDITIONAL_FIXES** (primera corrida — solo auditoría).
+Estado: **PHASE_004_RETRO_AUDIT_PASSED** (auditoría, remediación y aceptación del usuario).
 
 ## Alcance
 
