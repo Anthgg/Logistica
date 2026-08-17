@@ -259,8 +259,8 @@ jobs:
             echo "FAIL: $SKIPPED test(s) de la regresión F004 fueron SKIPPED."
             exit 1
           fi
-          if [ "$PASSED" -lt 44 ]; then
-            echo "FAIL: se esperaban al menos 44 casos y se ejecutaron $PASSED."
+          if [ "$PASSED" -lt 60 ]; then
+            echo "FAIL: se esperaban al menos 60 casos y se ejecutaron $PASSED."
             exit 1
           fi
 

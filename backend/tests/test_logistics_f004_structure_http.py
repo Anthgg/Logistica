@@ -40,22 +40,31 @@ F004_PERMISSIONS = [
 # Andamiaje: RBAC real, no simulado
 # ---------------------------------------------------------------------------
 
-def _permission(database, code: str) -> LogisticsPermission:
-    existing = (
-        database.query(LogisticsPermission).filter(LogisticsPermission.code == code).first()
-    )
-    if existing:
-        return existing
-    resource, action = code.split(".")[1], code.split(".")[-1]
-    perm = LogisticsPermission(
-        code=code,
-        resource=resource,
-        action=action,
-        name=code,
-        description=code,
-        category="structure",
-    )
-    database.add(perm)
+def _permission(
+    database, code: str, *, requires_step_up: bool | None = None
+) -> LogisticsPermission:
+    """Permiso del catálogo, creado si falta.
+
+    `requires_step_up` se fija explícitamente cuando el test depende de él: la base
+    de CI arranca con `logistics_permissions` vacía y la de desarrollo con el
+    catálogo sembrado, así que dar por supuesto el valor hace que el mismo test
+    responda 403 en un sitio y 409 en el otro.
+    """
+    perm = database.query(LogisticsPermission).filter(LogisticsPermission.code == code).first()
+    if perm is None:
+        resource, action = code.split(".")[1], code.split(".")[-1]
+        perm = LogisticsPermission(
+            code=code,
+            resource=resource,
+            action=action,
+            name=code,
+            description=code,
+            category="structure",
+            requires_step_up=False,
+        )
+        database.add(perm)
+    if requires_step_up is not None:
+        perm.requires_step_up = requires_step_up
     database.flush()
     return perm
 
@@ -253,13 +262,17 @@ def test_organization_update_foreign_is_403(client, scoped):
     assert response.status_code == 403, response.text
 
 
-def test_organization_status_change_requires_step_up(client, scoped):
-    """`logistics.organizations.change_status` está catalogado como critical con
+def test_organization_status_change_requires_step_up_when_catalog_demands_it(
+    client, database, scoped
+):
+    """En el catálogo real `logistics.organizations.change_status` es critical con
     ``requires_step_up = true``. Tener el permiso no basta: sin prueba de verificación
     reforzada la respuesta es 403 STEP_UP_REQUIRED.
 
-    F004 no relaja esa política; el catálogo pertenece a F006.
+    F004 no relaja esa política; el catálogo pertenece a F006. El test fija el flag
+    en vez de suponerlo, para que valga igual en CI y en desarrollo.
     """
+    _permission(database, "logistics.organizations.change_status", requires_step_up=True)
     response = client.patch(
         f"/api/logistics/organizations/{scoped['own'].id}/status",
         headers=scoped["headers"],
@@ -267,6 +280,34 @@ def test_organization_status_change_requires_step_up(client, scoped):
     )
     assert response.status_code == 403, response.text
     assert response.json()["error"]["code"] == "STEP_UP_REQUIRED"
+
+
+def test_organization_status_change_persists_without_step_up(client, database, scoped):
+    """Sin step-up y sin sedes activas, el cambio de estado llega hasta la fila."""
+    _permission(database, "logistics.organizations.change_status", requires_step_up=False)
+    org = _organization(database)
+    _grant(database, scoped["user"], _role_with(database, F004_PERMISSIONS), org)
+    response = client.patch(
+        f"/api/logistics/organizations/{org.id}/status",
+        headers=scoped["headers"],
+        json={"status": "inactive"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "inactive"
+    database.expire_all()
+    assert database.get(Organization, org.id).status == "inactive"
+
+
+def test_organization_status_change_with_active_branches_is_409(client, database, scoped):
+    """La organización de `scoped` tiene una sede activa: desactivarla es un conflicto."""
+    _permission(database, "logistics.organizations.change_status", requires_step_up=False)
+    response = client.patch(
+        f"/api/logistics/organizations/{scoped['own'].id}/status",
+        headers=scoped["headers"],
+        json={"status": "inactive"},
+    )
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["code"] == "ORGANIZATION_INACTIVE_CONFLICT"
 
 
 def test_organization_status_foreign_is_403(client, scoped):
