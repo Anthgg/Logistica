@@ -40,6 +40,7 @@ from app.modules.logistics.organization.service import (
     BranchService,
     LogisticsWarehouseService,
     OrganizationService,
+    to_branch_response,
 )
 from app.modules.logistics.principal import LogisticsPrincipal
 from app.schemas.common import PaginatedResponse
@@ -149,7 +150,7 @@ def _create_organization_router() -> APIRouter:
         assert_can_access_organization(principal, organization_id)
         branch = branch_service.create(db, organization_id, data, principal.user_id)
         db.commit()
-        return BranchResponse.model_validate(branch)
+        return to_branch_response(db, branch)
 
     @router.get(
         "/organizations/{organization_id}/branches",
@@ -179,7 +180,7 @@ def _create_organization_router() -> APIRouter:
     ):
         branch = branch_service.get(db, branch_id)
         assert_can_access_branch(principal, branch)
-        return BranchResponse.model_validate(branch)
+        return to_branch_response(db, branch)
 
     @router.patch("/branches/{branch_id}", response_model=BranchResponse)
     def update_branch(
@@ -194,7 +195,7 @@ def _create_organization_router() -> APIRouter:
         assert_can_access_branch(principal, branch_service.get(db, branch_id))
         branch = branch_service.update(db, branch_id, data, principal.user_id)
         db.commit()
-        return BranchResponse.model_validate(branch)
+        return to_branch_response(db, branch)
 
     @router.patch("/branches/{branch_id}/status", response_model=BranchResponse)
     def change_branch_status(
@@ -209,7 +210,7 @@ def _create_organization_router() -> APIRouter:
         assert_can_access_branch(principal, branch_service.get(db, branch_id))
         branch = branch_service.change_status(db, branch_id, data, principal.user_id)
         db.commit()
-        return BranchResponse.model_validate(branch)
+        return to_branch_response(db, branch)
 
     # ------------------------------------------------------------------
     # Warehouses (nested under branch)

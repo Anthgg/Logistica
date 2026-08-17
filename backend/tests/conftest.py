@@ -52,7 +52,7 @@ def test_engine():
         engine = create_engine(database_url, connect_args={"check_same_thread": False})
         import app.models.registry  # register ORM models
         allowed_prefixes = (
-            "organizations", "logistics_", "vehicles", "vehicle_", "assisted_",
+            "organizations", "logistics_", "geo_", "vehicles", "vehicle_", "assisted_",
             "business_", "units_", "measurement_", "document_", "product",
             "purchase_", "po_", "audit_logs", "users", "sessions", "devices", "step_up_", "drivers", "driver_",
             "file_", "files", "evidence_", "signature_",
@@ -95,7 +95,7 @@ def test_engine():
         sqlite_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
         import app.models.registry  # register ORM models
         allowed_prefixes = (
-            "organizations", "logistics_", "vehicles", "vehicle_", "assisted_",
+            "organizations", "logistics_", "geo_", "vehicles", "vehicle_", "assisted_",
             "business_", "units_", "measurement_", "document_", "product",
             "purchase_", "po_", "audit_logs", "users", "sessions", "devices", "step_up_", "drivers", "driver_",
             "file_", "files", "evidence_", "signature_",

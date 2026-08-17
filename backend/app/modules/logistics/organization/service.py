@@ -127,6 +127,16 @@ class OrganizationService:
         return org
 
 
+from app.modules.logistics.geography.service import GeographyService
+
+
+def to_branch_response(db: Session, branch: Branch) -> BranchResponse:
+    res = BranchResponse.model_validate(branch)
+    if branch.ubigeo_code:
+        res.ubigeo = GeographyService.resolve_ubigeo(db, branch.ubigeo_code)
+    return res
+
+
 class BranchService:
     def __init__(self) -> None:
         self.repo = BranchRepository()
@@ -137,9 +147,13 @@ class BranchService:
         assert_organization_active(org)
         if self.repo.get_by_code_for_org(db, org_id, data.code):
             raise ApplicationError("BRANCH_CODE_CONFLICT", "El código de sede ya existe en esta organización.", 409)
+        if data.ubigeo_code:
+            dist = GeographyService.get_district_by_code(db, data.ubigeo_code)
+            if not dist:
+                raise ApplicationError("UBIGEO_NOT_FOUND", f"Código UBIGEO '{data.ubigeo_code}' no existe en el catálogo.", 422)
         branch = self.repo.create(
             db, organization_id=org_id, code=data.code, name=data.name,
-            timezone=data.timezone, address_text=data.address_text,
+            timezone=data.timezone, ubigeo_code=data.ubigeo_code, address_text=data.address_text,
             latitude=data.latitude, longitude=data.longitude,
             created_by=user_id, updated_by=user_id,
         )
@@ -151,13 +165,17 @@ class BranchService:
     def list(self, db: Session, org_id: UUID, *, page: int, page_size: int, search: str | None, status: str | None) -> PaginatedResponse[BranchResponse]:
         items, total = self.repo.list_by_organization(db, org_id, page=page, page_size=page_size, search=search, status=status)
         return PaginatedResponse(
-            items=[BranchResponse.model_validate(b) for b in items],
+            items=[to_branch_response(db, b) for b in items],
             page=page, page_size=page_size, total=total,
             total_pages=ceil(total / page_size) if page_size else 0,
         )
 
     def update(self, db: Session, branch_id: UUID, data: BranchUpdate, user_id: UUID) -> Branch:
         branch = self.get(db, branch_id)
+        if data.ubigeo_code:
+            dist = GeographyService.get_district_by_code(db, data.ubigeo_code)
+            if not dist:
+                raise ApplicationError("UBIGEO_NOT_FOUND", f"Código UBIGEO '{data.ubigeo_code}' no existe en el catálogo.", 422)
         values = data.model_dump(exclude_unset=True)
         if values:
             self.repo.update(db, branch, updated_by=user_id, **values)

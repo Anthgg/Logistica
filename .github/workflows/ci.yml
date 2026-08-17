@@ -95,12 +95,11 @@ jobs:
           CURRENT=$(python -m alembic current 2>&1)
           echo "Alembic current: $CURRENT"
           # La cabeza esperada avanza con cada migración real. La cadena vigente
-          # es gi450410045dk -> gj450510045vr (baseline Supabase) -> hj460110046dk
-          # (F004: corrige los server_default entrecomillados de a2f27fd9a6c0 y
-          # normaliza warehouse_type).
-          if ! echo "$CURRENT" | grep -q "hj460110046dk\|gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
+          # es gi450410045dk -> gj450510045vr -> hj460110046dk -> ik470110047dk
+          # (F004.5: tablas canónicas de UBIGEO y normalización de sedes).
+          if ! echo "$CURRENT" | grep -q "ik470110047dk\|hj460110046dk\|gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
             echo "FAIL: Alembic current no muestra la cabeza esperada."
-            echo "Expected: hj460110046dk (o revisiones anteriores conocidas)"
+            echo "Expected: ik470110047dk (o revisiones anteriores conocidas)"
             echo "Got: $CURRENT"
             exit 1
           fi
@@ -262,6 +261,60 @@ jobs:
           fi
           if [ "$PASSED" -lt 60 ]; then
             echo "FAIL: se esperaban al menos 60 casos y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
+      # F004.5 — UBIGEO Y NORMALIZACIÓN GEOGRÁFICA
+      # -----------------------------------------------------------------------
+      - name: Lint F004.5 Geography & UBIGEO Modules
+        working-directory: backend
+        run: |
+          ruff check \
+            app/modules/logistics/geography/models.py \
+            app/modules/logistics/geography/schemas.py \
+            app/modules/logistics/geography/service.py \
+            app/modules/logistics/geography/router.py \
+            tests/test_logistics_geography.py \
+            tests/test_logistics_branch_ubigeo.py \
+            --output-format=github
+
+      - name: Run F004.5 Geography & UBIGEO Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest \
+            tests/test_logistics_geography.py \
+            tests/test_logistics_branch_ubigeo.py \
+            --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_f004_5.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_f004_5.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_f004_5.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_f004_5.log | tail -1 || true)
+
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
+          SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "F004.5 GEOGRAPHY & UBIGEO SUMMARY"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: la suite F004.5 terminó con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: $FAILED test(s) de F004.5 fallaron."
+            exit 1
+          fi
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $SKIPPED test(s) de F004.5 fueron SKIPPED."
             exit 1
           fi
 

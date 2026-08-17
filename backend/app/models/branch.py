@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, UniqueConstraint, text
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Numeric, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,6 +14,8 @@ class Branch(Base):
     __tablename__ = "logistics_branches"
     __table_args__ = (
         UniqueConstraint("organization_id", "code", name="uq_branches_org_code"),
+        CheckConstraint("latitude IS NULL OR (latitude >= -90.0 AND latitude <= 90.0)", name="chk_branches_latitude"),
+        CheckConstraint("longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0)", name="chk_branches_longitude"),
     )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -29,6 +31,12 @@ class Branch(Base):
         String(20), default="active", server_default=text("'active'"), nullable=False, index=True
     )
     timezone: Mapped[str] = mapped_column(String(50), default="America/Lima", server_default=text("'America/Lima'"), nullable=False)
+    ubigeo_code: Mapped[str | None] = mapped_column(
+        String(6),
+        ForeignKey("geo_districts.code", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     address_text: Mapped[str | None] = mapped_column(String(500))
     latitude: Mapped[float | None] = mapped_column(Numeric(10, 7))
     longitude: Mapped[float | None] = mapped_column(Numeric(10, 7))
@@ -40,6 +48,7 @@ class Branch(Base):
     updated_by: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
 
     organization: Mapped["Organization"] = relationship(back_populates="branches")
+    district: Mapped["GeoDistrict | None"] = relationship()
     warehouses: Mapped[list["Warehouse"]] = relationship(
         back_populates="branch", cascade="all, delete-orphan", passive_deletes=True
     )
@@ -47,3 +56,4 @@ class Branch(Base):
 
 from app.models.organization import Organization  # noqa: E402, F401
 from app.models.warehouse import Warehouse  # noqa: E402, F401
+from app.modules.logistics.geography.models import GeoDistrict  # noqa: E402, F401
