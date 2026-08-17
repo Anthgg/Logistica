@@ -1,6 +1,7 @@
 """Tests for Branch location normalization with UBIGEO and coordinate validations."""
 
 from uuid import UUID, uuid4
+
 import pytest
 
 from app.models.branch import Branch
