@@ -9,7 +9,7 @@ import pytest
 
 
 def test_alembic_single_head():
-    """Verify that Alembic has exactly one canonical HEAD and it is gj450510045vr."""
+    """Verify that Alembic has exactly one canonical HEAD and it is hj460110046dk."""
     backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     res = subprocess.run(
         [sys.executable, "-m", "alembic", "heads"],
@@ -20,7 +20,10 @@ def test_alembic_single_head():
     assert res.returncode == 0
     heads = [line.strip().split()[0] for line in res.stdout.splitlines() if line.strip()]
     assert len(heads) == 1
-    assert heads[0] == "gj450510045vr"
+    # Tras integrar F004 la cadena es gi450410045dk -> gj450510045vr -> hj460110046dk,
+    # asi que la cabeza es determinista. Aceptar varias convertiria este test en uno
+    # que no detecta una revision mal encadenada.
+    assert heads[0] == "hj460110046dk"
 
 
 def test_restore_script_missing_force_flag():

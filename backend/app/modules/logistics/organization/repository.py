@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Tuple
 from uuid import UUID
 
 from sqlalchemy import func, or_, select
@@ -32,8 +31,12 @@ class OrganizationRepository:
         page_size: int = 20,
         search: str | None = None,
         status: str | None = None,
-    ) -> Tuple[List[Organization], int]:
+        allowed_organization_ids: list[UUID] | None = None,
+    ) -> tuple[list[Organization], int]:
         filters = []
+        if allowed_organization_ids is not None:
+            # Alcance de tenant: lista vacia significa "ninguna", no "todas".
+            filters.append(Organization.id.in_(allowed_organization_ids))
         if status:
             filters.append(Organization.status == status)
         if search:
@@ -103,7 +106,7 @@ class BranchRepository:
         page_size: int = 20,
         search: str | None = None,
         status: str | None = None,
-    ) -> Tuple[List[Branch], int]:
+    ) -> tuple[list[Branch], int]:
         filters = [Branch.organization_id == org_id]
         if status:
             filters.append(Branch.status == status)
@@ -188,7 +191,7 @@ class LogisticsWarehouseRepository:
         status: str | None = None,
         warehouse_type: str | None = None,
         is_default: bool | None = None,
-    ) -> Tuple[List[Warehouse], int]:
+    ) -> tuple[list[Warehouse], int]:
         filters = [Warehouse.branch_id == branch_id]
         if status == "active":
             filters.append(Warehouse.is_active.is_(True))
@@ -227,5 +230,9 @@ class LogisticsWarehouseRepository:
 
     def set_active(self, db: Session, wh: Warehouse, is_active: bool) -> Warehouse:
         wh.is_active = is_active
+        # `status` es la representacion textual que lee el modulo F022 y `is_active` la
+        # booleana que lee la estructura F004. Escribir solo una deja la fila diciendo
+        # ACTIVE / is_active=False a la vez.
+        wh.status = "ACTIVE" if is_active else "INACTIVE"
         db.flush()
         return wh

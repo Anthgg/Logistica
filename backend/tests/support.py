@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import generate_csrf_token
+from app.models.branch import Branch
 from app.models.device import Device
+from app.models.organization import Organization
 from app.models.user import User
 from app.services.session_service import SessionService
 
@@ -92,3 +94,30 @@ def create_shipment(
     )
     assert response.status_code == 201, response.text
     return response.json()
+
+
+def create_organization_branch(
+    database: Session, *, org_code: str | None = None, branch_code: str = "SEDE"
+) -> tuple[Organization, Branch]:
+    """Crea una organizacion con una sede activa y las deja disponibles en la sesion.
+
+    Desde F004 todo almacen debe colgar de una sede, asi que las suites que solo
+    necesitan "un almacen cualquiera" necesitan primero esta pareja.
+    """
+    organization = Organization(
+        code=org_code or f"ORG-{uuid4().hex[:8].upper()}",
+        name="Organizacion de prueba",
+        country_code="PE",
+        timezone="America/Lima",
+    )
+    database.add(organization)
+    database.flush()
+    branch = Branch(
+        organization_id=organization.id,
+        code=f"{branch_code}-{uuid4().hex[:4].upper()}",
+        name="Sede de prueba",
+        timezone="America/Lima",
+    )
+    database.add(branch)
+    database.flush()
+    return organization, branch

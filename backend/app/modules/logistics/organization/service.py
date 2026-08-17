@@ -33,7 +33,6 @@ from app.modules.logistics.organization.schemas import (
 )
 from app.schemas.common import PaginatedResponse
 
-
 # ---------------------------------------------------------------------------
 # Validation helpers
 # ---------------------------------------------------------------------------
@@ -89,8 +88,24 @@ class OrganizationService:
     def get(self, db: Session, org_id: UUID) -> Organization:
         return assert_organization_exists(db, org_id, self.repo)
 
-    def list(self, db: Session, *, page: int, page_size: int, search: str | None, status: str | None) -> PaginatedResponse[OrganizationResponse]:
-        items, total = self.repo.list(db, page=page, page_size=page_size, search=search, status=status)
+    def list(
+        self,
+        db: Session,
+        *,
+        page: int,
+        page_size: int,
+        search: str | None,
+        status: str | None,
+        allowed_organization_ids: list[UUID] | None = None,
+    ) -> PaginatedResponse[OrganizationResponse]:
+        items, total = self.repo.list(
+            db,
+            page=page,
+            page_size=page_size,
+            search=search,
+            status=status,
+            allowed_organization_ids=allowed_organization_ids,
+        )
         return PaginatedResponse(
             items=[OrganizationResponse.model_validate(o) for o in items],
             page=page, page_size=page_size, total=total,
@@ -167,10 +182,18 @@ class LogisticsWarehouseService:
         if self.repo.get_by_code_for_branch(db, branch_id, data.code):
             raise ApplicationError("WAREHOUSE_CODE_CONFLICT", "El código de almacén ya existe en esta sede.", 409)
         wh = self.repo.create(
-            db, branch_id=branch_id, code=data.code, name=data.name,
+            db,
+            branch_id=branch.id,
+            # La organizacion se deriva de la sede persistida, nunca del cliente.
+            # Sin esto el almacen nace huerfano e invisible para todo listado que
+            # filtre por organization_id.
+            organization_id=branch.organization_id,
+            code=data.code, name=data.name,
             warehouse_type=data.warehouse_type, address=data.address,
             district=data.district, province=data.province, department=data.department,
             capacity=data.capacity, is_default=data.is_default, is_active=True,
+            status="ACTIVE",
+            created_by=user_id, updated_by=user_id,
         )
         if data.is_default:
             self.repo.clear_default_for_branch(db, branch_id, except_id=wh.id)
@@ -180,6 +203,11 @@ class LogisticsWarehouseService:
         wh = self.repo.get_by_id(db, wh_id)
         if not wh:
             raise ApplicationError("WAREHOUSE_NOT_FOUND", "El almacén no existe.", 404)
+        return wh
+
+    def get_for_branch(self, db: Session, branch_id: UUID, wh_id: UUID) -> Warehouse:
+        wh = self.get(db, wh_id)
+        assert_warehouse_belongs_to_branch(wh, branch_id)
         return wh
 
     def list(self, db: Session, branch_id: UUID, *, page: int, page_size: int, search: str | None, status: str | None, warehouse_type: str | None, is_default: bool | None) -> PaginatedResponse[LogisticsWarehouseResponse]:

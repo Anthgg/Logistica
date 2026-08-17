@@ -1,13 +1,16 @@
 from uuid import uuid4
 
-from tests.support import authenticate
+from tests.support import authenticate, create_organization_branch
 
 
-def _warehouse(client, headers) -> dict[str, object]:
+def _warehouse(client, headers, database) -> dict[str, object]:
+    # Desde F004 la creacion exige sede: sin ella el almacen nacia sin organizacion.
+    _, branch = create_organization_branch(database)
     response = client.post(
         "/api/warehouses",
         headers=headers,
         json={
+            "branch_id": str(branch.id),
             "code": f"WH-{uuid4().hex[:8]}",
             "name": "Almacén de prueba",
             "address": "Av. Almacén 100",
@@ -40,7 +43,7 @@ def _item(client, headers, warehouse_id) -> dict[str, object]:
 
 def test_inventory_atomic_movements_and_negative_stock(client, database) -> None:
     _, headers = authenticate(client, database)
-    warehouse = _warehouse(client, headers)
+    warehouse = _warehouse(client, headers, database)
     item = _item(client, headers, warehouse["id"])
     entry = client.post(
         "/api/inventory/movements",
@@ -99,7 +102,7 @@ def test_inventory_atomic_movements_and_negative_stock(client, database) -> None
 
 def test_duplicate_sku_per_warehouse_is_rejected(client, database) -> None:
     _, headers = authenticate(client, database)
-    warehouse = _warehouse(client, headers)
+    warehouse = _warehouse(client, headers, database)
     item = _item(client, headers, warehouse["id"])
     duplicate = client.post(
         "/api/inventory",

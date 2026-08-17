@@ -106,7 +106,10 @@ class BranchResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 class LogisticsWarehouseCreate(BaseModel):
-    branch_id: UUID
+    # La sede llega por la ruta (`/branches/{branch_id}/warehouses`) y es la unica
+    # autoridad: el servicio deriva de ella la organizacion. Exigirla tambien en el
+    # cuerpo obligaba al cliente a repetir un UUID que el backend ya ignora, y
+    # devolvia 422 a cualquier formulario que hiciera lo correcto.
     code: str = Field(min_length=1, max_length=30)
     name: str = Field(min_length=1, max_length=150)
     warehouse_type: str = Field(default="general", max_length=30)
@@ -154,14 +157,17 @@ class LogisticsWarehouseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    # Se emite para que el invariante "organization_id se deriva de la sede" sea
+    # verificable por HTTP y no solo mirando la tabla.
+    organization_id: UUID | None
     branch_id: UUID | None
     code: str
     name: str
     warehouse_type: str
-    address: str
-    district: str
-    province: str
-    department: str
+    address: str | None
+    district: str | None
+    province: str | None
+    department: str | None
     capacity: float | None
     is_default: bool
     is_active: bool

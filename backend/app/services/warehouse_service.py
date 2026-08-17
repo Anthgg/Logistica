@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ApplicationError
+from app.models.branch import Branch
 from app.models.warehouse import Warehouse
 from app.repositories.warehouse_repository import WarehouseRepository
 from app.schemas.common import PaginatedResponse
@@ -39,7 +40,14 @@ class WarehouseService:
     def create(self, database: Session, data: WarehouseCreate) -> Warehouse:
         if self.repository.get_by_code(database, data.code):
             raise ApplicationError("WAREHOUSE_CODE_EXISTS", "El código ya existe.", 409)
-        warehouse = Warehouse(**data.model_dump())
+        branch = database.get(Branch, data.branch_id)
+        if not branch:
+            raise ApplicationError("BRANCH_NOT_FOUND", "La sede no existe.", 404)
+        warehouse = Warehouse(
+            **data.model_dump(),
+            # Derivada de la sede persistida, igual que en la ruta estructural F004.
+            organization_id=branch.organization_id,
+        )
         database.add(warehouse)
         try:
             database.commit()
