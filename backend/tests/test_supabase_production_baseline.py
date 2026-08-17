@@ -34,7 +34,7 @@ def test_alembic_single_head():
     assert res.returncode == 0
     heads = [line.strip().split()[0] for line in res.stdout.splitlines() if line.strip()]
     assert len(heads) == 1
-    assert heads[0] == "ik470110047dk"
+    assert heads[0] == "jl480110048dk"
 
 
 def test_restore_script_missing_force_flag():

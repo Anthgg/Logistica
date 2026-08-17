@@ -97,9 +97,9 @@ jobs:
           # La cabeza esperada avanza con cada migración real. La cadena vigente
           # es gi450410045dk -> gj450510045vr -> hj460110046dk -> ik470110047dk
           # (F004.5: tablas canónicas de UBIGEO y normalización de sedes).
-          if ! echo "$CURRENT" | grep -q "ik470110047dk\|hj460110046dk\|gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
+          if ! echo "$CURRENT" | grep -q "jl480110048dk\|ik470110047dk\|hj460110046dk\|gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
             echo "FAIL: Alembic current no muestra la cabeza esperada."
-            echo "Expected: ik470110047dk (o revisiones anteriores conocidas)"
+            echo "Expected: jl480110048dk (o revisiones anteriores conocidas)"
             echo "Got: $CURRENT"
             exit 1
           fi
