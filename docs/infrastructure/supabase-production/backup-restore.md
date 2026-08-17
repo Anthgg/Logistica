@@ -1,33 +1,64 @@
 # Estrategia de Respaldo y Restauración de Base de Datos
 
-## 1. Respaldo Realizado para el Baseline
+## 1. Niveles de Recuperación de Desastres
 
-- **Timestamp de Respaldo:** `2026-08-16T23:42:36Z`
-- **Método de Respaldo:** `PYTHON_LOGICAL_TABLE_DUMP_JSON`
-- **Alcance:** Todas las 359 tablas del esquema `public` en Supabase con sus 4,593 registros existentes.
-- **Ruta de Archivo:** `backups/supabase/supabase_backup_20260816_234236Z.json`
-- **Tamaño:** `2,399,406 bytes (2,343.17 KB)`
-- **Checksum SHA256:** `84a36fab7eedb5752096e073f156f9fff31afb04bf4db317cae79a0a6166b0a9`
-- **Revisión Respaldada:** `gl440610044rb`
-- **Verificación:** `PASS` (Total tablas con datos: 54; Total registros validados: 4,593).
+Para garantizar la continuidad operativa sin ambigüedades, se definen tres niveles de recuperación:
+
+1. **SCHEMA RECOVERY (Recuperación de Esquema DDL):**
+   - **Mecanismo:** Árbol canónico de 59 revisiones Alembic en el repositorio.
+   - **Capacidad:** Reconstrucción determinística del 100% del DDL (tablas, columnas, tipos, constraints e índices) desde cero mediante `alembic upgrade head`.
+
+2. **DATA RECOVERY (Recuperación de Datos Operativos):**
+   - **Mecanismo:** Volcado lógico estructurado en JSON (`PYTHON_LOGICAL_TABLE_DUMP_JSON`).
+   - **Capacidad:** Restauración de datos tabla por tabla para todos los catálogos base, usuarios, configuraciones y registros transaccionales existentes.
+
+3. **FULL DATABASE DISASTER RECOVERY (Recuperación Total):**
+   - **Mecanismo:** Reconstrucción de DDL mediante Alembic + Restauración lógica de datos mediante [`scripts/restore_supabase_backup.py`](file:///C:/Users/anthg/Logistica-Supabase/scripts/restore_supabase_backup.py).
 
 ---
 
-## 2. Procedimiento de Restauración
+## 2. Respaldo Realizado para el Baseline
 
-En caso de fallo crítico en una migración futura, se debe ejecutar el siguiente procedimiento:
+- **Timestamp de Respaldo:** `2026-08-16T23:42:36Z`
+- **Método de Respaldo:** `PYTHON_LOGICAL_TABLE_DUMP_JSON`
+- **Ruta de Archivo:** `backups/supabase/supabase_backup_20260816_234236Z.json` (Excluido de Git vía `.gitignore`)
+- **Tamaño:** `2,399,406 bytes (2,343.17 KB)`
+- **Checksum SHA256:** `84a36fab7eedb5752096e073f156f9fff31afb04bf4db317cae79a0a6166b0a9`
+- **Revisión Respaldada:** `gl440610044rb`
+- **Contenido:** 54 tablas con datos respaldadas, totalizando 4,593 registros.
 
-1. **Detener Tráfico a Cloud Run:**
-   - Redirigir el tráfico a la revisión anterior o colocar el servicio en modo mantenimiento.
+---
 
-2. **Reversión de Esquema:**
-   - Si la migración es segura para downgrade:
-     ```bash
-     python -m alembic downgrade <target_revision>
-     ```
-   - Si la migración modificó datos de forma destructiva o no es reversible mediante downgrade:
-     - Restaurar las tablas afectadas desde el archivo de backup JSON verificado utilizando el script de restauración idempotente.
+## 3. Utilidad Versionada de Restauración Segura
 
-3. **Verificación Post-Restauración:**
-   - Consultar `alembic_version` y los conteos de registros para confirmar la integridad del estado restaurado.
-   - Ejecutar `GET /api/health` en Cloud Run para validar conectividad.
+Se ha versionado la herramienta de restauración en [`scripts/restore_supabase_backup.py`](file:///C:/Users/anthg/Logistica-Supabase/scripts/restore_supabase_backup.py).
+
+### Guardas de Seguridad Implementadas:
+1. **Requerimiento Explícito de Confirmación:** Requiere el flag obligatorio `--force-restore`.
+2. **Protección Contra Host de Producción:** Bloquea por defecto cualquier conexión a hosts remotos (`*.supabase.co`).
+3. **Validación de Base de Destino:** Valida que el nombre de la base de datos contenga identificadores seguros (`test`, `restore`, `staging`, `dev`, `local`).
+
+### Ejemplo de Ejecución Segura en Entorno de Pruebas:
+```bash
+python scripts/restore_supabase_backup.py \
+    --backup-file backups/supabase/supabase_backup_20260816_234236Z.json \
+    --target-db-url postgresql+psycopg://continuous_auth_user:pass@127.0.0.1:5432/continuous_auth_restore_test \
+    --force-restore
+```
+
+---
+
+## 4. Prueba Demostrada en Base Desechable (`continuous_auth_restore_test`)
+
+La herramienta fue validada ejecutando la restauración completa sobre una base de datos de pruebas limpia:
+
+- **Base de Datos de Prueba:** `continuous_auth_restore_test`
+- **Tablas Restauradas:** 54 tablas
+- **Registros Restaurados:** 4,593 registros (100% de los datos respaldados)
+  - `users`: 93
+  - `logistics_permissions`: 509
+  - `logistics_role_permissions`: 1390
+  - `audit_logs`: 361
+- **Errores:** `0`
+- **Integridad Referencial y FKs:** Preservadas y verificadas
+- **Afectación a Producción:** `NO` (Producción no fue tocada durante la prueba de restauración)

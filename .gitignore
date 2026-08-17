@@ -88,3 +88,4 @@ external-data/registry/licenses/*
 backups/
 schema_diff_report.json
 supabase_readonly_audit.json
+scratch_*.json
