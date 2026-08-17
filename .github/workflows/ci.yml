@@ -94,10 +94,10 @@ jobs:
         run: |
           CURRENT=$(python -m alembic current 2>&1)
           echo "Alembic current: $CURRENT"
-          # The head must be the Phase 045 revision (gi450410045dk is the latest — dimension_key fix)
-          if ! echo "$CURRENT" | grep -q "gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
+          # The head must be the Phase 045 revision (gj450510045vr is the latest — vehicle verifications reconciliation)
+          if ! echo "$CURRENT" | grep -q "gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
             echo "FAIL: Alembic current does not show expected Phase 045 head."
-            echo "Expected: gi450410045dk (or earlier Phase 045 revisions)"
+            echo "Expected: gj450510045vr (or earlier Phase 045 revisions)"
             echo "Got: $CURRENT"
             exit 1
           fi
