@@ -11,10 +11,7 @@ import pytest
 from sqlalchemy import select
 
 from app.database.session import SessionLocal
-from app.models.branch import Branch
 from app.models.entity_code_counter import EntityCodeCounter
-from app.models.organization import Organization
-from app.models.warehouse import Warehouse
 from app.modules.logistics.organization.code_generator import entity_code_generator
 from app.modules.logistics.rbac.models_assignment import LogisticsRoleAssignment
 from app.modules.logistics.rbac.models_permission import LogisticsPermission
@@ -181,7 +178,7 @@ def test_concurrent_generation_produces_no_duplicates():
             session.commit()
             with lock:
                 results.append(code)
-        except Exception as exc:  # pragma: no cover - solo si el bloqueo falla
+        except Exception as exc:  # noqa: BLE001 - el test existe para capturar cualquier fallo del bloqueo
             session.rollback()
             with lock:
                 errors.append(exc)

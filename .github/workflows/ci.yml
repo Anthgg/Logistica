@@ -319,6 +319,53 @@ jobs:
           fi
 
       # -----------------------------------------------------------------------
+      # F005.1 — CÓDIGOS AUTOMÁTICOS, CATÁLOGOS Y GEOGRAFÍA DERIVADA
+      # -----------------------------------------------------------------------
+      - name: Lint F005.1 Code Generation & Catalog Modules
+        working-directory: backend
+        run: |
+          ruff check             app/models/entity_code_counter.py             app/modules/logistics/organization/code_generator.py             app/modules/logistics/organization/reference_catalogs.py             tests/test_logistics_f0051_entity_codes_http.py             --output-format=github
+
+      - name: Run F005.1 Entity Code & Catalog Regression Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest tests/test_logistics_f0051_entity_codes_http.py             --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_f0051.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_f0051.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_f0051.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_f0051.log | tail -1 || true)
+          PASSED=${PASSED:-0}; FAILED=${FAILED:-0}; SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "F005.1 ENTITY CODES & CATALOGS"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: la regresión F005.1 terminó con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ]; then
+            echo "FAIL: $FAILED test(s) de la regresión F005.1 fallaron."
+            exit 1
+          fi
+          # El test de concurrencia se salta si la base no es PostgreSQL: un skip
+          # aquí significaría que el gate no protegió el bloqueo de fila.
+          if [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $SKIPPED test(s) de la regresión F005.1 fueron SKIPPED."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 20 ]; then
+            echo "FAIL: se esperaban al menos 20 casos y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
       # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
       # -----------------------------------------------------------------------
       - name: Run PostgreSQL Integration Tests
