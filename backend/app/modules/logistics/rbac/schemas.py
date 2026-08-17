@@ -95,3 +95,76 @@ class RoleConflictValidationResponse(BaseModel):
     description: str | None = None
     role_a_code: str | None = None
     role_b_code: str | None = None
+
+# --- Role write operations (F005) ---
+class RoleCreate(BaseModel):
+    """Alta de rol personalizado.
+
+    `is_system` no es un campo del contrato: los roles creados por la API son
+    siempre personalizados. Permitir que el cliente lo eligiera convertiría la
+    protección de roles del sistema en una casilla que cualquiera puede marcar.
+    """
+
+    code: str = Field(min_length=3, max_length=50)
+    name: str = Field(min_length=3, max_length=100)
+    description: str = Field(default="", max_length=500)
+    permission_codes: list[str] = Field(default_factory=list)
+
+
+class RoleUpdate(BaseModel):
+    """El código es el identificador estable del rol: no se edita."""
+
+    name: str | None = Field(default=None, min_length=3, max_length=100)
+    description: str | None = Field(default=None, max_length=500)
+
+
+class RoleStatusUpdate(BaseModel):
+    status: str = Field(pattern="^(active|inactive)$")
+
+
+class RolePermissionsUpdate(BaseModel):
+    """Reemplaza el conjunto completo de permisos del rol, de forma atómica."""
+
+    permission_codes: list[str]
+
+
+class RoleMatrixRole(BaseModel):
+    id: UUID
+    code: str
+    name: str
+    role_type: str
+    is_system: bool
+    status: str
+    permission_codes: list[str]
+
+
+class RoleMatrixPermission(BaseModel):
+    code: str
+    name: str
+    description: str
+    #: Primer segmento tras `logistics.`, para agrupar en la UI sin tocar el código.
+    group: str
+    resource: str
+    action: str
+    is_sensitive: bool
+    requires_step_up: bool
+
+
+class RoleMatrixResponse(BaseModel):
+    """Matriz completa en una sola respuesta.
+
+    Construir la matriz con una petición por rol obligaría al frontend a hacer
+    tantas llamadas como roles existan.
+    """
+
+    roles: list[RoleMatrixRole]
+    permissions: list[RoleMatrixPermission]
+    total_mappings: int
+
+
+class SodConflictDetail(BaseModel):
+    rule_code: str
+    role_a_code: str
+    role_b_code: str
+    reason: str
+    conflicting_permissions: list[str]
