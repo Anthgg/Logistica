@@ -198,3 +198,17 @@ class RoleSeedService:
                 created += 1
         db.commit()
         return {"created": created, "reused": reused}
+
+class SodSeedService:
+    """Siembra las reglas de separación de funciones de F005.
+
+    Reutiliza `logistics_role_conflict_rules`, que ya existía vacía. Es idempotente:
+    reejecutarla no duplica reglas ni las reescribe.
+    """
+
+    def seed_conflict_rules(self, db: Session) -> dict[str, int]:
+        from app.modules.logistics.rbac.sod import seed_canonical_rules
+
+        result = seed_canonical_rules(db)
+        db.commit()
+        return result

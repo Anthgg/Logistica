@@ -16,6 +16,9 @@ from app.modules.logistics.rbac.permission_schemas import (
     PermissionResponse,
     RolePermissionResponse,
 )
+from app.modules.logistics.auth_dependencies import require_permission
+from app.modules.logistics.principal import LogisticsPrincipal
+from app.modules.logistics.rbac.role_admin_service import RoleAdminService
 from app.modules.logistics.rbac.schemas import (
     EffectiveRolesResponse,
     RoleAssignmentCreate,
@@ -23,8 +26,13 @@ from app.modules.logistics.rbac.schemas import (
     RoleAssignmentResponse,
     RoleAssignmentRevoke,
     RoleConflictValidationResponse,
+    RoleCreate,
+    RoleMatrixResponse,
+    RolePermissionsUpdate,
     RoleResponse,
     RoleScopeRuleResponse,
+    RoleStatusUpdate,
+    RoleUpdate,
 )
 from app.modules.logistics.rbac.permission_service import PermissionService
 from app.modules.logistics.rbac.service import (
@@ -38,6 +46,78 @@ def _create_rbac_router() -> APIRouter:
     router = APIRouter()
     role_service = RoleService()
     assignment_service = RoleAssignmentService()
+    role_admin = RoleAdminService()
+
+    # ------------------------------------------------------------------
+    # Administración de roles (F005)
+    #
+    # La escritura se apoya en `logistics.role_permissions.update`, el permiso que
+    # el catálogo ya define para mutar definiciones RBAC: está marcado sensible y
+    # con step-up. F005 no añade códigos nuevos al catálogo.
+    # ------------------------------------------------------------------
+    @router.post("/roles", response_model=RoleResponse, status_code=201)
+    def create_role(
+        data: RoleCreate,
+        db: Session = Depends(get_db),
+        principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_permissions.update")
+        ),
+        _csrf: None = Depends(verify_csrf),
+    ):
+        role = role_admin.create(db, data, principal)
+        db.commit()
+        return RoleResponse.model_validate(role)
+
+    @router.patch("/roles/{role_id}", response_model=RoleResponse)
+    def update_role(
+        role_id: UUID,
+        data: RoleUpdate,
+        db: Session = Depends(get_db),
+        principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_permissions.update")
+        ),
+        _csrf: None = Depends(verify_csrf),
+    ):
+        role = role_admin.update(db, role_id, data, principal)
+        db.commit()
+        return RoleResponse.model_validate(role)
+
+    @router.patch("/roles/{role_id}/status", response_model=RoleResponse)
+    def change_role_status(
+        role_id: UUID,
+        data: RoleStatusUpdate,
+        db: Session = Depends(get_db),
+        principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_permissions.update")
+        ),
+        _csrf: None = Depends(verify_csrf),
+    ):
+        role = role_admin.change_status(db, role_id, data, principal)
+        db.commit()
+        return RoleResponse.model_validate(role)
+
+    @router.put("/roles/{role_id}/permissions", response_model=list[str])
+    def replace_role_permissions(
+        role_id: UUID,
+        data: RolePermissionsUpdate,
+        db: Session = Depends(get_db),
+        principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_permissions.update")
+        ),
+        _csrf: None = Depends(verify_csrf),
+    ):
+        codes = role_admin.replace_permissions(db, role_id, data, principal)
+        db.commit()
+        return codes
+
+    @router.get("/roles-matrix", response_model=RoleMatrixResponse)
+    def role_matrix(
+        db: Session = Depends(get_db),
+        principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.roles.read")
+        ),
+    ):
+        return role_admin.matrix(db)
 
     # ------------------------------------------------------------------
     # Role catalog

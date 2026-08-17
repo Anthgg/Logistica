@@ -72,6 +72,13 @@ EVENT_CATALOG: list[dict[str, str]] = [
     {"event_code": "logistics.role.assignment_revoked", "category": EventCategory.RBAC, "severity": EventSeverity.HIGH, "description": "Rol revocado"},
     {"event_code": "logistics.role.assignment_dates_updated", "category": EventCategory.RBAC, "severity": EventSeverity.MEDIUM, "description": "Fechas de asignación actualizadas"},
     {"event_code": "logistics.role.conflict_detected", "category": EventCategory.RBAC, "severity": EventSeverity.MEDIUM, "description": "Conflicto de roles detectado"},
+    # Definición de roles (F005). Las asignaciones ya estaban catalogadas; lo que
+    # faltaba era auditar la creación y edición del propio rol.
+    {"event_code": "logistics.role.created", "category": EventCategory.RBAC, "severity": EventSeverity.HIGH, "description": "Rol personalizado creado"},
+    {"event_code": "logistics.role.updated", "category": EventCategory.RBAC, "severity": EventSeverity.MEDIUM, "description": "Rol personalizado actualizado"},
+    {"event_code": "logistics.role.activated", "category": EventCategory.RBAC, "severity": EventSeverity.HIGH, "description": "Rol personalizado activado"},
+    {"event_code": "logistics.role.deactivated", "category": EventCategory.RBAC, "severity": EventSeverity.HIGH, "description": "Rol personalizado desactivado"},
+    {"event_code": "logistics.role.permissions_updated", "category": EventCategory.RBAC, "severity": EventSeverity.HIGH, "description": "Permisos de rol actualizados"},
     {"event_code": "logistics.role.system_role_registered", "category": EventCategory.RBAC, "severity": EventSeverity.LOW, "description": "Rol de sistema registrado"},
     # Permissions
     {"event_code": "logistics.permission.authorization_allowed", "category": EventCategory.AUTHORIZATION, "severity": EventSeverity.INFO, "description": "Autorización permitida"},
