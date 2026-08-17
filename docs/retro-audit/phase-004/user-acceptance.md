@@ -42,19 +42,22 @@ Ninguna de las dos bloquea el cierre de la fase; quedan registradas sin decidir.
 | Corrupción de defaults | **FIXED** — migración `hj460110046dk` |
 | Huérfanos heredados | **BLOCKED** — `LEGACY_ORPHAN_REQUIRES_DATA_DECISION`, sin evidencia de propiedad |
 
-## Lo que NO he podido comprobar
+## Alcance del precheck previo
 
-El precheck de navegador de las pantallas autenticadas **no está hecho**. Iniciar
-sesión exige escribir credenciales, y eso lo hace el usuario, no yo. Lo verificado
-sin sesión: la aplicación arranca, la ruta protegida redirige al login, y la consola
-solo muestra los 401 esperados del sondeo de sesión — sin crash de React, sin 404
-ni 500 inesperados.
+Sobre una sesión que el usuario ya tenía iniciada comprobé en navegador:
+organizaciones, sedes, el encadenado organización → sede → listado de almacenes,
+la creación (201), la persistencia con F5, el detalle estructural (200) y el 409 de
+código duplicado. Cero respuestas 500 y cero crashes de React.
 
-La evidencia equivalente más fuerte de la que dispongo son los 44 casos HTTP que
-atraviesan router y dependencias con RBAC real sembrado. No sustituyen la prueba
-humana y no se presentan como tal.
+Ese precheck destapó dos defectos que la suite no cubría —el 422 por `branch_id` en
+el cuerpo y el error de API renderizado detrás del modal—, ambos corregidos con su
+regresión. Detalle en [browser-acceptance.md](browser-acceptance.md).
 
-## Guion de la primera ronda
+No ejecuté desde el navegador las mutaciones de editar organización, cambiar su
+estado ni desactivar sede; quedaron cubiertas por la suite HTTP y las validó el
+usuario en su ronda.
+
+## Guion de la ronda
 
 Runtime servido desde los worktrees F004 (identidad registrada en
 [browser-acceptance.md](browser-acceptance.md)).
