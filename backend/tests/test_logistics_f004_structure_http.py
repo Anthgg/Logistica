@@ -384,12 +384,25 @@ def test_branch_create_duplicate_code_is_409(client, scoped):
 
 
 def test_branch_create_missing_required_field_is_422(client, scoped):
+    """Desde F005.1 el código es opcional —lo genera el backend—, así que el campo
+    realmente obligatorio que queda es el nombre."""
     response = client.post(
         f"/api/logistics/organizations/{scoped['own'].id}/branches",
         headers=scoped["headers"],
-        json={"name": "Sin código"},
+        json={"code": "SINNOMBRE"},
     )
     assert response.status_code == 422, response.text
+
+
+def test_branch_create_without_code_generates_one(client, scoped):
+    """Regresión inversa: omitir el código ya no es un error de validación."""
+    response = client.post(
+        f"/api/logistics/organizations/{scoped['own'].id}/branches",
+        headers=scoped["headers"],
+        json={"name": "Sede con código automático", "timezone": "America/Lima"},
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["code"].startswith("SED")
 
 
 def test_branch_create_foreign_org_is_403(client, scoped):

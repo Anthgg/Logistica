@@ -20,6 +20,7 @@ from app.models.client import Client
 from app.models.consent_record import ConsentRecord
 from app.models.continuous_auth_evaluation import ContinuousAuthEvaluation
 from app.models.device import Device
+from app.models.entity_code_counter import EntityCodeCounter
 from app.models.experimental_session import ExperimentalSession
 from app.models.facial_capture import FacialCapture
 from app.models.incident import Incident
@@ -359,6 +360,7 @@ from app.modules.logistics.inbound.reception_differences.infrastructure.persiste
 
 
 __all__ = [
+    "EntityCodeCounter",
     "Branch",
     "LogisticsRole",
     "LogisticsRoleScopeRule",

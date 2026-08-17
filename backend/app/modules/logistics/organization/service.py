@@ -11,6 +11,7 @@ from app.core.exceptions import ApplicationError
 from app.models.branch import Branch
 from app.models.organization import Organization
 from app.models.warehouse import Warehouse
+from app.modules.logistics.organization.code_generator import entity_code_generator
 from app.modules.logistics.organization.repository import (
     BranchRepository,
     LogisticsWarehouseRepository,
@@ -80,9 +81,12 @@ class OrganizationService:
         self.repo = OrganizationRepository()
 
     def create(self, db: Session, data: OrganizationCreate, user_id: UUID) -> Organization:
-        if self.repo.exists_by_code(db, data.code):
+        # El código lo genera el backend salvo que el cliente envíe uno explícito,
+        # que se sigue aceptando por compatibilidad.
+        code = data.code or entity_code_generator.next_code(db, "organization")
+        if self.repo.exists_by_code(db, code):
             raise ApplicationError("ORGANIZATION_CODE_CONFLICT", "El código ya está en uso.", 409)
-        org = self.repo.create(db, code=data.code, name=data.name, country_code=data.country_code, timezone=data.timezone, created_by=user_id, updated_by=user_id)
+        org = self.repo.create(db, code=code, name=data.name, country_code=data.country_code, timezone=data.timezone, created_by=user_id, updated_by=user_id)
         return org
 
     def get(self, db: Session, org_id: UUID) -> Organization:
@@ -145,14 +149,15 @@ class BranchService:
     def create(self, db: Session, org_id: UUID, data: BranchCreate, user_id: UUID) -> Branch:
         org = assert_organization_exists(db, org_id, self.org_repo)
         assert_organization_active(org)
-        if self.repo.get_by_code_for_org(db, org_id, data.code):
+        code = data.code or entity_code_generator.next_code(db, "branch")
+        if self.repo.get_by_code_for_org(db, org_id, code):
             raise ApplicationError("BRANCH_CODE_CONFLICT", "El código de sede ya existe en esta organización.", 409)
         if data.ubigeo_code:
             dist = GeographyService.get_district_by_code(db, data.ubigeo_code)
             if not dist:
                 raise ApplicationError("UBIGEO_NOT_FOUND", f"Código UBIGEO '{data.ubigeo_code}' no existe en el catálogo.", 422)
         branch = self.repo.create(
-            db, organization_id=org_id, code=data.code, name=data.name,
+            db, organization_id=org_id, code=code, name=data.name,
             timezone=data.timezone, ubigeo_code=data.ubigeo_code, address_text=data.address_text,
             latitude=data.latitude, longitude=data.longitude,
             created_by=user_id, updated_by=user_id,
@@ -197,8 +202,12 @@ class LogisticsWarehouseService:
     def create(self, db: Session, branch_id: UUID, data: LogisticsWarehouseCreate, user_id: UUID) -> Warehouse:
         branch = assert_branch_exists(db, branch_id, self.branch_repo)
         assert_branch_active(branch)
-        if self.repo.get_by_code_for_branch(db, branch_id, data.code):
+        code = data.code or entity_code_generator.next_code(db, "warehouse")
+        if self.repo.get_by_code_for_branch(db, branch_id, code):
             raise ApplicationError("WAREHOUSE_CODE_CONFLICT", "El código de almacén ya existe en esta sede.", 409)
+
+        district, province, department = self._resolve_location(db, branch, data)
+
         wh = self.repo.create(
             db,
             branch_id=branch.id,
@@ -206,9 +215,9 @@ class LogisticsWarehouseService:
             # Sin esto el almacen nace huerfano e invisible para todo listado que
             # filtre por organization_id.
             organization_id=branch.organization_id,
-            code=data.code, name=data.name,
+            code=code, name=data.name,
             warehouse_type=data.warehouse_type, address=data.address,
-            district=data.district, province=data.province, department=data.department,
+            district=district, province=province, department=department,
             capacity=data.capacity, is_default=data.is_default, is_active=True,
             status="ACTIVE",
             created_by=user_id, updated_by=user_id,
@@ -222,6 +231,30 @@ class LogisticsWarehouseService:
         if not wh:
             raise ApplicationError("WAREHOUSE_NOT_FOUND", "El almacén no existe.", 404)
         return wh
+
+    @staticmethod
+    def _resolve_location(
+        db: Session, branch: Branch, data: LogisticsWarehouseCreate
+    ) -> tuple[str | None, str | None, str | None]:
+        """Ubicación administrativa del almacén, derivada de su sede.
+
+        Un almacén está donde está su sede. Si la sede tiene UBIGEO normalizado, se
+        deriva de ahí e **ignora** lo que envíe el cliente: así es imposible
+        registrar un almacén de una sede de Lima declarando Arequipa.
+
+        Si la sede aún no tiene UBIGEO —quedó nullable en F004.5 y ninguna sede
+        existente lo tiene todavía— se conserva el texto recibido para no dejar el
+        alta inoperativa. Ese caso queda marcado como pendiente de normalizar.
+        """
+        if branch.ubigeo_code:
+            district = GeographyService.resolve_ubigeo(db, branch.ubigeo_code)
+            if district is not None:
+                return (
+                    district.district_name,
+                    district.province_name,
+                    district.department_name,
+                )
+        return data.district, data.province, data.department
 
     def get_for_branch(self, db: Session, branch_id: UUID, wh_id: UUID) -> Warehouse:
         wh = self.get(db, wh_id)
