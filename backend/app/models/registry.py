@@ -35,12 +35,13 @@ from app.models.logistics_route import LogisticsRoute
 from app.models.research_participant import ResearchParticipant
 from app.models.risk_event import RiskEvent
 from app.models.route_shipment import RouteShipment
+from app.models.organization import Organization
 from app.models.session import UserSession
 from app.models.shipment import Shipment
 from app.models.shipment_event import ShipmentEvent
-from app.models.organization import Organization
 from app.models.user import User
 from app.models.warehouse import Warehouse
+from app.modules.logistics.geography import models as _geography_models  # noqa: F401
 from app.modules.logistics.warehouses import models as _warehouse_location_models  # noqa: F401
 
 # Import putaway models (Phase 043)

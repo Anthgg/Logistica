@@ -5,7 +5,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-
 # ---------------------------------------------------------------------------
 # Organization
 # ---------------------------------------------------------------------------
@@ -55,6 +54,8 @@ class OrganizationResponse(BaseModel):
     updated_at: datetime
 
 
+from app.modules.logistics.geography.schemas import UbigeoHierarchyResponse
+
 # ---------------------------------------------------------------------------
 # Branch
 # ---------------------------------------------------------------------------
@@ -63,6 +64,7 @@ class BranchCreate(BaseModel):
     code: str = Field(min_length=1, max_length=30)
     name: str = Field(min_length=1, max_length=200)
     timezone: str = Field(default="America/Lima", max_length=50)
+    ubigeo_code: str | None = Field(default=None, min_length=6, max_length=6, pattern="^[0-9]{6}$")
     address_text: str | None = Field(default=None, max_length=500)
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
@@ -76,6 +78,7 @@ class BranchCreate(BaseModel):
 class BranchUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
     timezone: str | None = Field(default=None, max_length=50)
+    ubigeo_code: str | None = Field(default=None, min_length=6, max_length=6, pattern="^[0-9]{6}$")
     address_text: str | None = Field(default=None, max_length=500)
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
@@ -94,9 +97,11 @@ class BranchResponse(BaseModel):
     name: str
     status: str
     timezone: str
-    address_text: str | None
-    latitude: float | None
-    longitude: float | None
+    ubigeo_code: str | None = None
+    ubigeo: UbigeoHierarchyResponse | None = None
+    address_text: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     created_at: datetime
     updated_at: datetime
 
