@@ -134,8 +134,8 @@ def scoped(client, database):
 
 
 def _warehouse_payload(code: str | None = None) -> dict:
+    """Cuerpo exacto que envía el formulario: sin `branch_id`, que va en la ruta."""
     return {
-        "branch_id": str(uuid4()),  # ignorado: la ruta manda la sede en el path
         "code": code or f"WH{uuid4().hex[:8].upper()}",
         "name": "Almacén F004",
         "warehouse_type": "general",
@@ -452,16 +452,36 @@ def test_warehouse_create_derives_organization_from_branch(client, database, sco
     assert row.branch_id == scoped["own_branch"].id
 
 
-def test_warehouse_create_ignores_client_supplied_organization(client, database, scoped):
+def test_warehouse_create_ignores_client_supplied_scope(client, database, scoped):
+    """Ni `organization_id` ni `branch_id` del cuerpo mandan sobre la ruta."""
     payload = _warehouse_payload()
     payload["organization_id"] = str(scoped["foreign"].id)
+    payload["branch_id"] = str(scoped["foreign_branch"].id)
     response = client.post(
         f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses",
         headers=scoped["headers"],
         json=payload,
     )
     assert response.status_code == 201, response.text
-    assert response.json()["organization_id"] == str(scoped["own"].id)
+    body = response.json()
+    assert body["organization_id"] == str(scoped["own"].id)
+    assert body["branch_id"] == str(scoped["own_branch"].id)
+
+
+def test_warehouse_create_without_branch_id_in_body_succeeds(client, scoped):
+    """Regresión del 422 que encontró el navegador.
+
+    El formulario no envía `branch_id` porque la sede va en la ruta. El esquema lo
+    exigía igualmente y devolvía 422 a la única petición que la UI sabe construir.
+    """
+    payload = _warehouse_payload("NOBRANCHID")
+    assert "branch_id" not in payload
+    response = client.post(
+        f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses",
+        headers=scoped["headers"],
+        json=payload,
+    )
+    assert response.status_code == 201, response.text
 
 
 def test_warehouse_create_foreign_branch_is_403(client, scoped):
