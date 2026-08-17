@@ -7,7 +7,7 @@ principals se construyen sembrando RBAC de verdad (permiso, rol, asignación con
 ámbito) para que un fallo en el enforcement se note.
 """
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -364,7 +364,7 @@ def test_branch_create_persists(client, database, scoped):
     body = response.json()
     assert body["organization_id"] == str(scoped["own"].id)
     assert body["status"] == "active"
-    assert database.get(Branch, body["id"]) is not None
+    assert database.get(Branch, UUID(body["id"])) is not None
 
 
 def test_branch_create_duplicate_code_is_409(client, scoped):
@@ -488,7 +488,7 @@ def test_warehouse_create_derives_organization_from_branch(client, database, sco
     # de la sede, nunca del cliente.
     assert body["organization_id"] == str(scoped["own"].id)
     assert body["branch_id"] == str(scoped["own_branch"].id)
-    row = database.get(Warehouse, body["id"])
+    row = database.get(Warehouse, UUID(body["id"]))
     assert row.organization_id == scoped["own"].id
     assert row.branch_id == scoped["own_branch"].id
 
@@ -676,7 +676,7 @@ def test_warehouse_status_keeps_status_and_is_active_consistent(client, database
     assert response.status_code == 200, response.text
     assert response.json()["is_active"] is False
     database.expire_all()
-    row = database.get(Warehouse, warehouse_id)
+    row = database.get(Warehouse, UUID(warehouse_id))
     assert row.is_active is False
     assert row.status == "INACTIVE"
 
