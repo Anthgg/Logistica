@@ -76,24 +76,47 @@ referencia.
 **Efecto esperado y aceptado**: los JWT emitidos con la clave anterior dejan de validar.
 Los usuarios tendrán que iniciar sesión otra vez. CSRF no se ve afectado.
 
-## Rotar la contraseña de la base — `PENDING_SECURE_USER_ACTION`
+## Rotar la contraseña de la base
 
-Requiere el panel de Supabase. Orden seguro:
+El primer paso **no se puede automatizar**: en Supabase el rol `postgres` no tiene
+permiso para cambiar su propia contraseña por SQL. Un intento de
+`ALTER USER postgres WITH PASSWORD ...` falla con `InsufficientPrivilege`, así que la
+rotación sale del panel o de la API de gestión.
 
-1. **Supabase** → Project Settings → Database → *Reset database password*. Copiar el
-   valor nuevo al portapapeles; no pegarlo en ningún chat, ticket ni fichero.
-2. Añadir una versión nueva al secreto `DATABASE_URL_PRODUCTION` con la cadena completa
-   ya actualizada, pegándola en el editor de valor de Secret Manager (Consola de GCP →
-   Secret Manager → `DATABASE_URL_PRODUCTION` → *Nueva versión*). Así el valor no pasa
-   por la línea de comandos.
-3. Desplegar una revisión nueva del servicio para que lea la versión nueva.
-4. Ejecutar el Job de migraciones en modo `verify-only`: valida que también él conecta
-   con la credencial nueva.
-5. Deshabilitar la versión anterior del secreto.
-6. Confirmar en el panel de Supabase que la contraseña anterior ya no es válida.
+### 1. Rotar en Supabase
 
-El orden importa: si se rota la contraseña antes de actualizar el secreto, el servicio
-queda sin base hasta que se despliegue la revisión nueva.
+Project Settings → Database → *Reset database password*. Copiar el valor nuevo al
+portapapeles. No pegarlo en un chat, un ticket ni un fichero.
+
+A partir de ese momento la base solo acepta la contraseña nueva, y el secreto todavía
+guarda la anterior: **el servicio se degrada en cuanto arranque una instancia nueva**.
+Conviene encadenar los pasos siguientes sin pausas.
+
+### 2. Publicar la versión nueva del secreto
+
+```bash
+python backend/scripts/rotate_database_url.py
+```
+
+Pide la contraseña por entrada oculta, reutiliza usuario, host, puerto y base de la
+versión vigente, comprueba que la credencial conecta **antes** de publicar nada, y
+después verifica que la anterior ya no autentica. El valor no pasa por la línea de
+comandos, ni por el historial, ni por un fichero temporal, ni por la pantalla.
+
+Si prefieres no usar la terminal: Consola de GCP → Secret Manager →
+`DATABASE_URL_PRODUCTION` → *Nueva versión*, y pegar la cadena completa en el editor.
+
+### 3. Desplegar una revisión nueva
+
+Una revisión en marcha conserva el valor que leyó al arrancar; solo una revisión nueva
+lee la versión nueva del secreto.
+
+### 4. Verificar
+
+- `/health` responde 200.
+- El Job de migraciones en modo `verify-only` conecta y reporta `jl480110048dk`.
+- Deshabilitar la versión anterior del secreto.
+- Comprobar que la credencial anterior ya no autentica.
 
 ## Qué no hacer
 
