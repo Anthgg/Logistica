@@ -438,6 +438,95 @@ jobs:
           echo "PASS: ejecución real y sin continue-on-error."
 
       # -----------------------------------------------------------------------
+      # F005.3 — PIPELINE DE DESPLIEGUE PRODUCTIVO Y ROTACIÓN DE SECRETOS
+      # -----------------------------------------------------------------------
+      - name: Lint F005.3 Deployment Modules
+        working-directory: backend
+        run: |
+          ruff check \
+            scripts/scan_for_secrets.py \
+            tests/test_production_deploy_workflow.py \
+            tests/test_scan_for_secrets.py \
+            --output-format=github
+
+      - name: Run F005.3 Deployment Guard Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest tests/test_production_deploy_workflow.py tests/test_scan_for_secrets.py --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_f0053.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_f0053.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_f0053.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_f0053.log | tail -1 || true)
+          PASSED=${PASSED:-0}; FAILED=${FAILED:-0}; SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "F005.3 PRODUCTION DEPLOYMENT"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: las guardas de despliegue terminaron con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ] || [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $FAILED fallidos y $SKIPPED omitidos; se requiere 0 y 0."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 26 ]; then
+            echo "FAIL: se esperaban al menos 26 guardas y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # Red de seguridad independiente de pytest, igual que en el pipeline de
+      # migraciones: si alguien reintroduce el placeholder o silencia la
+      # autenticación, el gate cae también aquí.
+      - name: Guard — Production deploy must be real
+        run: |
+          WF=.github/workflows/production-deploy.yml
+          EFFECTIVE=$(grep -vE '^[[:space:]]*#' "$WF")
+
+          if printf '%s\n' "$EFFECTIVE" | grep -Eq 'echo[[:space:]]+["'"'"'][^"'"'"']*gcloud[[:space:]]+run[[:space:]]+deploy'; then
+            echo "FAIL: el despliegue vuelve a ser un echo."
+            exit 1
+          fi
+          if ! printf '%s\n' "$EFFECTIVE" | grep -q 'gcloud run deploy'; then
+            echo "FAIL: el workflow no despliega Cloud Run."
+            exit 1
+          fi
+          if printf '%s\n' "$EFFECTIVE" | grep -q 'continue-on-error'; then
+            echo "FAIL: el workflow de despliegue no puede silenciar fallos."
+            exit 1
+          fi
+          if ! printf '%s\n' "$EFFECTIVE" | grep -q -- '--set-secrets='; then
+            echo "FAIL: los secretos no se inyectan por referencia a Secret Manager."
+            exit 1
+          fi
+          if printf '%s\n' "$EFFECTIVE" | grep -- '--set-env-vars=' | grep -Eq 'DATABASE_URL|SECRET_KEY'; then
+            echo "FAIL: un secreto viaja como variable de entorno literal."
+            exit 1
+          fi
+          if [ -f .github/workflows/cd.yml ]; then
+            echo "FAIL: cd.yml duplica el pipeline de despliegue."
+            exit 1
+          fi
+          echo "PASS: despliegue real, fail-fast y secretos por referencia."
+
+      - name: Guard — No production secrets in deployment workflows
+        working-directory: backend
+        run: |
+          python scripts/scan_for_secrets.py \
+            ../.github/workflows/production-deploy.yml \
+            ../.github/workflows/staging-deploy.yml \
+            ../.github/workflows/database-migration.yml \
+            ../docs/phase-005-2 \
+            ../docs/phase-005-3
+
+      # -----------------------------------------------------------------------
       # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
       # -----------------------------------------------------------------------
       - name: Run PostgreSQL Integration Tests

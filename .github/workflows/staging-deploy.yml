@@ -1,32 +1,44 @@
-name: Staging Deployment Pipeline
+name: Staging Deployment Pipeline (DESACTIVADO — no existe entorno de staging)
+
+# No hay entorno de staging.
+#
+# Este workflow simulaba un despliegue: imprimía comandos `gcloud` con `echo` y
+# llevaba `continue-on-error: true` en la autenticación, así que terminaba en verde
+# pasara lo que pasara. Además se disparaba con cada push a `develop`, de modo que
+# producía un historial de "despliegues correctos" que nunca ocurrieron.
+#
+# La auditoría de infraestructura de F005.2 comprobó que ninguno de los recursos que
+# usaba existe en el proyecto GCP:
+#
+#   - servicio Cloud Run `proyecto-t1-api-staging`  → no existe
+#   - Artifact Registry `proyecto-t1-images`         → no existe
+#   - service account `t1-api-staging-sa`            → no existe
+#
+# Se deja desactivado en vez de borrado para que la decisión quede a la vista. Cuando
+# exista staging de verdad, el camino correcto es parametrizar
+# `production-deploy.yml` por entorno, no revivir este contenido.
+#
+# Ver `docs/phase-005-3/deployment-pipeline.md`.
 
 on:
-  push:
-    branches: [ develop ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  build-and-deploy-staging:
-    name: Build & Deploy to Staging
+  staging-unavailable:
+    name: Staging no disponible
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
-        continue-on-error: true
-
-      - name: Build & Tag Image
+      - name: Explicar por qué este pipeline no despliega
         run: |
-          echo "Building Docker image: southamerica-west1-docker.pkg.dev/gen-lang-client-0356667380/proyecto-t1-images/api:${{ github.sha }}"
-
-      - name: Trigger Migration Job
-        run: |
-          echo "Triggering out-of-band Alembic migration job for Staging..."
-
-      - name: Deploy to Cloud Run (Staging)
-        run: |
-          echo "Deploying Cloud Run service: proyecto-t1-api-staging"
+          echo "STAGING_AVAILABLE=false"
+          echo ""
+          echo "No existe entorno de staging en el proyecto GCP:"
+          echo "  - servicio Cloud Run proyecto-t1-api-staging: no existe"
+          echo "  - Artifact Registry proyecto-t1-images: no existe"
+          echo "  - service account t1-api-staging-sa: no existe"
+          echo ""
+          echo "El despliegue productivo va por production-deploy.yml."
+          exit 1
