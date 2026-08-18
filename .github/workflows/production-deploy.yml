@@ -72,13 +72,21 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      # La lista de tráfico incluye las revisiones con tag, que aparecen sin porcentaje.
+      # Tomar el elemento [0] devolvería una de esas y el rollback mandaría el tráfico a
+      # una revisión que no estaba sirviendo. Se filtra por el 100% real.
       - name: Record current production revision
         id: before
         run: |
           set -euo pipefail
           PREV="$(gcloud run services describe "${{ env.SERVICE_NAME }}" \
             --project="${{ env.GCP_PROJECT_ID }}" --region="${{ env.GCP_REGION }}" \
-            --format='value(status.traffic[0].revisionName)')"
+            --format='value(status.traffic.filter("percent:100").extract("revisionName"))' \
+            | tr -d "[]' ")"
+          if [ -z "$PREV" ]; then
+            echo "FAIL: no hay una revisión con el 100% del tráfico; sin destino de rollback." >&2
+            exit 1
+          fi
           echo "revision=${PREV}" >> "$GITHUB_OUTPUT"
           echo "Revisión actual (destino de rollback): ${PREV}"
 
@@ -127,12 +135,16 @@ jobs:
             --format='value(status.latestCreatedRevisionName)')"
           echo "revision=${REV}" >> "$GITHUB_OUTPUT"
 
+      # `type=Ready` en vez de `type:Ready`: el operador de dos puntos hace coincidencia
+      # laxa y devolvía el estado de varias condiciones a la vez, de modo que la
+      # comparación fallaba aunque la revisión estuviera lista.
       - name: Verify revision is ready
         run: |
           set -euo pipefail
           READY="$(gcloud run revisions describe "${{ steps.deploy.outputs.revision }}" \
             --project="${{ env.GCP_PROJECT_ID }}" --region="${{ env.GCP_REGION }}" \
-            --format='value(status.conditions.filter("type:Ready").extract("status"))' | tr -d "[]'")"
+            --format='value(status.conditions.filter("type=Ready").extract("status").flatten())')"
+          READY="$(printf '%s' "$READY" | tr -d "[]' \r")"
           echo "Ready=${READY}"
           if [ "$READY" != "True" ]; then
             echo "FAIL: la revisión no quedó lista." >&2

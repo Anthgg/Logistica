@@ -157,6 +157,33 @@ def test_rollback_exists_and_triggers_on_failure(raw: str) -> None:
     assert "steps.before.outputs.revision" in body, "no se registró la revisión previa"
 
 
+def test_rollback_target_is_the_revision_actually_serving(raw: str) -> None:
+    """El destino de rollback se toma del 100% del tráfico, no del primer elemento.
+
+    Con `status.traffic[0]` el workflow devolvía una revisión etiquetada sin
+    porcentaje, y el rollback mandaba el tráfico a una revisión que no estaba
+    sirviendo. Ocurrió de verdad en el primer despliegue de F005.3.
+    """
+    body = "\n".join(effective_lines(raw))
+    assert "status.traffic[0]" not in body, (
+        "el destino de rollback sale del primer elemento del tráfico, "
+        "que puede ser una revisión con tag y sin porcentaje"
+    )
+    assert 'status.traffic.filter("percent:100")' in body, (
+        "el destino de rollback no se filtra por la revisión que sirve el 100%"
+    )
+
+
+def test_readiness_uses_exact_condition_match(raw: str) -> None:
+    """`type:Ready` hace coincidencia laxa y devuelve varias condiciones a la vez."""
+    body = "\n".join(effective_lines(raw))
+    assert 'filter("type:Ready")' not in body, (
+        "la comprobación de readiness usa coincidencia laxa y puede devolver "
+        "el estado de varias condiciones"
+    )
+    assert 'filter("type=Ready")' in body
+
+
 def test_concurrency_prevents_parallel_deploys(workflow: dict) -> None:
     concurrency = workflow.get("concurrency")
     assert concurrency, "el workflow no declara concurrency"
