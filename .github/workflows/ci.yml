@@ -366,6 +366,78 @@ jobs:
           fi
 
       # -----------------------------------------------------------------------
+      # F005.2 — PIPELINE DE RELEASE DE BASE DE DATOS
+      # -----------------------------------------------------------------------
+      - name: Lint F005.2 Migration Release Modules
+        working-directory: backend
+        run: |
+          ruff check \
+            scripts/verify_production_schema.py \
+            tests/test_database_migration_workflow.py \
+            --output-format=github
+
+      - name: Validate migration job entrypoint syntax
+        working-directory: backend
+        run: sh -n scripts/run_migration_job.sh
+
+      - name: Run F005.2 Migration Workflow Guard Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest tests/test_database_migration_workflow.py --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_f0052.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_f0052.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_f0052.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_f0052.log | tail -1 || true)
+          PASSED=${PASSED:-0}; FAILED=${FAILED:-0}; SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "F005.2 DATABASE RELEASE PIPELINE"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: las guardas del workflow de migración terminaron con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ] || [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $FAILED fallidos y $SKIPPED omitidos; se requiere 0 y 0."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 14 ]; then
+            echo "FAIL: se esperaban al menos 14 guardas y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # Red de seguridad independiente de pytest: si alguien reintroduce el
+      # placeholder o silencia la autenticación, el gate cae aquí también.
+      - name: Guard — Migration workflow must execute for real
+        run: |
+          WF=.github/workflows/database-migration.yml
+
+          # Los comentarios nombran ambas reglas para explicarlas; lo que se audita
+          # son las líneas efectivas.
+          EFFECTIVE=$(grep -vE '^[[:space:]]*#' "$WF")
+
+          if printf '%s\n' "$EFFECTIVE" | grep -Eq 'echo[[:space:]]+["'"'"'][^"'"'"']*gcloud[[:space:]]+run[[:space:]]+jobs[[:space:]]+execute'; then
+            echo "FAIL: el workflow vuelve a imprimir el comando en vez de ejecutarlo."
+            exit 1
+          fi
+          if ! printf '%s\n' "$EFFECTIVE" | grep -q 'gcloud run jobs execute'; then
+            echo "FAIL: el workflow no ejecuta el Cloud Run Job."
+            exit 1
+          fi
+          if printf '%s\n' "$EFFECTIVE" | grep -q 'continue-on-error'; then
+            echo "FAIL: el workflow de migración no puede silenciar fallos."
+            exit 1
+          fi
+          echo "PASS: ejecución real y sin continue-on-error."
+
+      # -----------------------------------------------------------------------
       # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
       # -----------------------------------------------------------------------
       - name: Run PostgreSQL Integration Tests

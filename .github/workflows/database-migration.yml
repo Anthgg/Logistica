@@ -1,34 +1,156 @@
 name: Out-of-Band Database Migration Job
 
+# Release de base de datos fuera de banda (Fase 005.2).
+#
+# Ejecuta de verdad el Cloud Run Job de migraciones: no imprime el comando, lo lanza y
+# espera. Es manual a propósito — producción nunca se migra por un push.
+#
+# El Job es quien habla con la base; este workflow no ve nunca DATABASE_URL: la
+# inyecta Secret Manager directamente en el Job.
+
 on:
   workflow_dispatch:
     inputs:
       target_environment:
-        description: 'Target Environment for Alembic Migration'
+        description: 'Entorno destino de la migración Alembic'
         required: true
         default: 'staging'
         type: choice
         options:
           - staging
           - production
+      mode:
+        description: 'upgrade aplica migraciones; verify-only solo diagnostica sin escribir'
+        required: true
+        default: 'verify-only'
+        type: choice
+        options:
+          - verify-only
+          - upgrade
+      expected_alembic_head:
+        description: 'Head Alembic esperado en la imagen (opcional, refuerza la trazabilidad)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: gen-lang-client-0356667380
+  GCP_REGION: southamerica-west1
+
+# Dos releases simultáneos sobre la misma base son una carrera que nadie quiere
+# depurar. La cola es por entorno, y no se cancela la que ya está en vuelo.
+concurrency:
+  group: database-migration-${{ inputs.target_environment }}
+  cancel-in-progress: false
 
 jobs:
-  run-migration-job:
-    name: Run Alembic Migration Job
+  migrate:
+    name: Alembic release (${{ inputs.target_environment }} / ${{ inputs.mode }})
     runs-on: ubuntu-latest
+    environment: ${{ inputs.target_environment }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Sin continue-on-error: si la autenticación falla, el release se detiene aquí.
+      # Continuar tras un fallo de auth solo sirve para producir un verde falso.
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY_MIGRATIONS }}
-        continue-on-error: true
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Resolve migration job name
+        id: job
+        run: |
+          echo "name=t1-migration-job-${{ inputs.target_environment }}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify migration job exists
+        run: |
+          set -euo pipefail
+          gcloud run jobs describe "${{ steps.job.outputs.name }}" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
+            --region="${{ env.GCP_REGION }}" \
+            --format="value(metadata.name)"
+
+      - name: Report job configuration
+        run: |
+          set -euo pipefail
+          gcloud run jobs describe "${{ steps.job.outputs.name }}" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
+            --region="${{ env.GCP_REGION }}" \
+            --format="yaml(spec.template.spec.parallelism,spec.template.spec.taskCount,spec.template.spec.template.spec.maxRetries,spec.template.spec.template.spec.timeoutSeconds,spec.template.spec.template.spec.containers[0].image)"
 
       - name: Execute Cloud Run Migration Job
+        id: execute
         run: |
-          echo "Executing out-of-band Alembic migration job..."
-          echo "Target Environment: ${{ inputs.target_environment }}"
-          echo "Cloud Run Job: t1-migration-job-${{ inputs.target_environment }}"
-          echo "Executing: gcloud run jobs execute t1-migration-job-${{ inputs.target_environment }} --region=southamerica-west1 --wait"
+          set -euo pipefail
+
+          ARGS=(
+            "--project=${{ env.GCP_PROJECT_ID }}"
+            "--region=${{ env.GCP_REGION }}"
+            "--wait"
+            "--format=value(metadata.name)"
+            "--update-env-vars=MIGRATION_MODE=${{ inputs.mode }}"
+          )
+          if [ -n "${{ inputs.expected_alembic_head }}" ]; then
+            ARGS+=("--update-env-vars=EXPECTED_ALEMBIC_HEAD=${{ inputs.expected_alembic_head }}")
+          fi
+
+          EXECUTION="$(gcloud run jobs execute "${{ steps.job.outputs.name }}" "${ARGS[@]}")"
+          echo "execution=${EXECUTION}" >> "$GITHUB_OUTPUT"
+          echo "Ejecución lanzada: ${EXECUTION}"
+
+      # `--wait` devuelve 0 al terminar, pero terminar no es lo mismo que terminar bien:
+      # el resultado se lee del recurso de ejecución, no del código de salida de gcloud.
+      - name: Verify execution result
+        run: |
+          set -euo pipefail
+
+          EXECUTION="${{ steps.execute.outputs.execution }}"
+          gcloud run jobs executions describe "$EXECUTION" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
+            --region="${{ env.GCP_REGION }}" \
+            --format="yaml(metadata.name,status.startTime,status.completionTime,status.succeededCount,status.failedCount)"
+
+          SUCCEEDED="$(gcloud run jobs executions describe "$EXECUTION" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
+            --region="${{ env.GCP_REGION }}" \
+            --format='value(status.succeededCount)')"
+          FAILED="$(gcloud run jobs executions describe "$EXECUTION" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
+            --region="${{ env.GCP_REGION }}" \
+            --format='value(status.failedCount)')"
+
+          echo "succeeded=${SUCCEEDED:-0} failed=${FAILED:-0}"
+
+          if [ -n "${FAILED:-}" ] && [ "${FAILED}" != "0" ]; then
+            echo "FAIL: la ejecución registró tareas fallidas." >&2
+            exit 1
+          fi
+          if [ "${SUCCEEDED:-0}" != "1" ]; then
+            echo "FAIL: no se completó exactamente 1 tarea correctamente." >&2
+            exit 1
+          fi
+
+      - name: Migration release summary
+        run: |
+          {
+            echo "### Release de base de datos"
+            echo ""
+            echo "| Campo | Valor |"
+            echo "| --- | --- |"
+            echo "| Entorno | ${{ inputs.target_environment }} |"
+            echo "| Modo | ${{ inputs.mode }} |"
+            echo "| Job | ${{ steps.job.outputs.name }} |"
+            echo "| Región | ${{ env.GCP_REGION }} |"
+            echo "| Ejecución | ${{ steps.execute.outputs.execution }} |"
+            echo "| Commit | ${{ github.sha }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
