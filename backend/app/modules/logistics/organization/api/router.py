@@ -15,12 +15,18 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.dependencies.csrf import verify_csrf
-from app.modules.logistics.auth_dependencies import require_permission
+from app.modules.logistics.auth_dependencies import get_logistics_principal, require_permission
+from app.modules.logistics.organization.reference_catalogs import (
+    COUNTRIES,
+    TIMEZONES,
+    WAREHOUSE_TYPES,
+)
 from app.modules.logistics.organization.schemas import (
     BranchCreate,
     BranchResponse,
     BranchStatusUpdate,
     BranchUpdate,
+    CountryResponse,
     LogisticsWarehouseCreate,
     LogisticsWarehouseResponse,
     LogisticsWarehouseSetDefault,
@@ -29,6 +35,8 @@ from app.modules.logistics.organization.schemas import (
     OrganizationResponse,
     OrganizationStatusUpdate,
     OrganizationUpdate,
+    TimezoneResponse,
+    WarehouseTypeResponse,
 )
 from app.modules.logistics.organization.scope import (
     allowed_organization_ids,
@@ -51,6 +59,34 @@ def _create_organization_router() -> APIRouter:
     org_service = OrganizationService()
     branch_service = BranchService()
     wh_service = LogisticsWarehouseService()
+
+    # ------------------------------------------------------------------
+    # Catálogos de referencia (F005.1)
+    #
+    # Datos inmutables que no dependen del tenant: basta la sesión, sin permiso
+    # específico. Existen para que el frontend deje de mantener sus propias listas.
+    # ------------------------------------------------------------------
+    @router.get("/catalogs/countries", response_model=list[CountryResponse])
+    def list_countries(
+        _principal: LogisticsPrincipal = Depends(get_logistics_principal),
+    ):
+        return COUNTRIES
+
+    @router.get("/catalogs/timezones", response_model=list[TimezoneResponse])
+    def list_timezones(
+        country_code: str | None = Query(None),
+        _principal: LogisticsPrincipal = Depends(get_logistics_principal),
+    ):
+        if country_code:
+            wanted = country_code.strip().upper()
+            return [tz for tz in TIMEZONES if tz["country_code"] in (wanted, "")]
+        return TIMEZONES
+
+    @router.get("/catalogs/warehouse-types", response_model=list[WarehouseTypeResponse])
+    def list_warehouse_types(
+        _principal: LogisticsPrincipal = Depends(get_logistics_principal),
+    ):
+        return WAREHOUSE_TYPES
 
     # ------------------------------------------------------------------
     # Organizations
