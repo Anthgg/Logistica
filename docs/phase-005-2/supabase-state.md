@@ -97,3 +97,47 @@ de usuario.
 La imagen desplegada es **anterior a F004.5 y F005.1**: `/api/logistics/catalogs/*`
 responde 404 en producción. Migrar la base no despliega el código que la usa; eso
 pertenece a `INFRA_DEPLOYMENT_PIPELINE`, que sigue abierto.
+
+## Release ejecutado — 17 de agosto de 2026
+
+| Campo | Valor |
+|---|---|
+| Job | `t1-migration-job-production` (`southamerica-west1`) |
+| Ejecución `verify-only` | `t1-migration-job-production-zqhns` |
+| Ejecución `upgrade` | `t1-migration-job-production-x9ktq` |
+| Inicio / fin | `03:52:17Z` → `03:53:04Z` (47 s) |
+| Resultado | `succeededCount=1`, `failedCount=0` |
+| Camino aplicado | `hj460110046dk → ik470110047dk → jl480110048dk` |
+
+```
+SUPABASE_ALEMBIC_VERSION_BEFORE = hj460110046dk
+SUPABASE_ALEMBIC_VERSION_AFTER  = jl480110048dk
+```
+
+Verificación posterior, ejecutada por el propio Job:
+
+| Comprobación | Resultado |
+|---|---|
+| Tablas F004 / F004.5 / F005.1 | Presentes |
+| `geo_departments` / `geo_provinces` / `geo_districts` | 25 / 196 / 1893 |
+| RLS en las cuatro tablas nuevas | Habilitado |
+| `entity_code_counters` | 3 filas: `organization=216`, `branch=181`, `warehouse=4` |
+| Riesgo de colisión | Ninguno |
+
+## Idempotencia
+
+Tercera ejecución, con la base ya en `head`:
+
+```
+DATABASE_ALREADY_CURRENT=TRUE
+MIGRATION_RESULT=SUCCESS
+RESULTADO=PASS
+```
+
+Esquema antes y después de esa ejecución: **384 tablas, 6691 columnas** en ambos casos.
+Ningún cambio, ningún dato duplicado.
+
+## Datos de smoke, comprobado después de migrar
+
+`logistics_organizations` sigue teniendo **0** códigos con el patrón `ORG######`. Los
+identificadores creados en el cierre de F005.1 no llegaron a producción por esta vía.

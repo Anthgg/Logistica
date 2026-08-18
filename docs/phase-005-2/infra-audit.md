@@ -16,12 +16,24 @@ contra ese inventario habría fallado.
 | Artifact Registry `proyecto-t1-images` | CONFIGURADO | **No existe** (el real es `cloud-run-source-deploy`) |
 | Secret Manager `DATABASE_URL`, `SECRET_KEY` | CONFIGURADO | **Ningún secreto creado** |
 | Service accounts `t1-api-staging-sa`, `t1-api-production-sa` | CONFIGURADO | **No existen** (solo la SA por defecto de Compute) |
-| Cloud Run Job `t1-migration-job-*` | — | **No existe** |
+| Cloud Run Job `t1-migration-job-*` | — | **No existía; creado por F005.2** |
 
 ```
-CLOUD_RUN_MIGRATION_JOB_EXISTS = false
+CLOUD_RUN_MIGRATION_JOB_EXISTS = false  → true (creado en F005.2)
 STAGING_AVAILABLE               = false
 ```
+
+## Infraestructura creada por F005.2
+
+| Recurso | Valor |
+|---|---|
+| Secreto | `DATABASE_URL_PRODUCTION` (versión 1), acceso concedido a la SA del Job |
+| Imagen | `.../logistica-migration@sha256:1bce983555e8bcf5c24ecf7d08a862e887344a2188979f3eb95e73c360ce390f` |
+| Job | `t1-migration-job-production` · `southamerica-west1` |
+| Ejecución | `tasks=1`, `parallelism=1`, `maxRetries=0`, `taskTimeout=1800s`, 1 CPU / 1 GiB |
+
+La imagen se referencia **por digest**, no por etiqueta: una etiqueta se puede mover y
+entonces deja de responder a qué código escribió el esquema.
 
 No hay entorno de staging real, así que el pipeline no puede ensayarse allí primero. El
 modo `verify-only` cubre parcialmente ese hueco: permite ejercitar autenticación, Job,

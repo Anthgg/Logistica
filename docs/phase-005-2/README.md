@@ -1,6 +1,6 @@
 # Fase 005.2 — Pipeline de release de base de datos (Supabase)
 
-Estado: **código completo**. Ejecución productiva **pendiente de acceso de infraestructura**.
+Estado: **cerrada**. Pipeline operativo y migración productiva ejecutada el 17 de agosto de 2026.
 
 ## El problema que resuelve
 
