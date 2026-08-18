@@ -91,3 +91,22 @@ nada. Quedan deliberadamente fuera del gate.
 
 No se ha reescrito historia de git. Ante un secreto expuesto, la acción que sirve es
 **rotarlo**; reescribir el historial no invalida un valor que ya circuló.
+
+## Verificación tras la rotación
+
+| Comprobación | Resultado |
+|---|---|
+| `SECRET_KEY` en la configuración de Cloud Run | Referencia a Secret Manager, no valor literal |
+| Valor de ejemplo en producción | Ya no está |
+| Token firmado con la clave anterior | Rechazado (`401 INVALID_SESSION`) |
+| CSRF | `GET /api/auth/csrf` responde 200 |
+
+Sobre el alcance de la tercera comprobación, conviene ser preciso: un token firmado con
+la clave anterior recibe exactamente la misma respuesta que un token firmado con
+cualquier clave inventada. Prueba que la clave antigua no da acceso, pero no distingue
+por sí sola entre «firma inválida» y «sesión inexistente».
+
+La evidencia sólida de la rotación es la configuración: el servicio lee `SECRET_KEY` de
+`SECRET_KEY_PRODUCTION`, cuya versión 1 se generó con `secrets.token_urlsafe(48)`. Como
+solo existe una clave y no hay soporte de `kid` ni clave de respaldo, cambiarla invalida
+por construcción todos los JWT emitidos antes.
