@@ -1,16 +1,20 @@
 # Estado auditado de la base productiva
 
-Auditoría de **solo lectura** realizada el 17 de agosto de 2026 contra la base a la que
-apunta el servicio Cloud Run de producción. No se ejecutó ninguna migración.
+Todo lo que sigue se midió el 17 de agosto de 2026 contra la base a la que apunta el
+servicio Cloud Run de producción.
 
-## Revisión
+Las secciones hasta «Servicio productivo» describen el estado **anterior** al release y
+se obtuvieron en solo lectura, antes de migrar. El release ejecutado se documenta al
+final.
+
+## Revisión de partida
 
 ```
 SUPABASE_ALEMBIC_VERSION_BEFORE = hj460110046dk
 ```
 
-Es decir, producción está en **F004** (organizaciones / sedes / almacenes). Le faltan
-dos revisiones:
+Es decir, producción estaba en **F004** (organizaciones / sedes / almacenes). Le
+faltaban dos revisiones:
 
 | Revisión | Fase | Clasificación | Riesgo |
 |---|---|---|---|
