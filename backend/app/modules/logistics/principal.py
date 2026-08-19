@@ -51,41 +51,42 @@ class LogisticsPrincipal:
 
     @property
     def has_logistics_access(self) -> bool:
-        return self.logistics_enabled and (self.is_platform_admin or len(self.permission_codes) > 0)
+        return self.logistics_enabled and len(self.permission_codes) > 0
 
     @property
     def is_platform_admin(self) -> bool:
+        """Rol de plataforma del usuario.
+
+        Se conserva para trazas y diagnóstico, pero **ya no concede autorización**.
+        Hasta F006 cortocircuitaba permisos, alcance y step-up: un
+        ``users.role == "admin"`` entraba a todo sin pasar por el catálogo, y de paso
+        ocultaba que el módulo de evaluaciones exigía siete permisos inexistentes.
+
+        La autoridad es ahora el catálogo. Se comprobó antes de retirarlo que los 81
+        administradores activos en producción ya tienen ``LOGISTICS_ADMIN`` asignado
+        por la vía normal, así que ninguno pierde acceso.
+        """
         return self.platform_role == "admin"
 
     def has_permission(self, code: str) -> bool:
-        if self.is_platform_admin:
-            return True
         return code in self.permission_codes
 
     def has_any_permission(self, *codes: str) -> bool:
-        if self.is_platform_admin:
-            return True
         return any(c in self.permission_codes for c in codes)
 
     def can_access_organization(self, org_id: str | UUID) -> bool:
-        if self.is_platform_admin:
-            return True
         org_str = str(org_id)
         if not self.organization_ids:
             return True  # No scope restriction (global)
         return org_str in self.organization_ids
 
     def can_access_branch(self, branch_id: str | UUID) -> bool:
-        if self.is_platform_admin:
-            return True
         b_str = str(branch_id)
         if not self.branch_ids:
             return True
         return b_str in self.branch_ids
 
     def can_access_warehouse(self, wh_id: str | UUID) -> bool:
-        if self.is_platform_admin:
-            return True
         w_str = str(wh_id)
         if not self.warehouse_ids:
             return True

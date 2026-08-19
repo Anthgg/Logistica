@@ -32,7 +32,6 @@ def require_logistics_permission(
     """Return a FastAPI dependency that checks the user has the given permission.
 
     For sensitive permissions, also validates a step-up proof.
-    Platform admin bypasses temporarily until full RBAC migration.
     """
 
     def dependency(
@@ -41,9 +40,10 @@ def require_logistics_permission(
         db: Session = Depends(get_db),
         x_step_up_proof_id: str | None = Header(default=None, alias="X-Step-Up-Proof-ID"),
     ) -> User:
-        # Temporary: platform admin bypasses until full migration
-        if user.role == "admin":
-            return user
+        # El bypass por rol de plataforma se retiró en F006: concedía todo sin pasar
+        # por el catálogo y además saltaba el step-up de las operaciones críticas.
+        # Los administradores autorizan ahora por sus permisos efectivos, igual que
+        # cualquier otro usuario.
 
         # Resolve effective permissions
         effective = _service.resolve_effective_permissions(db, user.id)

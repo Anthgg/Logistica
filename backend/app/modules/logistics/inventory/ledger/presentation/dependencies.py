@@ -82,7 +82,7 @@ def enforce_inventory_route_security(
     step_up_level = getattr(endpoint, "__inventory_step_up_level__", None)
     requires_csrf = bool(getattr(endpoint, "__inventory_requires_csrf__", False))
 
-    if capability and not principal.is_platform_admin and not principal.has_permission(capability):
+    if capability and not principal.has_permission(capability):
         raise ApplicationError(
             "FORBIDDEN",
             f"No tiene el permiso requerido '{capability}'.",
@@ -92,7 +92,7 @@ def enforce_inventory_route_security(
     organization_value = request.path_params.get("organization_id")
     if organization_value is None:
         organization_value = request.query_params.get("organization_id")
-    if organization_value is not None and not principal.is_platform_admin:
+    if organization_value is not None:
         try:
             organization_id = UUID(str(organization_value))
         except (TypeError, ValueError) as exc:
@@ -108,11 +108,8 @@ def enforce_inventory_route_security(
                 403,
             )
 
-    if (
-        capability
-        and step_up_level not in {None, StepUpLevel.LOW.value}
-        and not principal.is_platform_admin
-    ):
+    # F006: el step-up del libro de inventario ya no se salta por rol de plataforma.
+    if capability and step_up_level not in {None, StepUpLevel.LOW.value}:
         from app.modules.logistics.security.step_up_service import step_up_service
 
         if not x_step_up_proof_id:

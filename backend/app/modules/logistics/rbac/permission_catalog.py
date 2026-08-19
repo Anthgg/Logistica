@@ -518,6 +518,11 @@ PERMISSIONS: list[dict[str, object]] = [
         "description": "Registrar inspección de calidad",
         "category": "quality",
         "risk_level": RiskLevel.MEDIUM,
+        # Este código estaba declarado dos veces: aquí y más abajo vía
+        # `_phase_permission`, que sí exigía step-up. Al consolidar se conserva la
+        # postura más estricta de las dos: quedarse con esta entrada tal cual habría
+        # retirado la verificación reforzada sin que nadie lo pidiera.
+        "requires_step_up": True,
     },
     {
         "code": "logistics.quality_inspections.approve",
@@ -2327,10 +2332,10 @@ PHASE_042_PERMISSIONS = [
         requires_step_up=True,
     ),
     # Inspection
-    _phase_permission("logistics.quality_inspections.read", "quality", RiskLevel.LOW),
-    _phase_permission(
-        "logistics.quality_inspections.create", "quality", RiskLevel.MEDIUM, requires_step_up=True
-    ),
+    # `logistics.quality_inspections.read` y `.create` se declaran más arriba con
+    # nombre y descripción escritos a mano. Estaban también aquí, y como el sembrado
+    # actualiza por código, la versión generada sobrescribía el texto bueno con la
+    # plantilla genérica. El step-up que aportaba `.create` se conservó allí.
     _phase_permission(
         "logistics.quality_inspections.start", "quality", RiskLevel.MEDIUM, requires_step_up=True
     ),
@@ -3589,6 +3594,147 @@ _LEGACY_WORKFLOW_CODES = [
     str(permission["code"]) for permission in LEGACY_WORKFLOW_PERMISSIONS
 ]
 _extend_role_permissions("LOGISTICS_ADMIN", _LEGACY_WORKFLOW_CODES)
+
+
+# ---------------------------------------------------------------------------
+# Fase 006 — permisos que el código exigía sin que existieran en el catálogo
+# ---------------------------------------------------------------------------
+#
+# El módulo `procurement/evaluations` protegía sus endpoints con
+# `require_permission(...)` sobre siete códigos que nunca se declararon aquí. Como
+# el sembrado solo crea lo que está en el catálogo, esos permisos no existían en la
+# base y ningún rol podía tenerlos: `require_permission` fallaba cerrado y dejaba el
+# módulo entero inaccesible. Pasó desapercibido porque el bypass de administrador de
+# plataforma se saltaba la comprobación, así que quien probaba era siempre admin.
+#
+# Se declaran con la semántica que ya usan sus endpoints. No se renombra ninguno en
+# esta fase: cambiar el código obligaría a tocar el router, y aquí solo se cierra el
+# agujero. La acción `manage` es deliberadamente vaga y queda anotada para F006 PR 2.
+PHASE_006_EVALUATION_PERMISSIONS: list[dict[str, object]] = [
+    {
+        "code": "logistics.supplier_evaluation_templates.read",
+        "resource": "supplier_evaluation_templates",
+        "action": "read",
+        "name": "Consultar plantillas de evaluación",
+        "description": "Ver las plantillas de evaluación de proveedores y sus criterios",
+        "category": "procurement",
+        "risk_level": RiskLevel.LOW,
+    },
+    {
+        "code": "logistics.supplier_evaluation_templates.manage",
+        "resource": "supplier_evaluation_templates",
+        "action": "manage",
+        "name": "Administrar plantillas de evaluación",
+        "description": "Crear y modificar plantillas de evaluación de proveedores y sus criterios",
+        "category": "procurement",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+    },
+    {
+        "code": "logistics.supplier_evaluation_templates.activate",
+        "resource": "supplier_evaluation_templates",
+        "action": "activate",
+        "name": "Activar plantilla de evaluación",
+        "description": "Poner en vigor una versión de plantilla de evaluación de proveedores",
+        "category": "procurement",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+        "requires_reason": True,
+    },
+    {
+        "code": "logistics.quotation_evaluations.create",
+        "resource": "quotation_evaluations",
+        "action": "create",
+        "name": "Crear evaluación de cotización",
+        "description": "Abrir la evaluación de las cotizaciones recibidas para una compra",
+        "category": "procurement",
+        "risk_level": RiskLevel.MEDIUM,
+    },
+    {
+        "code": "logistics.quotation_evaluations.calculate",
+        "resource": "quotation_evaluations",
+        "action": "calculate",
+        "name": "Calcular evaluación de cotización",
+        "description": "Ejecutar el cálculo de puntajes de una evaluación de cotizaciones",
+        "category": "procurement",
+        "risk_level": RiskLevel.MEDIUM,
+    },
+    {
+        # Sobrescribir a mano un puntaje calculado permite dirigir el resultado de la
+        # evaluación hacia un proveedor concreto. Es la operación más manipulable del
+        # módulo, y por eso pide motivo y verificación reforzada.
+        "code": "logistics.quotation_evaluation_scores.manual_create",
+        "resource": "quotation_evaluation_scores",
+        "action": "manual_create",
+        "name": "Registrar puntaje manual",
+        "description": "Asignar manualmente un puntaje de evaluación en lugar del calculado",
+        "category": "procurement",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+        "requires_reason": True,
+        "requires_step_up": True,
+    },
+    {
+        # Registrar la decisión es adjudicar: cierra el ciclo de selección de
+        # proveedor. Se separa de quien origina y calcula la evaluación.
+        "code": "logistics.quotation_evaluation_decisions.record",
+        "resource": "quotation_evaluation_decisions",
+        "action": "record",
+        "name": "Registrar decisión de evaluación",
+        "description": "Dejar constancia de la decisión de adjudicación de una evaluación",
+        "category": "procurement",
+        "risk_level": RiskLevel.CRITICAL,
+        "is_sensitive": True,
+        "requires_reason": True,
+        "requires_step_up": True,
+    },
+]
+
+PERMISSIONS.extend(PHASE_006_EVALUATION_PERMISSIONS)
+
+_EVALUATION_READ = ["logistics.supplier_evaluation_templates.read"]
+_EVALUATION_ORIGINATE = [
+    "logistics.quotation_evaluations.create",
+    "logistics.quotation_evaluations.calculate",
+    "logistics.quotation_evaluation_scores.manual_create",
+]
+_EVALUATION_DECIDE = ["logistics.quotation_evaluation_decisions.record"]
+_EVALUATION_ADMIN = [
+    "logistics.supplier_evaluation_templates.manage",
+    "logistics.supplier_evaluation_templates.activate",
+]
+
+# Quien origina y puntúa la evaluación no registra la decisión: es la misma
+# separación originar/aprobar que ya rige para los pedidos de compra.
+_extend_role_permissions("PURCHASING", _EVALUATION_READ + _EVALUATION_ORIGINATE)
+_extend_role_permissions("PURCHASING_APPROVER", _EVALUATION_READ + _EVALUATION_DECIDE)
+_extend_role_permissions("LOGISTICS_AUDITOR", _EVALUATION_READ)
+_extend_role_permissions("LOGISTICS_MANAGER", _EVALUATION_READ + _EVALUATION_DECIDE)
+_extend_role_permissions(
+    "LOGISTICS_ADMIN",
+    _EVALUATION_READ + _EVALUATION_ORIGINATE + _EVALUATION_DECIDE + _EVALUATION_ADMIN,
+)
+
+
+# ---------------------------------------------------------------------------
+# Fase 006 — permisos que LOGISTICS_ADMIN solo alcanzaba por el bypass
+# ---------------------------------------------------------------------------
+#
+# Estos cinco existen en el catálogo y los exige algún endpoint, pero no estaban en
+# la matriz de LOGISTICS_ADMIN: hasta ahora llegaba a ellos porque el bypass de
+# administrador de plataforma se saltaba la comprobación. Al retirar el bypass hay
+# que concederlos por la vía normal o el rol pierde acceso.
+#
+# Se añaden solo estos cinco, medidos comparando lo que exigen los endpoints contra
+# la matriz real. No se concede comodín ni acceso total.
+_PHASE_006_ADMIN_GAP = [
+    "logistics.documents.export",
+    "logistics.integrations.configure",
+    "logistics.inventory.rebuild",
+    "logistics.role_permissions.update",
+    "logistics.vehicles.create",
+]
+_extend_role_permissions("LOGISTICS_ADMIN", _PHASE_006_ADMIN_GAP)
 
 
 # Scope rules: all permissions allow all scope types by default.

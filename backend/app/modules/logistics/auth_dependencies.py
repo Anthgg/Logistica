@@ -65,7 +65,7 @@ def require_logistics_access(
     Use this for endpoints that should reject users without any
     logistics permissions.
     """
-    if not principal.is_platform_admin and not principal.has_logistics_access:
+    if not principal.has_logistics_access:
         raise ApplicationError(
             "LOGISTICS_ACCESS_DISABLED",
             "No tiene acceso al dominio logístico.",
@@ -84,7 +84,9 @@ def require_permission(*permission_codes: str):
             alias="X-Step-Up-Proof-ID",
         ),
     ) -> LogisticsPrincipal:
-        if not principal.is_platform_admin and not principal.has_any_permission(*permission_codes):
+        # Sin excepción por rol de plataforma: la autorización sale del catálogo de
+        # permisos, también para los administradores.
+        if not principal.has_any_permission(*permission_codes):
             raise ApplicationError(
                 "FORBIDDEN",
                 f"No tiene el permiso requerido '{permission_codes[0]}'.",
@@ -95,7 +97,7 @@ def require_permission(*permission_codes: str):
             (code for code in permission_codes if code in principal.step_up_permissions),
             None,
         )
-        if not principal.is_platform_admin and step_up_required_code:
+        if step_up_required_code:
             from app.modules.logistics.security.step_up_service import step_up_service
 
             if not x_step_up_proof_id:
@@ -134,17 +136,27 @@ def resolve_organization_id(principal: LogisticsPrincipal, x_org_id: Optional[st
     The platform ``User`` model intentionally has no ``organization_id``.
     Organization membership belongs to logistics role assignments and is
     exposed through ``LogisticsPrincipal`` instead.
+
+    ``x_org_id`` es una preferencia del cliente, no una autorización: antes se
+    devolvía tal cual, de modo que bastaba enviar la cabecera para operar sobre la
+    organización de otro. Ahora se comprueba contra el alcance del principal.
     """
     if x_org_id:
         try:
-            return UUID(str(x_org_id))
+            requested = UUID(str(x_org_id))
         except (TypeError, ValueError):
-            pass
+            requested = None
+        if requested is not None:
+            if not principal.can_access_organization(requested):
+                raise ApplicationError(
+                    "FORBIDDEN",
+                    "No tiene acceso a la organización solicitada.",
+                    403,
+                )
+            return requested
     organization_id = principal.default_organization_id
     if organization_id is None and principal.organization_ids:
         organization_id = principal.organization_ids[0]
-    if organization_id is None and (principal.platform_role == "admin" or principal.logistics_enabled):
-        organization_id = DEFAULT_LOGISTICS_ORGANIZATION_ID
     if organization_id is None:
         raise ApplicationError(
             "LOGISTICS_ORGANIZATION_REQUIRED",
