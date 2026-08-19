@@ -127,6 +127,17 @@ def require_permission(*permission_codes: str):
     return dependency
 
 
+def current_actor_id(
+    principal: LogisticsPrincipal = Depends(get_logistics_principal),
+) -> UUID:
+    """Identidad del actor, tomada de la sesión autenticada.
+
+    Existe para sustituir a los routers que recibían el usuario actual como parámetro
+    de consulta o cabecera: bastaba cambiar el valor para actuar en nombre de otro.
+    """
+    return principal.user_id
+
+
 DEFAULT_LOGISTICS_ORGANIZATION_ID = UUID("f8545a6d-4183-478b-8be2-0df2867475a2")
 
 
@@ -174,6 +185,7 @@ def resolve_organization_id(principal: LogisticsPrincipal, x_org_id: Optional[st
 
 
 __all__ = [
+    "current_actor_id",
     "get_logistics_principal",
     "require_logistics_principal",
     "require_logistics_access",

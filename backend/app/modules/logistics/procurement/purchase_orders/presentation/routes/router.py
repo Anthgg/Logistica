@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.modules.logistics.auth_dependencies import require_permission
 from app.modules.logistics.procurement.purchase_orders.application.dto.schemas import (
     PurchaseOrderApproveRequest,
     PurchaseOrderCancelRequest,
@@ -62,6 +63,7 @@ def get_current_user_context(request: Request) -> dict[str, Any]:
 
 @router.post(
     "/plan-generation",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.create"))],
     response_model=PurchaseOrderGenerationPlanResponse,
     summary="Preview PO creation plan from CCO decision",
 )
@@ -83,6 +85,7 @@ def plan_po_generation(
 
 @router.get(
     "",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.read"))],
     response_model=List[PurchaseOrderSummaryResponse],
     summary="List purchase orders",
 )
@@ -112,6 +115,7 @@ def list_purchase_orders(
 
 @router.get(
     "/{po_id}",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.read"))],
     response_model=PurchaseOrderDetailResponse,
     summary="Get purchase order details",
 )
@@ -130,6 +134,7 @@ def get_purchase_order(
 
 @router.post(
     "/{po_id}/submit",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.update"))],
     response_model=PurchaseOrderDetailResponse,
     summary="Submit purchase order for approval",
 )
@@ -156,6 +161,7 @@ def submit_purchase_order(
 
 @router.post(
     "/{po_id}/approve",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.approve"))],
     response_model=PurchaseOrderDetailResponse,
     summary="Approve purchase order (Step-Up required)",
 )
@@ -190,6 +196,7 @@ def approve_purchase_order(
 
 @router.post(
     "/{po_id}/reject",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.approve"))],
     response_model=PurchaseOrderDetailResponse,
     summary="Reject purchase order",
 )
@@ -217,6 +224,7 @@ def reject_purchase_order(
 
 @router.post(
     "/{po_id}/return-for-changes",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.approve"))],
     response_model=PurchaseOrderDetailResponse,
     summary="Return purchase order for changes",
 )
@@ -244,6 +252,7 @@ def return_purchase_order_for_changes(
 
 @router.post(
     "/{po_id}/cancel",
+    dependencies=[Depends(require_permission("logistics.purchase_orders.cancel"))],
     response_model=PurchaseOrderDetailResponse,
     summary="Cancel purchase order",
 )
