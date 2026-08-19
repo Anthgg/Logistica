@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.database.session import get_db
+from tests.support import authenticate
 from app.modules.logistics.drivers.domain.services.services import (
     DriverIdentityDocumentNormalizer,
     DriverLicenseNormalizer,
@@ -23,9 +24,27 @@ def test_driver_normalizers():
     assert DriverLicenseNormalizer.mask(norm_lic) == "*****5432"
 
 
-def test_driver_full_lifecycle(client: TestClient):
-    org_id = "f8545a6d-4183-478b-8be2-0df2867475a2"
-    headers = {"X-Org-Id": org_id, "X-Actor-Id": "37432a2c-8420-4393-acab-c590a02b1987"}
+def test_driver_full_lifecycle(client: TestClient, database):
+    """Ciclo de vida completo del conductor, ahora con sesión real.
+
+    La versión anterior se identificaba con `X-Org-Id` y `X-Actor-Id` fijos. F006
+    retiró esa vía: la identidad y la organización salen del principal autenticado,
+    así que el caso se apoya en una sesión y en permisos concedidos por rol.
+    """
+    from tests.test_logistics_f006_endpoint_authorization import _grant, _organization
+
+    user, headers = authenticate(client, database, role="operator")
+    # Ámbito de organización, no global: al retirar el UUID fijo de respaldo, un
+    # principal sin organización resoluble recibe 400 en vez de escribir en la
+    # organización por defecto. Aquí el tenant es explícito.
+    organization = _organization(database)
+    _grant(
+        database,
+        user,
+        ["logistics.drivers.read", "logistics.drivers.create", "logistics.drivers.update"],
+        scope_type="organization",
+        organization_id=organization.id,
+    )
 
     # Seed Categories
     client.post("/api/logistics/driver-license-categories/seed", headers=headers)
