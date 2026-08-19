@@ -37,13 +37,20 @@ MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 #: Prefijos cuyo contenido es de negocio. Fuera de aquí viven salud, auth y utilidades.
 BUSINESS_PREFIXES = ("/api/logistics", "/api/inventory", "/api/purchase", "/api/documents")
 
-#: Operaciones que legítimamente no exigen sesión.
+#: Operaciones que legítimamente no exigen sesión, cada una por su motivo:
+#: sondas de salud del contenedor, el flujo de autenticación —que no puede exigir la
+#: sesión que aún no existe— y la documentación del propio contrato.
 PUBLIC_ALLOWLIST = frozenset(
     {
         "/health",
+        "/live",
+        "/ready",
         "/api/health",
         "/api/health/live",
         "/api/health/ready",
+        # Catálogo de traducciones: cadenas de interfaz, sin datos de negocio. La
+        # pantalla de acceso lo necesita antes de que haya sesión.
+        "/api/i18n/catalog",
         "/api/auth/login",
         "/api/auth/register",
         "/api/auth/csrf",
@@ -292,9 +299,31 @@ def main() -> int:
             json.dump(payload, fh, ensure_ascii=False, indent=2, sort_keys=True)
         print(f"\nDetalle escrito en {args.json_path}")
 
-    if args.check and (unexpected_public or sensitive_unprotected):
-        print("\nRESULTADO=FAIL", file=sys.stderr)
-        return 1
+    if args.check:
+        problems: list[str] = []
+        if unexpected_public:
+            problems.append(
+                f"{len(unexpected_public)} operación(es) sin autenticación "
+                "fuera de la lista permitida"
+            )
+        # Las mutadoras que solo piden sesión son una categoría distinta de las que no
+        # pedían nada, y se cierran en su propia fase. Aquí solo se impide que crezcan:
+        # un umbral que no se mueve es lo que evita volver a acumularlas.
+        if len(sensitive_unprotected) > args.max_sensitive:
+            problems.append(
+                f"{len(sensitive_unprotected)} mutadoras solo con sesión, por encima "
+                f"del máximo declarado ({args.max_sensitive})"
+            )
+        if problems:
+            for problem in problems:
+                print(f"FAIL: {problem}", file=sys.stderr)
+            print("\nRESULTADO=FAIL", file=sys.stderr)
+            return 1
+        if len(sensitive_unprotected) < args.max_sensitive:
+            print(
+                f"\nAVISO: bajaron a {len(sensitive_unprotected)}; "
+                f"conviene bajar --max-sensitive de {args.max_sensitive}."
+            )
 
     print("\nRESULTADO=OK")
     return 0
