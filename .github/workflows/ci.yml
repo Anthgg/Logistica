@@ -574,6 +574,8 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: sqlite:////tmp/coverage-audit.db
+          # pytest añade la raíz al sys.path; `python` a secas no.
+          PYTHONPATH: .
         run: python scripts/audit_permission_coverage.py --check
 
       # Guarda del catálogo: ningún código duplicado y ninguna referencia a un permiso
@@ -581,6 +583,8 @@ jobs:
       # silencio, que es como el módulo de evaluaciones pasó meses sin funcionar.
       - name: Guard — Permission catalog integrity
         working-directory: backend
+        env:
+          PYTHONPATH: .
         run: |
           python - <<'GUARD'
           import collections, pathlib, re, sys
