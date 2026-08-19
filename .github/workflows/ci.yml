@@ -527,6 +527,42 @@ jobs:
             ../docs/phase-005-3
 
       # -----------------------------------------------------------------------
+      # F006 HOTFIX — HASH DE CONTRASEÑA IRRECONOCIBLE
+      # -----------------------------------------------------------------------
+      - name: Run Auth Invalid Password Hash Regression
+        working-directory: backend
+        run: |
+          set +e
+          pytest tests/test_auth_invalid_password_hash.py --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_authhash.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_authhash.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_authhash.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_authhash.log | tail -1 || true)
+          PASSED=${PASSED:-0}; FAILED=${FAILED:-0}; SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "AUTH INVALID PASSWORD HASH"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: la regresión de hash inválido terminó con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ] || [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $FAILED fallidos y $SKIPPED omitidos; se requiere 0 y 0."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 19 ]; then
+            echo "FAIL: se esperaban al menos 19 casos y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # -----------------------------------------------------------------------
       # F006 PR 1 — AUTORIZACIÓN DE ENDPOINTS
       # -----------------------------------------------------------------------
       - name: Lint F006 Authorization Modules
