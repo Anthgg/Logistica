@@ -7,6 +7,12 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.modules.logistics.auth_dependencies import (
+    get_logistics_principal,
+    require_permission,
+    resolve_organization_id,
+)
+from app.modules.logistics.principal import LogisticsPrincipal
 from app.modules.logistics.vehicle_verifications.application.services.apply_verification_service import ApplyVehicleVerificationService
 from app.modules.logistics.vehicle_verifications.application.services.assisted_verification_service import AssistedVehicleVerificationService
 from app.modules.logistics.vehicle_verifications.application.services.source_service import VehicleVerificationSourceService
@@ -25,20 +31,22 @@ router = APIRouter(prefix="", tags=["Vehicle Verifications"])
 
 
 # Mock actor & org helpers for development/testing
-def get_actor_id(x_actor_id: Optional[str] = Header(None)) -> UUID:
-    if x_actor_id:
-        return UUID(x_actor_id)
-    return UUID("37432a2c-8420-4393-acab-c590a02b1987")
+# Identidad derivada de la sesión, no de cabeceras con UUID fijo de respaldo.
+def get_actor_id(
+    principal: LogisticsPrincipal = Depends(get_logistics_principal),
+) -> UUID:
+    return principal.user_id
 
 
-def get_org_id(x_org_id: Optional[str] = Header(None)) -> UUID:
-    if x_org_id:
-        return UUID(x_org_id)
-    return UUID("f8545a6d-4183-478b-8be2-0df2867475a2")
+def get_org_id(
+    principal: LogisticsPrincipal = Depends(get_logistics_principal),
+    x_org_id: Optional[str] = Header(None),
+) -> UUID:
+    return resolve_organization_id(principal, x_org_id)
 
 
 # --- SOURCES ---
-@router.get("/vehicle-verification-sources", response_model=List[VehicleVerificationSourceResponseDTO])
+@router.get("/vehicle-verification-sources", response_model=List[VehicleVerificationSourceResponseDTO], dependencies=[Depends(require_permission("logistics.vehicles.read"))])
 def list_sources(
     enabled_only: bool = Query(False),
     db: Session = Depends(get_db),
@@ -47,14 +55,14 @@ def list_sources(
     return service.list_sources(enabled_only=enabled_only)
 
 
-@router.post("/vehicle-verification-sources/seed", response_model=List[VehicleVerificationSourceResponseDTO])
+@router.post("/vehicle-verification-sources/seed", response_model=List[VehicleVerificationSourceResponseDTO], dependencies=[Depends(require_permission("logistics.vehicles.update"))])
 def seed_sources(db: Session = Depends(get_db)):
     service = VehicleVerificationSourceService(db)
     return service.seed_default_sources()
 
 
 # --- VERIFICATIONS ---
-@router.post("/vehicles/{vehicle_id}/verifications", response_model=VehicleVerificationResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/vehicles/{vehicle_id}/verifications", response_model=VehicleVerificationResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.vehicles.verify"))])
 def request_verification(
     vehicle_id: UUID,
     payload: CreateVehicleVerificationRequestDTO,
@@ -74,7 +82,7 @@ def request_verification(
     )
 
 
-@router.get("/vehicles/{vehicle_id}/verifications", response_model=List[VehicleVerificationResponseDTO])
+@router.get("/vehicles/{vehicle_id}/verifications", response_model=List[VehicleVerificationResponseDTO], dependencies=[Depends(require_permission("logistics.vehicles.read"))])
 def list_vehicle_verifications(
     vehicle_id: UUID,
     db: Session = Depends(get_db),
@@ -84,7 +92,7 @@ def list_vehicle_verifications(
     return service.list_verifications(vehicle_id, org_id)
 
 
-@router.get("/vehicles/{vehicle_id}/verification-compliance", response_model=VehicleVerificationComplianceResponseDTO)
+@router.get("/vehicles/{vehicle_id}/verification-compliance", response_model=VehicleVerificationComplianceResponseDTO, dependencies=[Depends(require_permission("logistics.vehicles.read"))])
 def get_verification_compliance(
     vehicle_id: UUID,
     db: Session = Depends(get_db),
@@ -95,7 +103,7 @@ def get_verification_compliance(
 
 
 # --- ASSISTED VERIFICATIONS ---
-@router.post("/vehicles/{vehicle_id}/assisted-verifications", response_model=AssistedVerificationResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/vehicles/{vehicle_id}/assisted-verifications", response_model=AssistedVerificationResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.vehicles.verify"))])
 def create_assisted_verification(
     vehicle_id: UUID,
     payload: CreateAssistedVerificationRequestDTO,
@@ -125,7 +133,7 @@ def create_assisted_verification(
     )
 
 
-@router.post("/assisted-vehicle-verifications/{assisted_id}/approve", response_model=VehicleVerificationResponseDTO)
+@router.post("/assisted-vehicle-verifications/{assisted_id}/approve", response_model=VehicleVerificationResponseDTO, dependencies=[Depends(require_permission("logistics.vehicles.verify"))])
 def approve_assisted_verification(
     assisted_id: UUID,
     db: Session = Depends(get_db),
@@ -142,7 +150,7 @@ def approve_assisted_verification(
 
 
 # --- CONTROLLED APPLICATION TO VEHICLE ---
-@router.post("/vehicle-verifications/{verification_id}/apply")
+@router.post("/vehicle-verifications/{verification_id}/apply", dependencies=[Depends(require_permission("logistics.vehicles.update"))])
 def apply_verified_fields(
     verification_id: UUID,
     payload: ApplyVerificationFieldsRequestDTO,

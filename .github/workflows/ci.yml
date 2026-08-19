@@ -527,6 +527,90 @@ jobs:
             ../docs/phase-005-3
 
       # -----------------------------------------------------------------------
+      # F006 PR 1 — AUTORIZACIÓN DE ENDPOINTS
+      # -----------------------------------------------------------------------
+      - name: Lint F006 Authorization Modules
+        working-directory: backend
+        run: |
+          ruff check             scripts/audit_permission_coverage.py             tests/test_logistics_f006_endpoint_authorization.py             --output-format=github
+
+      - name: Run F006 Endpoint Authorization Regression
+        working-directory: backend
+        run: |
+          set +e
+          pytest tests/test_logistics_f006_endpoint_authorization.py --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_f006.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_f006.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_f006.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_f006.log | tail -1 || true)
+          PASSED=${PASSED:-0}; FAILED=${FAILED:-0}; SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "F006 ENDPOINT AUTHORIZATION"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: la regresión de autorización terminó con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ] || [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $FAILED fallidos y $SKIPPED omitidos; se requiere 0 y 0."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 30 ]; then
+            echo "FAIL: se esperaban al menos 30 casos y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # El auditor recorre las rutas reales e inspecciona sus dependencias. Falla si
+      # reaparece un endpoint sin autenticación fuera de la lista permitida o un
+      # mutador de negocio que solo pide sesión.
+      - name: Guard — Endpoint authorization coverage
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:////tmp/coverage-audit.db
+          # pytest añade la raíz al sys.path; `python` a secas no.
+          PYTHONPATH: .
+        run: python scripts/audit_permission_coverage.py --check
+
+      # Guarda del catálogo: ningún código duplicado y ninguna referencia a un permiso
+      # que no exista. Una referencia fantasma deja el endpoint inalcanzable en
+      # silencio, que es como el módulo de evaluaciones pasó meses sin funcionar.
+      - name: Guard — Permission catalog integrity
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'GUARD'
+          import collections, pathlib, re, sys
+          from app.modules.logistics.rbac.permission_catalog import PERMISSIONS
+
+          codes = [str(p["code"]) for p in PERMISSIONS]
+          duplicates = sorted(c for c, n in collections.Counter(codes).items() if n > 1)
+          catalog = set(codes)
+
+          pattern = re.compile(r"require_permission\(\s*[\"']([^\"']+)[\"']")
+          referenced = set()
+          for file in pathlib.Path("app").rglob("*.py"):
+              if "__pycache__" in str(file):
+                  continue
+              referenced.update(
+                  m.group(1) for m in pattern.finditer(file.read_text(encoding="utf-8", errors="replace"))
+              )
+          unknown = sorted(referenced - catalog)
+
+          print(f"TOTAL_PERMISSIONS             = {len(PERMISSIONS)}")
+          print(f"DUPLICATE_PERMISSION_CODES    = {len(duplicates)} {duplicates}")
+          print(f"UNKNOWN_PERMISSION_REFERENCES = {len(unknown)} {unknown}")
+          sys.exit(1 if duplicates or unknown else 0)
+          GUARD
+
+      # -----------------------------------------------------------------------
       # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
       # -----------------------------------------------------------------------
       - name: Run PostgreSQL Integration Tests

@@ -32,8 +32,8 @@ def allowed_organization_ids(principal: LogisticsPrincipal) -> list[UUID] | None
     "sin ninguna organización asignada"; el repositorio trata la lista vacía como un
     filtro que no deja pasar nada.
     """
-    if principal.is_platform_admin:
-        return None
+    # F006: el rol de plataforma ya no levanta el filtro de tenant. Un administrador
+    # ve las organizaciones que tiene asignadas, como cualquier otro principal.
     if not principal.organization_ids:
         # Contrato preexistente: un principal sin ámbitos declarados no está acotado.
         # Ver LogisticsPrincipal.can_access_organization.
@@ -59,9 +59,6 @@ def assert_can_access_warehouse(
     Los almacenes heredados sin sede ni organización (semilla demo) no pertenecen a
     ningún tenant, así que solo un administrador de plataforma puede alcanzarlos.
     """
-    if principal.is_platform_admin:
-        return
-
     organization_id = warehouse.organization_id
     if organization_id is None and warehouse.branch_id is not None:
         branch = db.get(Branch, warehouse.branch_id)

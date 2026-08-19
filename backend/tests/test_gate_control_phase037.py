@@ -182,7 +182,14 @@ class TestGateGuardResolver:
         with pytest.raises(GateCheckInGuardNotAuthorizedError):
             resolver.resolve(principal)
 
-    def test_platform_admin_bypasses_permission_check(self):
+    def test_platform_admin_no_longer_bypasses_permission_check(self):
+        """El rol de plataforma dejó de conceder acceso en F006.
+
+        Este caso afirmaba lo contrario: comprobaba que un `is_platform_admin`
+        entrara sin tener el permiso. Codificaba el backdoor, así que se invierte
+        junto con él. La autorización sale del catálogo de permisos, también para
+        los administradores.
+        """
         resolver = GateGuardResolver()
         principal = MagicMock()
         principal.user_id = uuid4()
@@ -190,8 +197,12 @@ class TestGateGuardResolver:
         principal.is_platform_admin = True
         principal.display_name = "Admin"
 
-        snapshot = resolver.resolve(principal)
-        assert "user_id" in snapshot
+        from app.modules.logistics.inbound.gate_control.domain.errors import (
+            GateCheckInGuardNotAuthorizedError,
+        )
+
+        with pytest.raises(GateCheckInGuardNotAuthorizedError):
+            resolver.resolve(principal)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

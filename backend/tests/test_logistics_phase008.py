@@ -92,9 +92,13 @@ def test_logistics_principal_creation() -> None:
         risk_score=None, logistics_enabled=True,
     )
     assert p.user_id == uid
+    # `is_platform_admin` sigue describiendo el rol de plataforma, pero desde F006 ya
+    # no concede nada: este caso afirmaba que un administrador tenía cualquier
+    # permiso, que es justamente el bypass retirado.
     assert p.is_platform_admin is True
-    assert p.has_permission("any.permission") is True
-    assert p.has_logistics_access is True
+    assert p.has_permission("any.permission") is False
+    # Sin permisos efectivos tampoco hay acceso al dominio logístico.
+    assert p.has_logistics_access is False
 
 
 def test_logistics_principal_non_admin() -> None:

@@ -38,7 +38,9 @@ class LogisticsAccessResolver:
         default_wh = wh_ids[0] if len(wh_ids) == 1 else None
 
         # 4. Determine if logistics is enabled
-        logistics_enabled = len(effective.permissions) > 0 or user.role == "admin"
+        # Ya no se habilita por rol de plataforma: el acceso al dominio logístico se
+        # deriva de tener permisos efectivos, que es lo que concede el catálogo.
+        logistics_enabled = len(effective.permissions) > 0
 
         return LogisticsPrincipal(
             user_id=user.id,

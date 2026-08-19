@@ -7,6 +7,12 @@ from fastapi import APIRouter, Depends, Header, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.modules.logistics.auth_dependencies import (
+    get_logistics_principal,
+    require_permission,
+    resolve_organization_id,
+)
+from app.modules.logistics.principal import LogisticsPrincipal
 from app.modules.logistics.drivers.application.services.carrier_contact_photo_service import (
     DriverCarrierAssignmentService,
     DriverContactService,
@@ -59,26 +65,32 @@ from app.modules.logistics.drivers.presentation.schemas.dto import (
 router = APIRouter(prefix="", tags=["Drivers"])
 
 
-def get_actor_id(x_actor_id: Optional[str] = Header(None)) -> UUID:
-    if x_actor_id:
-        return UUID(x_actor_id)
-    return UUID("37432a2c-8420-4393-acab-c590a02b1987")
+# El actor y la organización salen de la sesión autenticada. Antes se leían de las
+# cabeceras `X-Actor-Id` y `X-Org-Id` y, si faltaban —el frontend nunca las envía—, se
+# caía a dos UUID fijos. Eso hacía dos cosas a la vez: dejaba el módulo accesible sin
+# sesión y atribuía todo lo creado a una organización y un actor únicos, sin importar
+# quién operase.
+def get_actor_id(
+    principal: LogisticsPrincipal = Depends(get_logistics_principal),
+) -> UUID:
+    return principal.user_id
 
 
-def get_org_id(x_org_id: Optional[str] = Header(None)) -> UUID:
-    if x_org_id:
-        return UUID(x_org_id)
-    return UUID("f8545a6d-4183-478b-8be2-0df2867475a2")
+def get_org_id(
+    principal: LogisticsPrincipal = Depends(get_logistics_principal),
+    x_org_id: Optional[str] = Header(None),
+) -> UUID:
+    return resolve_organization_id(principal, x_org_id)
 
 
 # --- CATEGORIES (GLOBAL / SEED) ---
-@router.post("/driver-license-categories/seed", response_model=List[DriverLicenseCategoryResponseDTO])
+@router.post("/driver-license-categories/seed", response_model=List[DriverLicenseCategoryResponseDTO], dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def seed_categories(db: Session = Depends(get_db)):
     service = DriverCategoryService(db)
     return service.seed_default_categories()
 
 
-@router.get("/driver-license-categories", response_model=List[DriverLicenseCategoryResponseDTO])
+@router.get("/driver-license-categories", response_model=List[DriverLicenseCategoryResponseDTO], dependencies=[Depends(require_permission("logistics.drivers.read"))])
 def list_categories(
     country_code: str = Query("PE"),
     db: Session = Depends(get_db),
@@ -88,7 +100,7 @@ def list_categories(
 
 
 # --- DRIVERS CRUD ---
-@router.post("/drivers", response_model=DriverResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers", response_model=DriverResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.create"))])
 def create_driver(
     payload: CreateDriverRequestDTO,
     db: Session = Depends(get_db),
@@ -110,7 +122,7 @@ def create_driver(
     )
 
 
-@router.get("/drivers", response_model=List[DriverSummaryDTO])
+@router.get("/drivers", response_model=List[DriverSummaryDTO], dependencies=[Depends(require_permission("logistics.drivers.read"))])
 def list_drivers(
     search: Optional[str] = Query(None),
     lifecycle_status: Optional[str] = Query(None),
@@ -134,7 +146,7 @@ def list_drivers(
     return items
 
 
-@router.get("/drivers/{driver_id}", response_model=DriverResponseDTO)
+@router.get("/drivers/{driver_id}", response_model=DriverResponseDTO, dependencies=[Depends(require_permission("logistics.drivers.read"))])
 def get_driver(
     driver_id: UUID,
     db: Session = Depends(get_db),
@@ -144,7 +156,7 @@ def get_driver(
     return service.get_driver(driver_id=driver_id, organization_id=org_id)
 
 
-@router.patch("/drivers/{driver_id}", response_model=DriverResponseDTO)
+@router.patch("/drivers/{driver_id}", response_model=DriverResponseDTO, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def update_driver(
     driver_id: UUID,
     payload: UpdateDriverRequestDTO,
@@ -167,7 +179,7 @@ def update_driver(
     )
 
 
-@router.post("/drivers/{driver_id}/activate", response_model=DriverResponseDTO)
+@router.post("/drivers/{driver_id}/activate", response_model=DriverResponseDTO, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def activate_driver(
     driver_id: UUID,
     db: Session = Depends(get_db),
@@ -178,7 +190,7 @@ def activate_driver(
     return service.activate_driver(driver_id=driver_id, organization_id=org_id, actor_id=actor_id)
 
 
-@router.post("/drivers/{driver_id}/block", response_model=DriverResponseDTO)
+@router.post("/drivers/{driver_id}/block", response_model=DriverResponseDTO, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def block_driver(
     driver_id: UUID,
     payload: DriverBlockRequestDTO,
@@ -190,7 +202,7 @@ def block_driver(
     return service.block_driver(driver_id=driver_id, organization_id=org_id, reason=payload.reason, actor_id=actor_id)
 
 
-@router.post("/drivers/{driver_id}/unblock", response_model=DriverResponseDTO)
+@router.post("/drivers/{driver_id}/unblock", response_model=DriverResponseDTO, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def unblock_driver(
     driver_id: UUID,
     db: Session = Depends(get_db),
@@ -202,7 +214,7 @@ def unblock_driver(
 
 
 # --- IDENTITY DOCUMENTS ---
-@router.post("/drivers/{driver_id}/identity-documents", response_model=DriverIdentityDocumentResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers/{driver_id}/identity-documents", response_model=DriverIdentityDocumentResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def add_identity_document(
     driver_id: UUID,
     payload: CreateDriverIdentityDocumentRequestDTO,
@@ -226,7 +238,7 @@ def add_identity_document(
 
 
 # --- LICENSES & CATEGORIES ---
-@router.post("/drivers/{driver_id}/licenses", response_model=DriverLicenseResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers/{driver_id}/licenses", response_model=DriverLicenseResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def add_license(
     driver_id: UUID,
     payload: CreateDriverLicenseRequestDTO,
@@ -249,7 +261,7 @@ def add_license(
     )
 
 
-@router.post("/driver-licenses/{license_id}/categories", response_model=DriverLicenseCategoryAssignmentResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/driver-licenses/{license_id}/categories", response_model=DriverLicenseCategoryAssignmentResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def assign_category(
     license_id: UUID,
     payload: AssignCategoryRequestDTO,
@@ -268,7 +280,7 @@ def assign_category(
 
 
 # --- CARRIER ASSIGNMENTS ---
-@router.post("/drivers/{driver_id}/carrier-assignments", response_model=DriverCarrierAssignmentResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers/{driver_id}/carrier-assignments", response_model=DriverCarrierAssignmentResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def assign_carrier(
     driver_id: UUID,
     payload: AssignCarrierRequestDTO,
@@ -289,7 +301,7 @@ def assign_carrier(
 
 
 # --- CONTACTS & PHOTOS ---
-@router.post("/drivers/{driver_id}/contacts", response_model=DriverContactResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers/{driver_id}/contacts", response_model=DriverContactResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def add_contact(
     driver_id: UUID,
     payload: CreateDriverContactRequestDTO,
@@ -312,7 +324,7 @@ def add_contact(
     )
 
 
-@router.post("/drivers/{driver_id}/photos", response_model=DriverPhotoResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers/{driver_id}/photos", response_model=DriverPhotoResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def link_photo(
     driver_id: UUID,
     payload: LinkDriverPhotoRequestDTO,
@@ -331,7 +343,7 @@ def link_photo(
 
 
 # --- DOCUMENTS & RESTRICTIONS ---
-@router.post("/drivers/{driver_id}/documents", response_model=DriverDocumentResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers/{driver_id}/documents", response_model=DriverDocumentResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def add_document(
     driver_id: UUID,
     payload: CreateDriverDocumentRequestDTO,
@@ -353,7 +365,7 @@ def add_document(
     )
 
 
-@router.post("/drivers/{driver_id}/restrictions", response_model=DriverRestrictionResponseDTO, status_code=status.HTTP_201_CREATED)
+@router.post("/drivers/{driver_id}/restrictions", response_model=DriverRestrictionResponseDTO, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_permission("logistics.drivers.update"))])
 def add_restriction(
     driver_id: UUID,
     payload: CreateDriverRestrictionRequestDTO,
@@ -374,7 +386,7 @@ def add_restriction(
 
 
 # --- UTILITIES (COMPATIBILITY, DUPLICATES, ALERTS) ---
-@router.post("/drivers/{driver_id}/vehicle-compatibility", response_model=VehicleCompatibilityResponseDTO)
+@router.post("/drivers/{driver_id}/vehicle-compatibility", response_model=VehicleCompatibilityResponseDTO, dependencies=[Depends(require_permission("logistics.drivers.read"))])
 def evaluate_vehicle_compatibility(
     driver_id: UUID,
     payload: VehicleCompatibilityRequestDTO,
@@ -389,7 +401,7 @@ def evaluate_vehicle_compatibility(
     )
 
 
-@router.post("/drivers/duplicate-check", response_model=DuplicateCheckResponseDTO)
+@router.post("/drivers/duplicate-check", response_model=DuplicateCheckResponseDTO, dependencies=[Depends(require_permission("logistics.drivers.read"))])
 def check_duplicates(
     payload: DuplicateCheckRequestDTO,
     db: Session = Depends(get_db),
@@ -406,7 +418,7 @@ def check_duplicates(
     )
 
 
-@router.get("/drivers/{driver_id}/alerts")
+@router.get("/drivers/{driver_id}/alerts", dependencies=[Depends(require_permission("logistics.drivers.read"))])
 def get_driver_alerts(
     driver_id: UUID,
     db: Session = Depends(get_db),

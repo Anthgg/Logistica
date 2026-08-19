@@ -268,19 +268,23 @@ def test_list_grants_reprint_with_permission(
     assert row["can_cancel"] is False
 
 
-def test_list_platform_admin_gets_actions_without_explicit_permissions(
+def test_list_platform_admin_without_permissions_is_denied(
     db_session: Session, issued_document
 ) -> None:
-    """El bypass de platform admin vive en `has_permission`, no en el router."""
-    document = issued_document["document"]
+    """El bypass de platform admin se retiró en F006.
+
+    Este caso comprobaba lo contrario: que un administrador de plataforma sin
+    permisos explícitos recibiera igualmente las acciones, porque `has_permission`
+    devolvía True para él. Esa excepción concedía además alcance de tenant y
+    saltaba el step-up, así que se retiró entera y el caso se invierte con ella.
+    """
     client = _client(
         db_session, _make_principal(issued_document["org"].id, [], is_admin=True)
     )
 
-    row = _fetch_row(client, document.id)
+    response = client.get("/api/logistics/documents/")
 
-    assert row["can_cancel"] is True
-    assert row["can_reprint"] is True
+    assert response.status_code == 403
 
 
 def test_list_cancelled_document_denies_cancel_but_allows_reprint(

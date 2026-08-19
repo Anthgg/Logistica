@@ -126,7 +126,7 @@ class GateGuardResolver:
             GateCheckInGuardNotAuthorizedError,
         )
 
-        if not principal.has_permission("logistics.gate_check_ins.create") and not principal.is_platform_admin:
+        if not principal.has_permission("logistics.gate_check_ins.create"):
             raise GateCheckInGuardNotAuthorizedError()
 
         return {

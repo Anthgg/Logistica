@@ -102,9 +102,12 @@ class RoleAdminService:
 
     @staticmethod
     def _assert_no_escalation(principal: LogisticsPrincipal, codes: list[str]) -> None:
-        """Un actor no puede conceder permisos que él mismo no posee."""
-        if principal.is_platform_admin:
-            return
+        """Un actor no puede conceder permisos que él mismo no posee.
+
+        F006 retiró la excepción por rol de plataforma: eximir al administrador de
+        esta comprobación deja abierta la escalada en dos pasos que el guard existe
+        para impedir.
+        """
         held = set(principal.permission_codes)
         exceeding = sorted(set(codes) - held)
         if exceeding:

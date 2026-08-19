@@ -9,6 +9,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
+from app.modules.logistics.auth_dependencies import (
+    current_actor_id,
+    require_permission,
+)
 from app.modules.logistics.procurement.approvals.application.services.approval_engine import (
     ProcurementApprovalEngine,
 )
@@ -40,13 +44,14 @@ router = APIRouter(
 
 @router.post(
     "/policies",
+    dependencies=[Depends(require_permission("logistics.procurement_approval_policies.create"))],
     response_model=PolicyResponseSchema,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new procurement approval policy",
 )
 def create_policy(
     payload: PolicyCreateSchema,
-    user_id: UUID = Query(..., description="Current user ID"),
+    user_id: UUID = Depends(current_actor_id),
     db: Session = Depends(get_db),
 ) -> Any:
     """Create a new policy aggregate root."""
@@ -72,6 +77,7 @@ def create_policy(
 
 @router.get(
     "/policies",
+    dependencies=[Depends(require_permission("logistics.procurement_approval_policies.read"))],
     response_model=list[PolicyResponseSchema],
     summary="List procurement approval policies",
 )
@@ -88,6 +94,7 @@ def list_policies(
 
 @router.get(
     "/policies/{policy_id}",
+    dependencies=[Depends(require_permission("logistics.procurement_approval_policies.read"))],
     response_model=PolicyResponseSchema,
     summary="Get policy details",
 )
@@ -103,6 +110,7 @@ def get_policy(
 
 @router.post(
     "/policy-versions/{version_id}/conditions",
+    dependencies=[Depends(require_permission("logistics.procurement_approval_policies.update"))],
     status_code=status.HTTP_201_CREATED,
     summary="Add condition to policy version",
 )
@@ -130,6 +138,7 @@ def add_condition(
 
 @router.post(
     "/policy-versions/{version_id}/steps",
+    dependencies=[Depends(require_permission("logistics.procurement_approval_policies.update"))],
     status_code=status.HTTP_201_CREATED,
     summary="Add step definition to policy version",
 )
@@ -163,11 +172,12 @@ def add_step_definition(
 
 @router.post(
     "/policy-versions/{version_id}/activate",
+    dependencies=[Depends(require_permission("logistics.procurement_approval_policies.activate"))],
     summary="Activate policy version",
 )
 def activate_policy_version(
     version_id: UUID,
-    user_id: UUID = Query(..., description="Acting user ID"),
+    user_id: UUID = Depends(current_actor_id),
     db: Session = Depends(get_db),
 ) -> Any:
     engine = ProcurementApprovalEngine(db)
@@ -182,13 +192,14 @@ def activate_policy_version(
 
 @router.post(
     "/requests",
+    dependencies=[Depends(require_permission("logistics.procurement_approvals.read"))],
     response_model=ApprovalRequestResponseSchema,
     status_code=status.HTTP_201_CREATED,
     summary="Submit a purchasing resource for approval",
 )
 def submit_request(
     payload: ApprovalSubmitSchema,
-    user_id: UUID = Query(..., description="Submitter user ID"),
+    user_id: UUID = Depends(current_actor_id),
     db: Session = Depends(get_db),
 ) -> Any:
     engine = ProcurementApprovalEngine(db)
@@ -218,6 +229,7 @@ def submit_request(
 
 @router.get(
     "/requests/{request_id}",
+    dependencies=[Depends(require_permission("logistics.procurement_approvals.read"))],
     response_model=ApprovalRequestResponseSchema,
     summary="Get approval request status details",
 )
@@ -233,10 +245,11 @@ def get_request(
 
 @router.get(
     "/assignments/my-pending",
+    dependencies=[Depends(require_permission("logistics.procurement_approvals.read"))],
     summary="Get pending assignments for active user",
 )
 def get_my_pending_assignments(
-    user_id: UUID = Query(...),
+    user_id: UUID = Depends(current_actor_id),
     db: Session = Depends(get_db),
 ) -> Any:
     assignments = (
@@ -258,12 +271,13 @@ def get_my_pending_assignments(
 
 @router.post(
     "/assignments/{assignment_id}/decision",
+    dependencies=[Depends(require_permission("logistics.procurement_approvals.decide"))],
     summary="Record an approval decision (APPROVE / REJECT / RETURN)",
 )
 def record_decision(
     assignment_id: UUID,
     payload: DecisionRecordSchema,
-    user_id: UUID = Query(..., description="Acting user ID"),
+    user_id: UUID = Depends(current_actor_id),
     db: Session = Depends(get_db),
 ) -> Any:
     engine = ProcurementApprovalEngine(db)
@@ -290,6 +304,7 @@ def record_decision(
 
 @router.get(
     "/requests/{request_id}/audit-seal",
+    dependencies=[Depends(require_permission("logistics.procurement_approvals.read"))],
     summary="Get approval request audit seal",
 )
 def get_audit_seal(

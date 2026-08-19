@@ -76,7 +76,7 @@ def list_documents(
 ) -> DocumentListResponse:
     # Build query
     stmt = select(DocumentInstanceModel)
-    if not principal.is_platform_admin and principal.organization_ids:
+    if principal.organization_ids:
         stmt = stmt.where(DocumentInstanceModel.organization_id.in_([UUID(oid) for oid in principal.organization_ids]))
 
     # Apply filters
