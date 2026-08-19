@@ -28,7 +28,7 @@ import argparse
 import json
 import sys
 from collections import Counter
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 #: Métodos que modifican estado. Un GET sin permiso puede justificarse; un POST rara vez.
@@ -133,7 +133,7 @@ def inspect_callable(call: Any) -> tuple[bool, list[str], list[str]]:
 
 
 def classify(route: Any, full_path: str, extra_dependencies: list[Any]) -> Operation:
-    method = sorted(route.methods - {"HEAD", "OPTIONS"})[0] if route.methods else "GET"
+    method = min(route.methods - {"HEAD", "OPTIONS"}, default="GET")
 
     permissions: list[str] = []
     roles: list[str] = []
