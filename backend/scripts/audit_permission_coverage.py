@@ -56,6 +56,11 @@ PUBLIC_ALLOWLIST = frozenset(
     }
 )
 
+#: Operaciones mutadoras de negocio que hoy solo exigen sesión. F006 PR 1 cerró las
+#: que no pedían ni sesión; estas son una categoría distinta y se abordan en PR 2.
+#: El número solo puede bajar.
+MAX_SENSITIVE_BASELINE = 25
+
 AUTH_DEPENDENCY_NAMES = frozenset(
     {
         "get_current_user",
@@ -132,10 +137,28 @@ def inspect_callable(call: Any) -> tuple[bool, list[str], list[str]]:
     return False, [], []
 
 
+#: El libro de inventario no usa `require_permission`: marca cada handler con
+#: `@require_capability(...)`, que deja el código en un atributo de la función y lo
+#: exige una dependencia a nivel de router. Sin mirar ese atributo, sus operaciones
+#: parecerían protegidas solo por sesión.
+CAPABILITY_ATTRIBUTES = ("__inventory_capability__",)
+
+
+def endpoint_capabilities(route: Any) -> list[str]:
+    endpoint = getattr(route, "endpoint", None)
+    if endpoint is None:
+        return []
+    return [
+        value
+        for attribute in CAPABILITY_ATTRIBUTES
+        if isinstance(value := getattr(endpoint, attribute, None), str)
+    ]
+
+
 def classify(route: Any, full_path: str, extra_dependencies: list[Any]) -> Operation:
     method = min(route.methods - {"HEAD", "OPTIONS"}, default="GET")
 
-    permissions: list[str] = []
+    permissions: list[str] = list(endpoint_capabilities(route))
     roles: list[str] = []
     has_auth = False
 
@@ -223,6 +246,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Auditoría de cobertura de autorización.")
     parser.add_argument("--json", dest="json_path", default=None, help="Volcar el detalle a un fichero.")
     parser.add_argument("--check", action="store_true", help="Salir con error si hay hallazgos.")
+    parser.add_argument(
+        "--max-sensitive",
+        type=int,
+        default=MAX_SENSITIVE_BASELINE,
+        help=(
+            "Máximo de operaciones mutadoras de negocio protegidas solo por sesión. "
+            "Es un trinquete: no puede subir, y cada fase que cierre alguna lo baja."
+        ),
+    )
     args = parser.parse_args()
 
     ops = collect()
