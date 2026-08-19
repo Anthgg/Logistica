@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 import jwt
 from jwt import InvalidTokenError
 from pwdlib import PasswordHash
+from pwdlib.exceptions import UnknownHashError
 
 from app.core.config import settings
 
@@ -24,9 +25,27 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, password_hash: str) -> bool:
+    """Comprueba una contraseña contra su hash. Un hash irreconocible es un fallo.
+
+    Un hash que pwdlib no sabe interpretar significa que esa credencial no puede
+    verificarse, y eso es exactamente lo mismo que una contraseña incorrecta: no hay
+    prueba de identidad. Devolverlo como ``False`` mantiene un único contrato para
+    quien llama, en lugar de obligar a cada consumidor a conocer las excepciones de
+    la librería.
+
+    Hasta ahora ``UnknownHashError`` escapaba —hereda de ``PwdlibError``, no de
+    ``ValueError``— y el intento de acceso terminaba en 500. Como un usuario
+    inexistente devuelve 401, la diferencia de respuesta delataba qué correos existen
+    con un hash heredado inválido.
+
+    Se captura la excepción concreta y no su base: ``HasherNotAvailable``, la otra
+    hija de ``PwdlibError``, indica que falta el backend de hashing. Eso es un fallo
+    de configuración del servicio y debe propagarse, no disfrazarse de credencial
+    incorrecta para todo el mundo.
+    """
     try:
         return password_hasher.verify(password, password_hash)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, UnknownHashError):
         return False
 
 
