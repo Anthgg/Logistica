@@ -89,3 +89,4 @@ backups/
 schema_diff_report.json
 supabase_readonly_audit.json
 scratch_*.json
+backend/coverage_pr2.json

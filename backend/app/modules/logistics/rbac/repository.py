@@ -78,11 +78,19 @@ class RoleAssignmentRepository:
         return items, total
 
     def list_active_by_user(self, db: Session, user_id: UUID) -> List[LogisticsRoleAssignment]:
+        """Asignaciones vigentes del usuario.
+
+        El estado se compara en minúsculas. La escritura siempre produce `active`, y
+        el enum canónico lo declara así, pero hay filas sembradas antes con `ACTIVE`:
+        una comparación exacta las descartaba en silencio, de modo que el usuario
+        perdía esos permisos sin que nada lo indicara. Normalizar al leer resuelve el
+        caso sin tocar datos productivos ni añadir una migración.
+        """
         now = func.now()
         return list(db.scalars(
             select(LogisticsRoleAssignment).where(
                 LogisticsRoleAssignment.user_id == user_id,
-                LogisticsRoleAssignment.status == "active",
+                func.lower(LogisticsRoleAssignment.status) == "active",
                 or_(LogisticsRoleAssignment.starts_at.is_(None), LogisticsRoleAssignment.starts_at <= now),
                 or_(LogisticsRoleAssignment.ends_at.is_(None), LogisticsRoleAssignment.ends_at > now),
             )

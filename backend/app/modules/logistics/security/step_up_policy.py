@@ -465,6 +465,70 @@ POLICY_CATALOG: dict[str, StepUpPolicyEntry] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Reconciliación con el catálogo de permisos (Fase 006 PR 2)
+# ---------------------------------------------------------------------------
+#
+# Hasta ahora había dos declaraciones independientes de qué operación exige
+# verificación reforzada, y discrepaban en las dos direcciones:
+#
+#   - 46 permisos marcados `requires_step_up=True` en el catálogo no tenían entrada
+#     aquí, de modo que `is_sensitive_permission` los consideraba no sensibles;
+#   - 4 entradas de aquí correspondían a permisos con `requires_step_up=False`, de
+#     modo que `require_permission` no les exigía prueba.
+#
+# El resultado era que una misma operación exigía step-up o no según cuál de los dos
+# guards protegiera el endpoint. Se unifica declarando **este módulo como autoridad**:
+# lo que el catálogo marca se sintetiza aquí si falta, y la siembra deriva de aquí el
+# valor que se guarda en la base. Dos listas que deben coincidir acaban divergiendo;
+# una lista con una derivación, no.
+#
+# Las entradas escritas a mano tienen prioridad: expresan una elección deliberada de
+# factores que no se debe sobrescribir.
+
+#: Riesgo del catálogo → riesgo de política. Nombres idénticos, enumeraciones distintas.
+_CATALOG_RISK_TO_POLICY_RISK = {
+    "low": RiskLevel.MEDIUM,  # un permiso de riesgo bajo que pide step-up es raro: se eleva
+    "medium": RiskLevel.MEDIUM,
+    "high": RiskLevel.HIGH,
+    "critical": RiskLevel.CRITICAL,
+}
+
+#: Todas las entradas escritas a mano usan este factor, sin excepción entre las 87.
+#: La síntesis sigue la misma convención en vez de inventar una nueva.
+_SYNTHESIZED_FACTORS = [StepUpFactor.COMBINED_FACE_PAD]
+
+
+def _synthesize_missing_policies() -> int:
+    """Crea una política para cada permiso que declara step-up y no tiene una.
+
+    Import diferido: el catálogo de permisos no importa este módulo, pero hacerlo al
+    nivel del módulo ataría el orden de importación sin necesidad.
+    """
+    from app.modules.logistics.rbac.permission_catalog import PERMISSIONS
+
+    created = 0
+    for permission in PERMISSIONS:
+        code = str(permission["code"])
+        if not permission.get("requires_step_up") or code in POLICY_CATALOG:
+            continue
+        POLICY_CATALOG[code] = StepUpPolicyEntry(
+            permission_code=code,
+            base_risk_level=_CATALOG_RISK_TO_POLICY_RISK.get(
+                str(permission.get("risk_level", "high")), RiskLevel.HIGH
+            ),
+            required_factors=list(_SYNTHESIZED_FACTORS),
+            one_time_proof=True,
+            requires_reason=bool(permission.get("requires_reason", False)),
+            fail_closed=True,
+        )
+        created += 1
+    return created
+
+
+SYNTHESIZED_POLICY_COUNT = _synthesize_missing_policies()
+
+
 def get_policy(permission_code: str) -> StepUpPolicyEntry | None:
     """Get the step-up policy for a permission, or None if not sensitive."""
     return POLICY_CATALOG.get(permission_code)

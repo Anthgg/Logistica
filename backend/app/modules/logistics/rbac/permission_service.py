@@ -7,6 +7,20 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import ApplicationError
 from app.modules.logistics.rbac.models_assignment import LogisticsRoleAssignment
+from app.modules.logistics.security.step_up_policy import is_sensitive_permission
+
+
+def _step_up_required(perm_def: dict) -> bool:
+    """Step-up efectivo de un permiso, según el catálogo de políticas.
+
+    `POLICY_CATALOG` sintetiza una entrada para todo permiso que declare step-up, así
+    que preguntarle cubre tanto los declarados en el catálogo de permisos como los que
+    solo tenían política. Antes se leía el dict del catálogo y las dos listas
+    discrepaban en 50 códigos.
+    """
+    return is_sensitive_permission(str(perm_def["code"]))
+
+
 from app.modules.logistics.rbac.permission_catalog import (
     CATALOG_VERSION,
     PERMISSIONS,
@@ -170,8 +184,11 @@ class PermissionSeedService:
                     existing.is_sensitive = perm_def.get("is_sensitive", False)
                 if existing.requires_reason != perm_def.get("requires_reason", False):
                     existing.requires_reason = perm_def.get("requires_reason", False)
-                if existing.requires_step_up != perm_def.get("requires_step_up", False):
-                    existing.requires_step_up = perm_def.get("requires_step_up", False)
+                # La política es la autoridad del step-up: si se derivara del dict
+                # del catálogo, la base podría contradecir a POLICY_CATALOG y una
+                # misma operación exigiría prueba o no según el guard que la protege.
+                if existing.requires_step_up != _step_up_required(perm_def):
+                    existing.requires_step_up = _step_up_required(perm_def)
                 reused += 1
             else:
                 self.perm_repo.create(
@@ -185,7 +202,7 @@ class PermissionSeedService:
                     risk_level=perm_def["risk_level"],
                     is_sensitive=perm_def.get("is_sensitive", False),
                     requires_reason=perm_def.get("requires_reason", False),
-                    requires_step_up=perm_def.get("requires_step_up", False),
+                    requires_step_up=_step_up_required(perm_def),
                     is_system=True,
                     status="active",
                 )

@@ -63,10 +63,34 @@ PUBLIC_ALLOWLIST = frozenset(
     }
 )
 
-#: Operaciones mutadoras de negocio que hoy solo exigen sesión. F006 PR 1 cerró las
-#: que no pedían ni sesión; estas son una categoría distinta y se abordan en PR 2.
-#: El número solo puede bajar.
-MAX_SENSITIVE_BASELINE = 25
+#: Mutaciones que legítimamente se conforman con la sesión, cada una con su motivo.
+#: No es una lista para aparcar deuda: cada entrada describe por qué exigir un permiso
+#: sería circular o carecería de sentido.
+JUSTIFIED_AUTH_ONLY_MUTATIONS: dict[tuple[str, str], str] = {
+    ("POST", "/api/logistics/authorization/check"): (
+        "Responde si el propio usuario tiene un permiso. Exigir un permiso para "
+        "preguntar por los permisos propios es circular."
+    ),
+    ("POST", "/api/logistics/me/context"): (
+        "Fija el contexto de trabajo del propio usuario dentro de los ámbitos que ya "
+        "tiene concedidos. No alcanza datos de nadie más."
+    ),
+    ("POST", "/api/logistics/security/step-up/challenges"): (
+        "Inicia el desafío que produce la prueba reforzada. Exigir el permiso que esa "
+        "prueba desbloquea impediría obtenerla nunca."
+    ),
+    ("POST", "/api/logistics/security/step-up/challenges/{challenge_id}/complete"): (
+        "Completa el desafío iniciado por el propio usuario; el desafío ya está atado "
+        "a su sesión."
+    ),
+    ("POST", "/api/logistics/security/step-up/challenges/{challenge_id}/factors"): (
+        "Aporta un factor al desafío propio, dentro del mismo flujo."
+    ),
+}
+
+#: Mutaciones de negocio protegidas solo por sesión **sin justificar**. Tras F006 PR 2
+#: no queda ninguna, y el trinquete impide que vuelvan.
+MAX_SENSITIVE_BASELINE = 0
 
 AUTH_DEPENDENCY_NAMES = frozenset(
     {
@@ -137,10 +161,16 @@ def inspect_callable(call: Any) -> tuple[bool, list[str], list[str]]:
         return True, [], []
     # Las fábricas devuelven un closure llamado `dependency`; el nombre real de la
     # fábrica sobrevive en __qualname__.
-    if "require_logistics_permission" in qual or "require_permission" in qual:
-        return True, flatten_strings(closure_values(call)), []
+    #
+    # El orden importa: `require_permissions` (autoriza por nombre de rol) contiene a
+    # `require_permission` como subcadena. Comprobando primero el singular, los
+    # endpoints basados en rol se tomaban por permisos, sus nombres de rol se
+    # descartaban al no llevar punto, y acababan contados como "solo sesión". Por eso
+    # ROLE_PROTECTED salía 0 aunque hubiera 51 usos en el código.
     if "require_permissions" in qual:
         return True, [], flatten_strings(closure_values(call))
+    if "require_logistics_permission" in qual or "require_permission" in qual:
+        return True, flatten_strings(closure_values(call)), []
     return False, [], []
 
 
@@ -273,7 +303,20 @@ def main() -> int:
 
     unexpected_public = [o for o in ops if o.auth_class == "PUBLIC" and o.path not in PUBLIC_ALLOWLIST]
     sensitive_unprotected = [
-        o for o in ops if o.auth_class == "AUTH_ONLY" and o.mutating and o.business
+        o
+        for o in ops
+        if o.auth_class == "AUTH_ONLY"
+        and o.mutating
+        and o.business
+        and (o.method, o.path) not in JUSTIFIED_AUTH_ONLY_MUTATIONS
+    ]
+    justified = [
+        o
+        for o in ops
+        if o.auth_class == "AUTH_ONLY"
+        and o.mutating
+        and o.business
+        and (o.method, o.path) in JUSTIFIED_AUTH_ONLY_MUTATIONS
     ]
     role_protected = [o for o in ops if o.auth_class == "ROLE_PROTECTED"]
 
@@ -285,6 +328,12 @@ def main() -> int:
     for o in sensitive_unprotected[:30]:
         print(f"    {o.method:6s} {o.path}")
 
+    print(f"\nJUSTIFIED_AUTH_ONLY_MUTATIONS   = {len(justified)}")
+    for o in justified:
+        print(f"    {o.method:6s} {o.path}")
+
+    # Autorizadas por nombre de rol de plataforma en vez de por el catálogo. No son un
+    # agujero —deniegan— pero tampoco usan la fuente canónica de autorización.
     print(f"\nROLE_PROTECTED_OPERATIONS       = {len(role_protected)}")
     for o in role_protected[:20]:
         print(f"    {o.method:6s} {o.path}  roles={o.roles}")

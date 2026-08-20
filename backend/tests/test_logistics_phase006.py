@@ -44,8 +44,18 @@ def test_auth_check_requires_auth(client: TestClient) -> None:
 
 # --- Catalog constants ---
 def test_catalog_version_defined() -> None:
+    """La versión existe y está bien formada.
+
+    Antes fijaba `== "1.1.0"`. El catálogo ya iba por 1.2.0, así que el caso llevaba
+    fallando desde entonces sin señalar nada roto: solo que nadie actualizó el número.
+    Un `assert` sobre una constante que debe cambiar cada vez que crece el catálogo no
+    protege nada; se comprueba la forma, que es lo que sí es invariante.
+    """
+    import re
+
     from app.modules.logistics.rbac.permission_catalog import CATALOG_VERSION
-    assert CATALOG_VERSION == "1.1.0"
+
+    assert re.fullmatch(r"\d+\.\d+\.\d+", CATALOG_VERSION), CATALOG_VERSION
 
 
 def test_permissions_defined() -> None:
@@ -54,11 +64,23 @@ def test_permissions_defined() -> None:
 
 
 def test_role_permission_matrix_defined() -> None:
+    """Todo rol de sistema tiene entrada en la matriz, y ninguna está vacía.
+
+    Antes exigía `== 16` roles. Hoy hay 20, así que el caso llevaba tiempo en rojo por
+    haber crecido el sistema, no por estar roto. La invariante que importa es que la
+    matriz cubra exactamente los roles declarados: un rol de sistema sin permisos es
+    un rol que no puede hacer nada, y uno en la matriz que no existe es un mapping
+    huérfano. Eso sí protege, y además crece solo.
+    """
+    from app.modules.logistics.rbac.catalog import SYSTEM_ROLES
     from app.modules.logistics.rbac.permission_catalog import ROLE_PERMISSION_MATRIX
-    assert len(ROLE_PERMISSION_MATRIX) == 16  # All 16 roles
-    assert "LOGISTICS_ADMIN" in ROLE_PERMISSION_MATRIX
-    assert "DRIVER" in ROLE_PERMISSION_MATRIX
-    assert len(ROLE_PERMISSION_MATRIX["LOGISTICS_ADMIN"]) > 20
+
+    system_roles = {str(role["code"]) for role in SYSTEM_ROLES}
+
+    assert system_roles - set(ROLE_PERMISSION_MATRIX) == set(), "roles de sistema sin permisos"
+    assert set(ROLE_PERMISSION_MATRIX) - system_roles == set(), "mappings de roles inexistentes"
+    empty = sorted(code for code, perms in ROLE_PERMISSION_MATRIX.items() if not perms)
+    assert not empty, f"roles sin ningún permiso: {empty}"
 
 
 def test_permission_codes_follow_convention() -> None:

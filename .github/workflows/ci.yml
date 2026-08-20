@@ -647,6 +647,95 @@ jobs:
           GUARD
 
       # -----------------------------------------------------------------------
+      # F006 PR 2 — CATÁLOGO DE PERMISOS Y GATES DE AUTORIZACIÓN
+      # -----------------------------------------------------------------------
+      - name: Lint F006 PR2 Modules
+        working-directory: backend
+        run: |
+          ruff check             scripts/audit_permission_catalog.py             tests/test_logistics_f006_catalog_gates.py             --output-format=github
+
+      - name: Run F006 Catalog Gate Tests
+        working-directory: backend
+        run: |
+          set +e
+          pytest tests/test_logistics_f006_catalog_gates.py --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_f006b.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_f006b.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_f006b.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_f006b.log | tail -1 || true)
+          PASSED=${PASSED:-0}; FAILED=${FAILED:-0}; SKIPPED=${SKIPPED:-0}
+
+          echo "==================================="
+          echo "F006 PERMISSION CATALOG GATES"
+          echo "PASSED : $PASSED"
+          echo "FAILED : $FAILED"
+          echo "SKIPPED: $SKIPPED"
+          echo "==================================="
+
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: las guardas del catálogo terminaron con código $PYTEST_EXIT"
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -gt 0 ] || [ "$SKIPPED" -gt 0 ]; then
+            echo "FAIL: $FAILED fallidos y $SKIPPED omitidos; se requiere 0 y 0."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 25 ]; then
+            echo "FAIL: se esperaban al menos 25 guardas y se ejecutaron $PASSED."
+            exit 1
+          fi
+
+      # Integridad del catálogo: duplicados, referencias inexistentes, metadata
+      # obligatoria, convención de nombres, step-up con política, y una matriz de roles
+      # que cubra exactamente los roles de sistema sin conceder permisos que no existen.
+      - name: Guard — Permission catalog integrity
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+        run: python scripts/audit_permission_catalog.py --check
+
+      # El artefacto derivado debe corresponder al catálogo actual. Si alguien lo edita
+      # a mano o cambia el catálogo sin regenerarlo, deja de ser derivado.
+      - name: Guard — Derived catalog artifact is current
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+        run: |
+          python scripts/audit_permission_catalog.py --export /tmp/catalog.json >/dev/null
+          if ! diff -q /tmp/catalog.json ../docs/phase-006/permission_catalog.json >/dev/null; then
+            echo "FAIL: docs/phase-006/permission_catalog.json no corresponde al catálogo."
+            echo "Regenéralo con: python scripts/audit_permission_catalog.py --export ../docs/phase-006/permission_catalog.json"
+            exit 1
+          fi
+          echo "PASS: el artefacto derivado está al día."
+
+      # Ningún endpoint puede volver a confiar la identidad al cliente.
+      - name: Guard — Identity comes from the authenticated principal
+        working-directory: backend
+        run: |
+          # `X-Org-Id` es legítimo: es una preferencia que `resolve_organization_id`
+          # valida contra el ámbito del principal. Lo que no puede volver es la
+          # identidad del actor por cabecera ni el UUID fijo de respaldo, que atribuían
+          # todo lo creado a una organización y un actor únicos.
+          if grep -rn 'x_actor_id' --include=*.py app/ | grep -v '__pycache__' | grep -vE '^\s*#'; then
+            echo "FAIL: la identidad del actor no puede venir del cliente."
+            exit 1
+          fi
+          FALLBACKS=$(grep -rnE 'return UUID\("[0-9a-f-]{36}"\)' --include=*.py app/ | grep -v '__pycache__' || true)
+          if [ -n "$FALLBACKS" ]; then
+            echo "FAIL: hay identidades con UUID fijo de respaldo:"
+            echo "$FALLBACKS"
+            exit 1
+          fi
+          if grep -rnE '(user|principal)\.role\s*(==|!=)\s*"admin"' --include=*.py app/modules/logistics/ | grep -v '__pycache__' | grep -vE '^\s*#'; then
+            echo "FAIL: autorización por nombre de rol de plataforma en el dominio logístico."
+            exit 1
+          fi
+          echo "PASS: identidad y autorización salen del principal y del catálogo."
+
+      # -----------------------------------------------------------------------
       # POSTGRESQL INTEGRATION TESTS — SKIP=0 requerido
       # -----------------------------------------------------------------------
       - name: Run PostgreSQL Integration Tests
