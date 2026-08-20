@@ -22,7 +22,6 @@ from app.modules.logistics.rbac.models_role import LogisticsRole
 from app.modules.logistics.rbac.models_role_permission import LogisticsRolePermission
 from tests.support import authenticate
 
-
 # ---------------------------------------------------------------------------
 # Coherencia del catálogo
 # ---------------------------------------------------------------------------
