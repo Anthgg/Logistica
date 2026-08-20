@@ -328,6 +328,12 @@ def main() -> int:
     for o in sensitive_unprotected[:30]:
         print(f"    {o.method:6s} {o.path}")
 
+    print(f"\nJUSTIFIED_AUTH_ONLY_MUTATIONS   = {len(justified)}")
+    for o in justified:
+        print(f"    {o.method:6s} {o.path}")
+
+    # Autorizadas por nombre de rol de plataforma en vez de por el catálogo. No son un
+    # agujero —deniegan— pero tampoco usan la fuente canónica de autorización.
     print(f"\nROLE_PROTECTED_OPERATIONS       = {len(role_protected)}")
     for o in role_protected[:20]:
         print(f"    {o.method:6s} {o.path}  roles={o.roles}")

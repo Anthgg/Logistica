@@ -3832,6 +3832,109 @@ _extend_role_permissions("LOGISTICS_MANAGER", _FILE_EDIT + _FILE_LIFECYCLE)
 _extend_role_permissions("LOGISTICS_ADMIN", _FILE_EDIT + _FILE_LIFECYCLE + _FILE_CUSTODY)
 
 
+# ---------------------------------------------------------------------------
+# Fase 006 PR 2 — lectura de datos sensibles en documentos renderizados
+# ---------------------------------------------------------------------------
+#
+# `delivery_router` y `transport_router` deciden con `principal.has_permission(...)` si
+# desenmascaran los datos sensibles del documento. Esos dos códigos nunca se declararon
+# en el catálogo, así que la comprobación devolvía siempre False: el dato quedaba
+# siempre oculto —falla cerrado, que es lo correcto— pero la capacidad era inalcanzable
+# para cualquier rol. El mismo patrón que el módulo de evaluaciones en PR 1.
+#
+# No los vio el detector de PR 1 porque solo miraba `require_permission`. Estos se
+# consultan con `has_permission`, que es otra vía de autorización igual de real.
+PHASE_006_SENSITIVE_DOCUMENT_PERMISSIONS: list[dict[str, object]] = [
+    {
+        "code": "logistics.delivery_documents.read_sensitive",
+        "resource": "delivery_documents",
+        "action": "read_sensitive",
+        "name": "Ver datos sensibles de guías de remisión",
+        "description": "Consultar sin enmascarar los datos sensibles de un documento de entrega",
+        "category": "documents",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+    },
+    {
+        "code": "logistics.transport_documents.read_sensitive",
+        "resource": "transport_documents",
+        "action": "read_sensitive",
+        "name": "Ver datos sensibles de documentos de transporte",
+        "description": "Consultar sin enmascarar los datos sensibles de un documento de transporte",
+        "category": "documents",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+    },
+]
+
+PERMISSIONS.extend(PHASE_006_SENSITIVE_DOCUMENT_PERMISSIONS)
+
+# Se conceden a quien ya audita o controla documentación, siguiendo el criterio de
+# `logistics.audit.read_sensitive`. Deliberadamente **no** a LOGISTICS_VIEWER, que
+# tiene la lectura normal: ver el documento y ver sus datos sensibles no es lo mismo.
+_SENSITIVE_DOCUMENT_CODES = [
+    str(permission["code"]) for permission in PHASE_006_SENSITIVE_DOCUMENT_PERMISSIONS
+]
+for _role in ("LOGISTICS_ADMIN", "LOGISTICS_AUDITOR", "DOCUMENT_CONTROLLER"):
+    _extend_role_permissions(_role, _SENSITIVE_DOCUMENT_CODES)
+
+
+# ---------------------------------------------------------------------------
+# Fase 006 PR 2 — permisos que la matriz concedía sin que existieran
+# ---------------------------------------------------------------------------
+#
+# La matriz de roles otorgaba cuatro códigos ausentes del catálogo. El sembrado los
+# salta en silencio (`if not perm: skipped += 1`), así que GATE_CONTROL creía poder
+# actualizar entradas de puerta y citas, LOGISTICS_MANAGER aprobar órdenes de salida y
+# el auditor leer cuarentena, y ninguno de esos permisos se concedía nunca.
+#
+# El recurso existe en los cuatro casos; lo que faltaba era la acción. Se declaran
+# para que la matriz deje de registrar una intención que el catálogo no respalda.
+# Ningún endpoint los referencia todavía, así que declararlos no cambia el
+# comportamiento: solo hace verdadera la concesión que ya estaba escrita.
+PHASE_006_MATRIX_GAP_PERMISSIONS: list[dict[str, object]] = [
+    {
+        "code": "logistics.gate_entries.update",
+        "resource": "gate_entries",
+        "action": "update",
+        "name": "Actualizar entrada de puerta",
+        "description": "Modificar los datos de una entrada registrada en puerta",
+        "category": "inbound",
+        "risk_level": RiskLevel.MEDIUM,
+    },
+    {
+        "code": "logistics.inbound_appointments.update",
+        "resource": "inbound_appointments",
+        "action": "update",
+        "name": "Actualizar cita de recepción",
+        "description": "Modificar los datos de una cita de recepción programada",
+        "category": "inbound",
+        "risk_level": RiskLevel.MEDIUM,
+    },
+    {
+        "code": "logistics.outbound_orders.approve",
+        "resource": "outbound_orders",
+        "action": "approve",
+        "name": "Aprobar orden de salida",
+        "description": "Autorizar la salida de mercadería de una orden de despacho",
+        "category": "outbound",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+    },
+    {
+        "code": "logistics.quarantine.read",
+        "resource": "quarantine",
+        "action": "read",
+        "name": "Consultar cuarentena",
+        "description": "Ver el inventario retenido en cuarentena y su motivo",
+        "category": "quality",
+        "risk_level": RiskLevel.LOW,
+    },
+]
+
+PERMISSIONS.extend(PHASE_006_MATRIX_GAP_PERMISSIONS)
+
+
 # Scope rules: all permissions allow all scope types by default.
 # Individual permissions can be restricted in future phases.
 ALL_SCOPES = ["global", "organization", "branch", "warehouse"]
