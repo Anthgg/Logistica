@@ -49,6 +49,51 @@ class GeocodeAddress:
     country: str = "Perú"
     country_code: str = "pe"
 
+    def format_human_address(self, manual_house_number: str | None = None) -> str:
+        """Construct a concise, human-friendly formatted address string.
+
+        Priority: road + house_number, neighbourhood/suburb, district, province/city, department, country.
+        Eliminates duplicate administrative tokens.
+        """
+        parts: list[str] = []
+
+        # 1. Road + House number
+        num = (manual_house_number or self.house_number or "").strip()
+        street = (self.road or "").strip()
+        if street and num:
+            parts.append(f"{street} {num}")
+        elif street:
+            parts.append(street)
+        elif num:
+            parts.append(f"N° {num}")
+
+        # 2. Neighbourhood / Suburb
+        urb = (self.neighbourhood or self.suburb or "").strip()
+        if urb and not any(p.lower() == urb.lower() for p in parts):
+            parts.append(urb)
+
+        # 3. District
+        dist = (self.district or "").strip()
+        if dist and not any(p.lower() == dist.lower() for p in parts):
+            parts.append(dist)
+
+        # 4. Province / City
+        prov = (self.province or self.city or "").strip()
+        if prov and not any(p.lower() == prov.lower() for p in parts):
+            parts.append(prov)
+
+        # 5. Department
+        dept = (self.department or "").strip()
+        if dept and not any(p.lower() == dept.lower() for p in parts):
+            parts.append(dept)
+
+        # 6. Country
+        country = (self.country or "Perú").strip()
+        if country and not any(p.lower() == country.lower() for p in parts):
+            parts.append(country)
+
+        return ", ".join(parts) if parts else (self.road or "")
+
     def to_dict(self) -> dict[str, str | None]:
         return {
             "road": self.road,

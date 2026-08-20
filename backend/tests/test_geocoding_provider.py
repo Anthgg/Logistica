@@ -130,6 +130,52 @@ def test_geocode_address_and_location_result_dto_serialization():
     assert loc_dict["address"]["district"] == "Miraflores"
 
 
+def test_geocode_address_human_formatting_and_deduplication():
+    """Verify human-friendly address construction with house number handling and locality deduplication."""
+    # 1. Full address with provider house_number and duplicate Miraflores / Lima
+    addr_with_num = GeocodeAddress(
+        road="Avenida José Larco",
+        house_number="1234",
+        neighbourhood="Cocharcas",
+        suburb="Miraflores",
+        district="Miraflores",
+        city="Miraflores",
+        province="Lima",
+        department="Lima",
+        country="Perú",
+    )
+    formatted = addr_with_num.format_human_address()
+    assert formatted == "Avenida José Larco 1234, Cocharcas, Miraflores, Lima, Perú"
+
+    # 2. Address without house_number, but manual house_number provided by user
+    addr_no_num = GeocodeAddress(
+        road="Calle Mercaderes",
+        house_number=None,
+        district="Arequipa",
+        city="Arequipa",
+        province="Arequipa",
+        department="Arequipa",
+        country="Perú",
+    )
+    # Without manual number
+    assert addr_no_num.format_human_address() == "Calle Mercaderes, Arequipa, Perú"
+    # With manual number
+    assert (
+        addr_no_num.format_human_address(manual_house_number="305")
+        == "Calle Mercaderes 305, Arequipa, Perú"
+    )
+
+    # 3. Only house number without street
+    addr_only_num = GeocodeAddress(
+        road=None,
+        house_number="500",
+        district="San Isidro",
+        province="Lima",
+        country="Perú",
+    )
+    assert addr_only_num.format_human_address() == "N° 500, San Isidro, Lima, Perú"
+
+
 # ============================================================================
 # 3. LRU Cache Tests
 # ============================================================================
