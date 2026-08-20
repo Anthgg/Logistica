@@ -166,11 +166,13 @@ def _create_rbac_router() -> APIRouter:
         db: Session = Depends(get_db),
         user: User = Depends(require_active_user),
         _csrf: None = Depends(verify_csrf),
+        # Asignar roles autoriza por el catálogo, no por el nombre del rol de
+        # plataforma. El chequeo anterior comparaba contra "admin", con un comentario
+        # que lo declaraba temporal hasta esta fase.
+        _principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_assignments.create")
+        ),
     ):
-        # Only admins can assign roles (temporary until Phase 006)
-        if user.role != "admin":
-            from app.core.exceptions import ApplicationError
-            raise ApplicationError("INSUFFICIENT_ASSIGNMENT_AUTHORITY", "No tiene autoridad para asignar roles.", 403)
         assignment = assignment_service.assign(db, data, user)
         db.commit()
         return RoleAssignmentResponse.model_validate(assignment)
@@ -201,6 +203,9 @@ def _create_rbac_router() -> APIRouter:
         db: Session = Depends(get_db),
         user: User = Depends(require_active_user),
         _csrf: None = Depends(verify_csrf),
+        _principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_assignments.update")
+        ),
     ):
         assignment = assignment_service.update_dates(db, assignment_id, data.starts_at, data.ends_at, user)
         db.commit()
@@ -213,10 +218,10 @@ def _create_rbac_router() -> APIRouter:
         db: Session = Depends(get_db),
         user: User = Depends(require_active_user),
         _csrf: None = Depends(verify_csrf),
+        _principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_assignments.revoke")
+        ),
     ):
-        if user.role != "admin":
-            from app.core.exceptions import ApplicationError
-            raise ApplicationError("INSUFFICIENT_ASSIGNMENT_AUTHORITY", "No tiene autoridad para revocar roles.", 403)
         assignment = assignment_service.revoke(db, assignment_id, data.revocation_reason, user)
         db.commit()
         return RoleAssignmentResponse.model_validate(assignment)
@@ -229,7 +234,9 @@ def _create_rbac_router() -> APIRouter:
         role_a_id: UUID = Query(...),
         role_b_id: UUID = Query(...),
         db: Session = Depends(get_db),
-        user: User = Depends(get_current_user),
+        _principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.role_assignments.read")
+        ),
     ):
         result = assignment_service.validate_conflicts(db, role_a_id, role_b_id)
         return RoleConflictValidationResponse(success=True, **result)

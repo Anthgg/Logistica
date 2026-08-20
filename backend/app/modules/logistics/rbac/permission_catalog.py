@@ -3737,6 +3737,101 @@ _PHASE_006_ADMIN_GAP = [
 _extend_role_permissions("LOGISTICS_ADMIN", _PHASE_006_ADMIN_GAP)
 
 
+# ---------------------------------------------------------------------------
+# Fase 006 PR 2 — ciclo de vida documental y custodia de evidencia
+# ---------------------------------------------------------------------------
+#
+# Estas operaciones existían protegidas solo por sesión: cualquier usuario
+# autenticado podía editar metadatos, archivar, restaurar, poner un archivo bajo
+# retención legal o aceptar la custodia de una evidencia. El catálogo solo tenía
+# `read`, `upload`, `download` y `delete`, que no cubren el ciclo de vida.
+#
+# Se declaran acciones concretas en vez de un `files.manage`: archivar y aceptar
+# custodia son potestades distintas, y quien sube un archivo no tiene por qué poder
+# congelarlo legalmente.
+PHASE_006_FILE_LIFECYCLE_PERMISSIONS: list[dict[str, object]] = [
+    {
+        "code": "logistics.files.update",
+        "resource": "files",
+        "action": "update",
+        "name": "Editar metadatos de archivo",
+        "description": "Modificar clasificación, etiquetas y asociaciones de un archivo",
+        "category": "files",
+        "risk_level": RiskLevel.MEDIUM,
+    },
+    {
+        "code": "logistics.files.archive",
+        "resource": "files",
+        "action": "archive",
+        "name": "Archivar archivo",
+        "description": "Retirar un archivo de la vista operativa conservándolo",
+        "category": "files",
+        "risk_level": RiskLevel.MEDIUM,
+        "requires_reason": True,
+    },
+    {
+        "code": "logistics.files.restore",
+        "resource": "files",
+        "action": "restore",
+        "name": "Restaurar archivo archivado",
+        "description": "Devolver a la vista operativa un archivo archivado",
+        "category": "files",
+        "risk_level": RiskLevel.MEDIUM,
+        "requires_reason": True,
+    },
+    {
+        # Una retención legal impide borrar el archivo mientras dure. Ponerla afecta a
+        # obligaciones de conservación, no solo al fichero.
+        "code": "logistics.files.legal_hold",
+        "resource": "files",
+        "action": "legal_hold",
+        "name": "Aplicar retención legal",
+        "description": "Someter un archivo a retención legal, bloqueando su eliminación",
+        "category": "files",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+        "requires_reason": True,
+    },
+    {
+        "code": "logistics.files.evidence.create",
+        "resource": "files",
+        "action": "evidence.create",
+        "name": "Registrar evidencia",
+        "description": "Incorporar un archivo a la cadena de custodia como evidencia",
+        "category": "files",
+        "risk_level": RiskLevel.MEDIUM,
+    },
+    {
+        # Aceptar la custodia traslada la responsabilidad sobre la evidencia: es el
+        # eslabón que da valor probatorio a la cadena.
+        "code": "logistics.files.evidence.accept",
+        "resource": "files",
+        "action": "evidence.accept",
+        "name": "Aceptar custodia de evidencia",
+        "description": "Asumir la custodia de una evidencia dentro de la cadena",
+        "category": "files",
+        "risk_level": RiskLevel.HIGH,
+        "is_sensitive": True,
+        "requires_reason": True,
+    },
+]
+
+PERMISSIONS.extend(PHASE_006_FILE_LIFECYCLE_PERMISSIONS)
+
+# Mínimo privilegio: quien ya sube archivos puede editarlos y registrar evidencia;
+# archivar y restaurar son de control documental; la retención legal y la aceptación
+# de custodia quedan en control documental y administración, no en operación.
+_FILE_EDIT = ["logistics.files.update", "logistics.files.evidence.create"]
+_FILE_LIFECYCLE = ["logistics.files.archive", "logistics.files.restore"]
+_FILE_CUSTODY = ["logistics.files.legal_hold", "logistics.files.evidence.accept"]
+
+for _role in ("RECEIVING", "QUALITY", "WAREHOUSE_OPERATOR", "DISPATCH", "PURCHASING"):
+    _extend_role_permissions(_role, _FILE_EDIT)
+_extend_role_permissions("DOCUMENT_CONTROLLER", _FILE_EDIT + _FILE_LIFECYCLE + _FILE_CUSTODY)
+_extend_role_permissions("LOGISTICS_MANAGER", _FILE_EDIT + _FILE_LIFECYCLE)
+_extend_role_permissions("LOGISTICS_ADMIN", _FILE_EDIT + _FILE_LIFECYCLE + _FILE_CUSTODY)
+
+
 # Scope rules: all permissions allow all scope types by default.
 # Individual permissions can be restricted in future phases.
 ALL_SCOPES = ["global", "organization", "branch", "warehouse"]

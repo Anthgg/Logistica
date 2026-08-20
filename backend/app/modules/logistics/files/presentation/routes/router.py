@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.modules.logistics.auth_dependencies import (
     require_logistics_principal,
+    require_permission,
     resolve_organization_id,
 )
 from app.modules.logistics.principal import LogisticsPrincipal
@@ -60,6 +61,7 @@ router = APIRouter(prefix="/files", tags=["files"])
 
 @router.post(
     "/upload-sessions",
+    dependencies=[Depends(require_permission("logistics.files.upload"))],
     response_model=UploadSessionResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Crear sesión de carga de archivo",
@@ -103,6 +105,7 @@ def create_upload_session(
 
 @router.post(
     "/upload-sessions/{session_id}/finalize",
+    dependencies=[Depends(require_permission("logistics.files.upload"))],
     response_model=FileAssetResponse,
     status_code=status.HTTP_200_OK,
     summary="Finalizar sesión de carga",
@@ -175,6 +178,7 @@ def get_file(
 
 @router.patch(
     "/{file_id}",
+    dependencies=[Depends(require_permission("logistics.files.update"))],
     response_model=FileAssetResponse,
     status_code=status.HTTP_200_OK,
     summary="Actualizar metadatos de archivo",
@@ -274,6 +278,7 @@ def get_preview_url(
 
 @router.post(
     "/{file_id}/archive",
+    dependencies=[Depends(require_permission("logistics.files.archive"))],
     response_model=FileAssetResponse,
     status_code=status.HTTP_200_OK,
     summary="Archivar archivo",
@@ -298,6 +303,7 @@ def archive_file(
 
 @router.post(
     "/{file_id}/restore",
+    dependencies=[Depends(require_permission("logistics.files.restore"))],
     response_model=FileAssetResponse,
     status_code=status.HTTP_200_OK,
     summary="Restaurar archivo archivado",
@@ -322,6 +328,7 @@ def restore_file(
 
 @router.post(
     "/{file_id}/associations",
+    dependencies=[Depends(require_permission("logistics.files.update"))],
     response_model=FileAssociationResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Asociar archivo a un recurso de dominio",
@@ -384,6 +391,7 @@ def list_evidence(
 
 @router.post(
     "/evidence",
+    dependencies=[Depends(require_permission("logistics.files.evidence.create"))],
     response_model=EvidenceResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Registrar evidencia formal",
@@ -410,6 +418,7 @@ def register_evidence(
 
 @router.post(
     "/evidence/{evidence_id}/accept",
+    dependencies=[Depends(require_permission("logistics.files.evidence.accept"))],
     response_model=EvidenceResponse,
     status_code=status.HTTP_200_OK,
     summary="Aceptar evidencia inmutable",
@@ -450,6 +459,7 @@ def get_custody_events(
 
 @router.post(
     "/{file_id}/legal-holds",
+    dependencies=[Depends(require_permission("logistics.files.legal_hold"))],
     response_model=LegalHoldResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Aplicar retención legal (Legal Hold)",
@@ -475,6 +485,7 @@ def apply_legal_hold(
 
 @router.post(
     "/{file_id}/request-deletion",
+    dependencies=[Depends(require_permission("logistics.files.delete"))],
     response_model=DeletionRequestResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Solicitar eliminación controlada de archivo",
@@ -499,9 +510,13 @@ def request_deletion(
 
 
 # Standalone evidence router for /logistics/evidence
+#
+# Reexpone los mismos handlers bajo un segundo prefijo. `add_api_route` no hereda las
+# dependencias declaradas en `@router.post(...)`, así que cada ruta repite su guard:
+# sin eso, la misma operación queda protegida por una ruta y abierta por la otra.
 evidence_router = APIRouter(prefix="/evidence", tags=["evidence"])
-evidence_router.add_api_route("", list_evidence, methods=["GET"], response_model=List[EvidenceResponse], status_code=status.HTTP_200_OK, summary="Listar registros de evidencia")
-evidence_router.add_api_route("", register_evidence, methods=["POST"], response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED, summary="Registrar evidencia formal")
-evidence_router.add_api_route("/{evidence_id}/accept", accept_evidence, methods=["POST"], response_model=EvidenceResponse, status_code=status.HTTP_200_OK, summary="Aceptar evidencia inmutable")
-evidence_router.add_api_route("/{evidence_id}/custody-events", get_custody_events, methods=["GET"], response_model=List[CustodyEventResponse], status_code=status.HTTP_200_OK, summary="Obtener eventos de cadena de custodia")
+evidence_router.add_api_route("", list_evidence, methods=["GET"], response_model=List[EvidenceResponse], status_code=status.HTTP_200_OK, summary="Listar registros de evidencia", dependencies=[Depends(require_permission("logistics.files.read"))])
+evidence_router.add_api_route("", register_evidence, methods=["POST"], response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED, summary="Registrar evidencia formal", dependencies=[Depends(require_permission("logistics.files.evidence.create"))])
+evidence_router.add_api_route("/{evidence_id}/accept", accept_evidence, methods=["POST"], response_model=EvidenceResponse, status_code=status.HTTP_200_OK, summary="Aceptar evidencia inmutable", dependencies=[Depends(require_permission("logistics.files.evidence.accept"))])
+evidence_router.add_api_route("/{evidence_id}/custody-events", get_custody_events, methods=["GET"], response_model=List[CustodyEventResponse], status_code=status.HTTP_200_OK, summary="Obtener eventos de cadena de custodia", dependencies=[Depends(require_permission("logistics.files.read"))])
 

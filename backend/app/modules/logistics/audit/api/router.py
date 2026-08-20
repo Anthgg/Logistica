@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.dependencies.auth import get_current_user
+from app.modules.logistics.auth_dependencies import require_permission
 from app.models.user import User
 from app.modules.logistics.audit.schemas import (
     AuditEventDetailResponse,
@@ -104,7 +105,13 @@ def create_audit_event_router() -> APIRouter:
             total_pages=ceil(total / page_size) if page_size else 0,
         )
 
-    @router.post("/audit-events/{event_id}/verify-integrity", response_model=IntegrityCheckResponse)
+    @router.post(
+        "/audit-events/{event_id}/verify-integrity",
+        response_model=IntegrityCheckResponse,
+        # Verificar la integridad de un evento es una lectura sobre su sello de
+        # auditoría; exige el mismo permiso que consultarla.
+        dependencies=[Depends(require_permission("logistics.audit.read"))],
+    )
     def verify_integrity(
         event_id: UUID,
         db: Session = Depends(get_db),
