@@ -170,6 +170,18 @@ CATALOGS: Final[dict[str, dict[str, str]]] = {
         "error.RATE_LIMIT_EXCEEDED": (
             "Se enviaron demasiadas solicitudes. Inténtelo nuevamente más tarde."
         ),
+        "error.GEOCODING_PROVIDER_UNAVAILABLE": (
+            "El servicio de geolocalización no está disponible temporalmente."
+        ),
+        "error.GEOCODING_RATE_LIMIT_EXCEEDED": (
+            "Se ha excedido el límite de solicitudes de geolocalización. Intente nuevamente en unos segundos."
+        ),
+        "error.GEOCODING_INVALID_COORDINATES": (
+            "Las coordenadas geográficas proporcionadas no son válidas."
+        ),
+        "error.GEOCODING_VALIDATION_ERROR": (
+            "Los datos de geolocalización no son válidos."
+        ),
         "validation.missing": "Este campo es obligatorio.",
         "validation.string_too_short": "El texto es demasiado corto.",
         "validation.string_too_long": "El texto es demasiado largo.",
@@ -341,6 +353,18 @@ CATALOGS: Final[dict[str, dict[str, str]]] = {
         "error.NO_FACE_DETECTED": "No face was detected.",
         "error.MULTIPLE_FACES_DETECTED": "More than one face was detected.",
         "error.RATE_LIMIT_EXCEEDED": "Too many requests were sent. Please try again later.",
+        "error.GEOCODING_PROVIDER_UNAVAILABLE": (
+            "The geocoding service is temporarily unavailable."
+        ),
+        "error.GEOCODING_RATE_LIMIT_EXCEEDED": (
+            "Geocoding rate limit exceeded. Please try again in a few seconds."
+        ),
+        "error.GEOCODING_INVALID_COORDINATES": (
+            "The provided geographic coordinates are invalid."
+        ),
+        "error.GEOCODING_VALIDATION_ERROR": (
+            "The geocoding data is invalid."
+        ),
         "validation.missing": "This field is required.",
         "validation.string_too_short": "The text is too short.",
         "validation.string_too_long": "The text is too long.",
@@ -515,6 +539,18 @@ CATALOGS: Final[dict[str, dict[str, str]]] = {
         "error.MULTIPLE_FACES_DETECTED": "Mais de um rosto foi detectado.",
         "error.RATE_LIMIT_EXCEEDED": (
             "Muitas solicitações foram enviadas. Tente novamente mais tarde."
+        ),
+        "error.GEOCODING_PROVIDER_UNAVAILABLE": (
+            "O serviço de geolocalização está temporariamente indisponível."
+        ),
+        "error.GEOCODING_RATE_LIMIT_EXCEEDED": (
+            "O limite de solicitações de geolocalização foi excedido. Tente novamente em alguns segundos."
+        ),
+        "error.GEOCODING_INVALID_COORDINATES": (
+            "As coordenadas geográficas fornecidas são inválidas."
+        ),
+        "error.GEOCODING_VALIDATION_ERROR": (
+            "Os dados de geolocalização são inválidos."
         ),
         "validation.missing": "Este campo é obrigatório.",
         "validation.string_too_short": "O texto é muito curto.",
