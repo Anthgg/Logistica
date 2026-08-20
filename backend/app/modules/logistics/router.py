@@ -122,6 +122,7 @@ def _create_logistics_router() -> APIRouter:
         router as inventory_balances_router,
     )
     from app.modules.logistics.geography.router import router as geography_router
+    from app.modules.logistics.geocoding.router import router as geocoding_router
 
     from app.modules.logistics.cost_centers.router import router as cost_centers_router
     from app.modules.logistics.procurement.requisitions.presentation.routes.router import (
@@ -184,6 +185,7 @@ def _create_logistics_router() -> APIRouter:
     router.include_router(rbac_router(), tags=["Logistics - RBAC"])
     router.include_router(organization_router(), tags=["Logistics - Organization"])
     router.include_router(geography_router)
+    router.include_router(geocoding_router)
     router.include_router(documents_router(), prefix="/documents", tags=["Logistics - Documents"])
     router.include_router(create_packages_router())
     router.include_router(routes_router(), prefix="/routes", tags=["Logistics - Routes"])

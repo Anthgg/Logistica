@@ -107,6 +107,13 @@ class Settings(BaseSettings):
     RISK_CRITICAL_CONFIRMATION_COUNT: int = Field(default=2, ge=1, le=20)
     RISK_RECOVERY_CONFIRMATION_COUNT: int = Field(default=3, ge=1, le=20)
     RISK_EVALUATION_WINDOW_SECONDS: int = Field(default=60, ge=5, le=3600)
+    GEOCODING_PROVIDER: str = "nominatim"
+    NOMINATIM_BASE_URL: str = "https://nominatim.openstreetmap.org"
+    NOMINATIM_USER_AGENT: str = "LogisticaT1-BranchLocator/1.0 (contact@logisticat1.pe)"
+    NOMINATIM_TIMEOUT_SECONDS: float = Field(default=5.0, ge=0.5, le=60.0)
+    NOMINATIM_MIN_INTERVAL_SECONDS: float = Field(default=1.0, ge=0.1, le=10.0)
+    GEOCODING_CACHE_TTL_SECONDS: int = Field(default=3600, ge=60)
+    GEOCODING_CACHE_MAX_ENTRIES: int = Field(default=1000, ge=10, le=100000)
 
     @field_validator(
         "APP_NAME",
@@ -129,6 +136,8 @@ class Settings(BaseSettings):
         "NORMALIZATION_CONFIG_PATH",
         "RESEARCH_PROTOCOL_VERSION",
         "RESEARCH_COLLECTOR_VERSION",
+        "NOMINATIM_BASE_URL",
+        "NOMINATIM_USER_AGENT",
     )
     @classmethod
     def must_not_be_blank(cls, value: str) -> str:
