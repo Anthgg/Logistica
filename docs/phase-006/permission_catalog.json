@@ -1,11 +1,11 @@
 {
   "catalog_version": "1.2.0",
   "classification": {
-    "ACTIVE_ASSIGNED": 212,
-    "ACTIVE_USED": 332,
+    "ACTIVE_ASSIGNED": 211,
+    "ACTIVE_USED": 333,
     "ORPHAN_CANDIDATE": 11
   },
-  "distinct_references": 332,
+  "distinct_references": 333,
   "domains": [
     "audit",
     "branches",
@@ -9579,7 +9579,7 @@
         "LOGISTICS_ADMIN"
       ],
       "is_sensitive": false,
-      "referenced_in_code": 0,
+      "referenced_in_code": 1,
       "requires_reason": false,
       "requires_step_up": false,
       "resource": "warehouses",
