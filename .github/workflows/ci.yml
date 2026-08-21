@@ -96,10 +96,10 @@ jobs:
           echo "Alembic current: $CURRENT"
           # La cabeza esperada avanza con cada migración real. La cadena vigente
           # es gi450410045dk -> gj450510045vr -> hj460110046dk -> ik470110047dk
-          # (F004.5: tablas canónicas de UBIGEO y normalización de sedes).
-          if ! echo "$CURRENT" | grep -q "jl480110048dk\|ik470110047dk\|hj460110046dk\|gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
+          # -> jl480110048dk -> km490110049wh (geolocalización de almacén).
+          if ! echo "$CURRENT" | grep -q "km490110049wh\|jl480110048dk\|ik470110047dk\|hj460110046dk\|gj450510045vr\|gi450410045dk\|gh450310045pu\|gg450210045sw\|hh450110045dc"; then
             echo "FAIL: Alembic current no muestra la cabeza esperada."
-            echo "Expected: jl480110048dk (o revisiones anteriores conocidas)"
+            echo "Expected: km490110049wh (o revisiones anteriores conocidas)"
             echo "Got: $CURRENT"
             exit 1
           fi
@@ -263,6 +263,57 @@ jobs:
             echo "FAIL: se esperaban al menos 60 casos y se ejecutaron $PASSED."
             exit 1
           fi
+
+      # -----------------------------------------------------------------------
+      # WAREHOUSE GEOLOCATION — model, migration and effective-location rules
+      # -----------------------------------------------------------------------
+      - name: Lint Warehouse Geolocation Modules
+        working-directory: backend
+        run: |
+          ruff check \
+            alembic/versions/km490110049wh_add_warehouse_geolocation.py \
+            app/models/warehouse.py \
+            app/modules/logistics/organization/schemas.py \
+            app/modules/logistics/organization/repository.py \
+            app/modules/logistics/organization/service.py \
+            app/modules/logistics/organization/api/router.py \
+            tests/test_warehouse_geolocation.py \
+            tests/test_logistics_f004_structure_http.py \
+            --output-format=github
+
+      - name: Run Warehouse Geolocation PostgreSQL Gate
+        working-directory: backend
+        env:
+          TEST_MIGRATION_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/warehouse_geo_test_ci
+        run: |
+          PGPASSWORD=postgrespassword createdb \
+            --host=localhost --port=5432 --username=postgres \
+            warehouse_geo_test_ci
+          DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic upgrade head
+          set +e
+          pytest tests/test_warehouse_geolocation.py --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_warehouse_geo.log
+          PYTEST_EXIT=${PIPESTATUS[0]}
+          set -e
+
+          PASSED=$(grep -oP '\d+(?= passed)' /tmp/pytest_warehouse_geo.log | tail -1 || true)
+          FAILED=$(grep -oP '\d+(?= failed)' /tmp/pytest_warehouse_geo.log | tail -1 || true)
+          SKIPPED=$(grep -oP '\d+(?= skipped)' /tmp/pytest_warehouse_geo.log | tail -1 || true)
+          PASSED=${PASSED:-0}; FAILED=${FAILED:-0}; SKIPPED=${SKIPPED:-0}
+
+          echo "Warehouse geolocation — PASSED: $PASSED | FAILED: $FAILED | SKIPPED: $SKIPPED"
+          if [ "$PYTEST_EXIT" -ne 0 ]; then
+            echo "FAIL: pytest terminó con código $PYTEST_EXIT."
+            exit "$PYTEST_EXIT"
+          fi
+          if [ "$FAILED" -ne 0 ] || [ "$SKIPPED" -ne 0 ]; then
+            echo "FAIL: warehouse geolocation requires FAILED=0 and SKIPPED=0 on PostgreSQL."
+            exit 1
+          fi
+          if [ "$PASSED" -lt 11 ]; then
+            echo "FAIL: expected at least 11 warehouse geolocation tests."
+            exit 1
+          fi
+          echo "PASS: warehouse geolocation model and migration verified on PostgreSQL."
 
       # -----------------------------------------------------------------------
       # F004.5 — UBIGEO Y NORMALIZACIÓN GEOGRÁFICA

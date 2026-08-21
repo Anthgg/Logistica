@@ -31,6 +31,7 @@ from app.modules.logistics.organization.schemas import (
     LogisticsWarehouseResponse,
     LogisticsWarehouseSetDefault,
     LogisticsWarehouseStatusUpdate,
+    LogisticsWarehouseUpdate,
     OrganizationCreate,
     OrganizationResponse,
     OrganizationStatusUpdate,
@@ -309,6 +310,26 @@ def _create_organization_router() -> APIRouter:
         """
         assert_can_access_branch(principal, branch_service.get(db, branch_id))
         wh = wh_service.get_for_branch(db, branch_id, warehouse_id)
+        return LogisticsWarehouseResponse.model_validate(wh)
+
+    @router.patch(
+        "/branches/{branch_id}/warehouses/{warehouse_id}",
+        response_model=LogisticsWarehouseResponse,
+    )
+    def update_warehouse(
+        branch_id: UUID,
+        warehouse_id: UUID,
+        data: LogisticsWarehouseUpdate,
+        db: Session = Depends(get_db),
+        principal: LogisticsPrincipal = Depends(
+            require_permission("logistics.warehouses.update")
+        ),
+        _csrf: None = Depends(verify_csrf),
+    ):
+        assert_can_access_branch(principal, branch_service.get(db, branch_id))
+        wh_service.get_for_branch(db, branch_id, warehouse_id)
+        wh = wh_service.update(db, warehouse_id, data, principal.user_id)
+        db.commit()
         return LogisticsWarehouseResponse.model_validate(wh)
 
     @router.patch("/warehouses/{warehouse_id}/status", response_model=LogisticsWarehouseResponse)

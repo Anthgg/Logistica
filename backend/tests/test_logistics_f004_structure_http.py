@@ -31,6 +31,7 @@ F004_PERMISSIONS = [
     "logistics.branches.change_status",
     "logistics.warehouses.read",
     "logistics.warehouses.create",
+    "logistics.warehouses.update",
     "logistics.warehouses.change_status",
     "logistics.warehouses.set_default",
 ]
@@ -171,6 +172,15 @@ def _warehouse_payload(code: str | None = None) -> dict:
 )
 def test_unauthenticated_is_401(client, path):
     assert client.get(path).status_code == 401
+
+
+def test_warehouse_patch_unauthenticated_is_401(client):
+    response = client.patch(
+        "/api/logistics/branches/00000000-0000-0000-0000-000000000001/"
+        "warehouses/00000000-0000-0000-0000-000000000002",
+        json={"name": "No autenticado"},
+    )
+    assert response.status_code == 401
 
 
 # ---------------------------------------------------------------------------
@@ -504,6 +514,148 @@ def test_warehouse_create_derives_organization_from_branch(client, database, sco
     row = database.get(Warehouse, UUID(body["id"]))
     assert row.organization_id == scoped["own"].id
     assert row.branch_id == scoped["own_branch"].id
+
+
+def test_warehouse_create_inherited_resolves_branch_location(client, database, scoped):
+    scoped["own_branch"].latitude = -12.1234567
+    scoped["own_branch"].longitude = -77.1234567
+    database.flush()
+    payload = _warehouse_payload()
+    payload["uses_branch_location"] = True
+
+    response = client.post(
+        f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses",
+        headers=scoped["headers"],
+        json=payload,
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["uses_branch_location"] is True
+    assert body["latitude"] is None and body["longitude"] is None
+    assert body["location_source"] == "BRANCH"
+    assert body["effective_latitude"] == pytest.approx(-12.1234567)
+    assert body["effective_longitude"] == pytest.approx(-77.1234567)
+
+
+def test_warehouse_create_custom_persists_own_location(client, database, scoped):
+    payload = _warehouse_payload()
+    payload.update(
+        uses_branch_location=False,
+        latitude=-12.2222222,
+        longitude=-77.2222222,
+    )
+
+    response = client.post(
+        f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses",
+        headers=scoped["headers"],
+        json=payload,
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    row = database.get(Warehouse, UUID(body["id"]))
+    assert body["location_source"] == "WAREHOUSE"
+    assert body["effective_latitude"] == pytest.approx(-12.2222222)
+    assert body["effective_longitude"] == pytest.approx(-77.2222222)
+    assert float(row.latitude) == pytest.approx(-12.2222222)
+    assert float(row.longitude) == pytest.approx(-77.2222222)
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        {"uses_branch_location": False},
+        {"uses_branch_location": False, "latitude": -12.0},
+        {"uses_branch_location": False, "latitude": -91.0, "longitude": -77.0},
+        {"uses_branch_location": False, "latitude": -12.0, "longitude": 181.0},
+        {"uses_branch_location": True, "latitude": -12.0, "longitude": -77.0},
+        {"uses_branch_location": False, "latitude": "NaN", "longitude": -77.0},
+        {"uses_branch_location": False, "latitude": "Infinity", "longitude": -77.0},
+    ],
+)
+def test_warehouse_create_rejects_invalid_location(client, scoped, location):
+    payload = _warehouse_payload()
+    payload.update(location)
+    response = client.post(
+        f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses",
+        headers=scoped["headers"],
+        json=payload,
+    )
+    assert response.status_code == 422, response.text
+
+
+def test_warehouse_patch_custom_then_inherited_clears_coordinates(client, database, scoped):
+    created = client.post(
+        f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses",
+        headers=scoped["headers"],
+        json=_warehouse_payload(),
+    )
+    assert created.status_code == 201, created.text
+    warehouse_id = created.json()["id"]
+
+    custom = client.patch(
+        f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses/{warehouse_id}",
+        headers=scoped["headers"],
+        json={
+            "uses_branch_location": False,
+            "latitude": -12.3333333,
+            "longitude": -77.3333333,
+        },
+    )
+    assert custom.status_code == 200, custom.text
+    assert custom.json()["location_source"] == "WAREHOUSE"
+
+    inherited = client.patch(
+        f"/api/logistics/branches/{scoped['own_branch'].id}/warehouses/{warehouse_id}",
+        headers=scoped["headers"],
+        json={"uses_branch_location": True},
+    )
+    assert inherited.status_code == 200, inherited.text
+    assert inherited.json()["location_source"] == "BRANCH"
+    row = database.get(Warehouse, UUID(warehouse_id))
+    database.refresh(row)
+    assert row.uses_branch_location is True
+    assert row.latitude is None and row.longitude is None
+
+
+def test_warehouse_patch_foreign_branch_is_403(client, database, scoped):
+    warehouse = Warehouse(
+        organization_id=scoped["foreign"].id,
+        branch_id=scoped["foreign_branch"].id,
+        code=f"FWH{uuid4().hex[:8].upper()}",
+        name="Almacén ajeno",
+    )
+    database.add(warehouse)
+    database.flush()
+
+    response = client.patch(
+        f"/api/logistics/branches/{scoped['foreign_branch'].id}/warehouses/{warehouse.id}",
+        headers=scoped["headers"],
+        json={"name": "No autorizado"},
+    )
+    assert response.status_code == 403, response.text
+
+
+def test_warehouse_update_without_permission_is_403(client, database):
+    user, headers = authenticate(client, database, role="operator")
+    org = _organization(database)
+    branch = _branch(database, org)
+    _grant(database, user, _role_with(database, ["logistics.warehouses.read"]), org)
+    warehouse = Warehouse(
+        organization_id=org.id,
+        branch_id=branch.id,
+        code=f"WH{uuid4().hex[:8].upper()}",
+        name="Almacén sin permiso de edición",
+    )
+    database.add(warehouse)
+    database.flush()
+    response = client.patch(
+        f"/api/logistics/branches/{branch.id}/warehouses/{warehouse.id}",
+        headers=headers,
+        json={"name": "No debería pasar"},
+    )
+    assert response.status_code == 403, response.text
 
 
 def test_warehouse_create_ignores_client_supplied_scope(client, database, scoped):

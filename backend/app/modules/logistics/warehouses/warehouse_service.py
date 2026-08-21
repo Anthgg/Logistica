@@ -10,9 +10,12 @@ from sqlalchemy.orm import Session
 from app.database.base import utc_now
 from app.models.branch import Branch
 from app.models.warehouse import Warehouse
-from app.modules.logistics.audit.service import audit_service, AuditEventCommand
+from app.modules.logistics.audit.service import AuditEventCommand, audit_service
 from app.modules.logistics.warehouses.schemas import WarehouseCreate, WarehouseUpdate
-from app.modules.logistics.warehouses.validators import validate_warehouse_code, VALID_WAREHOUSE_TYPES
+from app.modules.logistics.warehouses.validators import (
+    VALID_WAREHOUSE_TYPES,
+    validate_warehouse_code,
+)
 
 
 class WarehouseService:
@@ -95,6 +98,9 @@ class WarehouseService:
             description=req.description,
             warehouse_type=wh_type,
             address=req.address,
+            uses_branch_location=req.uses_branch_location,
+            latitude=None if req.uses_branch_location else req.latitude,
+            longitude=None if req.uses_branch_location else req.longitude,
             address_id=req.address_id,
             district=req.district,
             province=req.province,
@@ -155,6 +161,23 @@ class WarehouseService:
 
         if req.warehouse_type is not None:
             wh.warehouse_type = req.warehouse_type.upper()
+
+        if "uses_branch_location" in req.model_fields_set:
+            wh.uses_branch_location = bool(req.uses_branch_location)
+            if wh.uses_branch_location:
+                wh.latitude = None
+                wh.longitude = None
+            else:
+                wh.latitude = req.latitude
+                wh.longitude = req.longitude
+        elif "latitude" in req.model_fields_set or "longitude" in req.model_fields_set:
+            if wh.uses_branch_location:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Desactiva la ubicación heredada antes de guardar coordenadas propias.",
+                )
+            wh.latitude = req.latitude
+            wh.longitude = req.longitude
 
         wh.updated_by = actor_id
         wh.updated_at = utc_now()

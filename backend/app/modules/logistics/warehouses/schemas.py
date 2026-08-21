@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # --- WAREHOUSE SCHEMAS ---
@@ -16,6 +16,13 @@ class WarehouseCreate(BaseModel):
     description: str | None = None
     warehouse_type: str = "GENERAL"
     address: str | None = None
+    uses_branch_location: bool = True
+    latitude: Decimal | None = Field(
+        default=None, ge=Decimal(-90), le=Decimal(90), allow_inf_nan=False
+    )
+    longitude: Decimal | None = Field(
+        default=None, ge=Decimal(-180), le=Decimal(180), allow_inf_nan=False
+    )
     address_id: UUID | None = None
     district: str | None = None
     province: str | None = None
@@ -31,6 +38,16 @@ class WarehouseCreate(BaseModel):
     inventory_enabled: bool = True
     is_default: bool = False
 
+    @model_validator(mode="after")
+    def validate_location_mode(self) -> "WarehouseCreate":
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Latitud y longitud deben enviarse juntas.")
+        if self.uses_branch_location and self.latitude is not None:
+            raise ValueError("La ubicación heredada no acepta coordenadas propias.")
+        if not self.uses_branch_location and self.latitude is None:
+            raise ValueError("La ubicación propia requiere latitud y longitud confirmadas.")
+        return self
+
 
 class WarehouseUpdate(BaseModel):
     code: str | None = None
@@ -38,6 +55,13 @@ class WarehouseUpdate(BaseModel):
     description: str | None = None
     warehouse_type: str | None = None
     address: str | None = None
+    uses_branch_location: bool | None = None
+    latitude: Decimal | None = Field(
+        default=None, ge=Decimal(-90), le=Decimal(90), allow_inf_nan=False
+    )
+    longitude: Decimal | None = Field(
+        default=None, ge=Decimal(-180), le=Decimal(180), allow_inf_nan=False
+    )
     address_id: UUID | None = None
     district: str | None = None
     province: str | None = None
@@ -53,6 +77,16 @@ class WarehouseUpdate(BaseModel):
     inventory_enabled: bool | None = None
     is_default: bool | None = None
 
+    @model_validator(mode="after")
+    def validate_location_mode(self) -> "WarehouseUpdate":
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Latitud y longitud deben enviarse juntas.")
+        if self.uses_branch_location is True and self.latitude is not None:
+            raise ValueError("La ubicación heredada no acepta coordenadas propias.")
+        if self.uses_branch_location is False and self.latitude is None:
+            raise ValueError("La ubicación propia requiere latitud y longitud confirmadas.")
+        return self
+
 
 class WarehouseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -65,6 +99,12 @@ class WarehouseResponse(BaseModel):
     description: str | None
     warehouse_type: str
     address: str | None
+    uses_branch_location: bool
+    latitude: Decimal | None
+    longitude: Decimal | None
+    effective_latitude: Decimal | None
+    effective_longitude: Decimal | None
+    location_source: str
     address_id: UUID | None
     district: str | None
     province: str | None
