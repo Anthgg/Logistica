@@ -711,6 +711,15 @@ jobs:
           fi
           echo "PASS: el artefacto derivado está al día."
 
+      # El contrato que consume el frontend tambien es derivado. Si deja de
+      # corresponder al catalogo, el frontend compilaria contra codigos que ya no
+      # existen: exactamente la deriva que F006 PR 3.1 tuvo que reconciliar.
+      - name: Guard — Frontend permission contract is current
+        working-directory: backend
+        env:
+          PYTHONPATH: .
+        run: python scripts/generate_permission_contract.py --check ../docs/phase-006/permission-contract.json
+
       # Ningún endpoint puede volver a confiar la identidad al cliente.
       - name: Guard — Identity comes from the authenticated principal
         working-directory: backend

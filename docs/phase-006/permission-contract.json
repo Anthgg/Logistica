@@ -1,0 +1,3338 @@
+{
+  "_comment": "Artefacto DERIVADO del catalogo canonico del backend (rbac/permission_catalog.py), generado por backend/scripts/generate_permission_contract.py. No editar a mano.",
+  "backend_sha": "b381e5311c6dbae04e6185612054ba36bbae91b2",
+  "catalog_version": "1.2.0",
+  "permissions": [
+    {
+      "code": "logistics.arrival_notice_transport.manage",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.arrival_notice_transport.override_driver",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.arrival_notice_transport.override_vehicle",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.arrival_notice_transport.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.arrival_notices.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.arrival_notices.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.arrival_notices.mark_ready",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.arrival_notices.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.arrival_notices.read_all",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.arrival_notices.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.arrival_notices.request_changes",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.arrival_notices.review",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.arrival_notices.submit",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.arrival_notices.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.arrival_notices.validate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.audit.export",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.audit.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.audit.read_sensitive",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.authorized_signers.activate",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.authorized_signers.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.authorized_signers.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.authorized_signers.revoke",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.authorized_signers.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.branches.change_status",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.branches.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.branches.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.branches.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.business_partner_addresses.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.business_partner_contacts.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.business_partner_evaluations.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.business_partner_roles.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.business_partners.activate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.business_partners.block",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.business_partners.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.business_partners.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.business_partners.ruc_apply",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.business_partners.ruc_verify",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.catalog.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.catalog.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.catalog.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.company_addresses.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.company_addresses.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.company_assets.activate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.company_assets.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.company_assets.revoke",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.company_assets.upload",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.company_contacts.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.company_contacts.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.company_profile.activate",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.company_profile.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.company_profile.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.company_profile.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.company_profile.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.company_settings.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.company_settings.update",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.cost_centers.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.cost_centers.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.deliveries.confirm",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.deliveries.manual_close",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.deliveries.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.deliveries.register_partial",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.deliveries.reject",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.delivery_documents.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.delivery_documents.read_sensitive",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.dispatches.cancel",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.dispatches.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.dispatches.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.dispatches.release",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.dock_operational_integrity.read",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.dock_operational_metrics.export",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.dock_operational_metrics.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.documents.cancel",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.documents.download",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.documents.download_bulk",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.documents.export",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.documents.issue",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.documents.preview",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.documents.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.documents.reprint",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.documents.verify",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.drivers.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.drivers.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.drivers.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.files.archive",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.files.delete",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.files.download",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.files.evidence.accept",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.files.evidence.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.files.legal_hold",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.files.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.files.restore",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.files.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.files.upload",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.gate_check_ins.approve_correction",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.cancel",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.complete",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.hold",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.read_all",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.request_correction",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.resume",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.start_verification",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_check_ins.walk_in",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_document_inspections.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_documents.download",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_documents.download_package",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_documents.issue",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_documents.preview",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_driver_inspections.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_entries.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.gate_entries.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_entries.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.gate_entry.authorize",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_entry.authorize_with_observations",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_entry.deny",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_entry.supervise",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_exceptions.approve",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_exceptions.reject",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_exceptions.request",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_photo_evidence.capture",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_photo_evidence.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_seal_inspections.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_sensitive_evidence.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gate_vehicle_inspections.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gps.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.gps.write",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_appointments.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_appointments.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_appointments.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_dock_assignments.assign",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_dock_assignments.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_dock_assignments.plan",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_dock_assignments.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_dock_assignments.reassign",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_dock_assignments.release",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_dock_queue.change_priority",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_dock_queue.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_dock_queue.override_priority",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_dock_queue.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_inventory_disposition.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_inventory_disposition.materialize",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_inventory_disposition.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_inventory_disposition.split",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipt_expiration.capture",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_receipt_identifiers.read_sensitive",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipt_lots.capture",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_receipt_scans.batch",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_receipt_scans.compensate",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipt_scans.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_receipt_scans.manual_entry",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_receipt_scans.resolve_unknown",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipt_serials.capture",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_receipts.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipts.complete",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipts.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_receipts.export",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipts.pause",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_receipts.prepare",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_receipts.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_receipts.read_all",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_receipts.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inbound_receipts.read_integrity",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipts.resume",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inbound_receipts.start",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inbound_receipts.validate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.incidents.close",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.incidents.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.incidents.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.incidents.reopen",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.incidents.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.integrations.configure",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.integrations.execute",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.integrations.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory.adjustments.approve",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.inventory.adjustments.create",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.inventory.adjustments.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory.movements.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inventory.movements.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory.rebuild",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory.transfers.approve",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory.transfers.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inventory.transfers.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_kardex.export",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inventory_kardex.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_kardex.read_running_quantity",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inventory_ledger.approve_compensation",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.inventory_ledger.create_checkpoint",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.execute_compensation",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.inventory_ledger.post_prepared_event",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.post_putaway_events",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.post_quality_events",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_ledger.read_balance_preparation",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_ledger.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_ledger.read_integrity",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_ledger.read_snapshots",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inventory_ledger.read_sources",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_ledger.read_traceability_preparation",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.inventory_ledger.reconcile",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.request_compensation",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.retry_failed_posting",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.review_compensation",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.inventory_ledger.validate_prepared_event",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.inventory_ledger.verify",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.kpis.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.kpis.read_financial",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.non_conformities.close",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.non_conformities.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.non_conformities.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.notifications.configure",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.notifications.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.numbering_policies.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.numbering_policies.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.organizations.change_status",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.organizations.create",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.organizations.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.organizations.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.outbound_orders.approve",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.outbound_orders.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.outbound_orders.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.packing.complete",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.packing.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.partners.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.partners.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.partners.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.permissions.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.picking.complete",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.picking.execute",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.picking.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.procurement_approval_policies.activate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.procurement_approval_policies.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.procurement_approval_policies.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.procurement_approval_policies.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.procurement_approvals.decide",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.procurement_approvals.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.product_brands.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.product_brands.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.product_categories.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.product_categories.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.product_identifiers.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.product_identifiers.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.product_packaging.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.product_storage_conditions.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.product_tracking_policies.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.product_units.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.product_units.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.products.activate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.products.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.products.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.products.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.proof_of_delivery.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.proof_of_delivery.invalidate",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.proof_of_delivery.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.proof_of_download.download",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_orders.approve",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.purchase_orders.cancel",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.purchase_orders.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.purchase_orders.issue",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.purchase_orders.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_orders.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.purchase_requests.approve",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.purchase_requests.cancel",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.purchase_requests.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.purchase_requests.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requests.reject",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.purchase_requests.submit",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.purchase_requests.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.purchase_requisitions.approve",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.cancel",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.comment",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.edit",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.issue",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.review",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.purchase_requisitions.submit",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.putaway.assign",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.putaway.capacity.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.putaway.capacity.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.putaway.compatibility.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.putaway.compatibility.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.putaway.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.putaway.execute",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.putaway.override",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.putaway.override.approve",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.putaway.policies.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.putaway.policies.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.putaway.policies.update",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.putaway.proximity.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.putaway.proximity.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.putaway.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.putaway.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_availability.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_disposition.approve",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_disposition.keep_quarantined",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_disposition.propose",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_disposition.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_disposition.reject_proposal",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_disposition.review",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_future_preparation.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.approve",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_inspections.complete",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_inspections.create",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_inspections.pause",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.record_measurements",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.record_results",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.record_samples",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.reject",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_inspections.request_reinspection",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_inspections.resume",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.review_certificates",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_inspections.start",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_inspections.upload_evidence",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_inspections.validate",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_nonconformities.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.quality_nonconformities.download",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_nonconformities.issue",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_nonconformities.preview",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_nonconformities.reprint",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.activate",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.activate_version",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.archive",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.quality_plan.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.create_certificate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.create_condition",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.create_control",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.create_sampling",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.create_scope",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.create_tolerance",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.create_version",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.deactivate",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.delete",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.delete_certificate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.delete_condition",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.delete_control",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.delete_sampling",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.delete_scope",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.delete_tolerance",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.link_reference_file",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_plan.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_plan.read_integrity",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.retire_version",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.unlink_reference_file",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_plan.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.update_certificate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.update_condition",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.update_control",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.update_sampling",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.update_scope",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_plan.update_tolerance",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_quarantine.activate",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_quarantine.approve_rejection",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.quality_quarantine.approve_release",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.close",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.confirm_placement",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_quarantine.create",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_quarantine.direct_release",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.quality_quarantine.execute_rejection",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.execute_release",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.manage_zones",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_quarantine.read_all",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quality_quarantine.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quality_quarantine.read_integrity",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.request_rejection",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quality_quarantine.request_release",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quarantine.place",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quarantine.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.quarantine.release",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.quotation_evaluation_decisions.record",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.quotation_evaluation_scores.manual_create",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.quotation_evaluations.calculate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.quotation_evaluations.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_appointments.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_appointments.confirm",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_appointments.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_appointments.download",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_appointments.download_package",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_appointments.preview",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_appointments.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_appointments.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_appointments.reprint",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_appointments.reschedule",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_calendars.manage",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_calendars.manage_blackouts",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.reception_calendars.override_capacity",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.reception_calendars.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_acknowledgements.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_acknowledgements.dispute",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_acknowledgements.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_approvals.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_candidates.acknowledge",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_difference_candidates.dismiss",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_difference_candidates.prepare",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_difference_candidates.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.approve",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.cancel",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.close",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.review",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.submit",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_cases.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_documents.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.reception_difference_documents.download",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_documents.download_package",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_documents.issue",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_difference_documents.package",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_documents.preview",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_documents.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_documents.reprint",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_evidence.archive",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_difference_evidence.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_evidence.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_evidence.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_evidence.upload",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_items.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_items.dismiss",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_items.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_items.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.acknowledge",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.assign_internal",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.dispute",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.mark_undetermined",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.propose",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.review",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_difference_responsibility.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_reviews.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_reviews.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_reviews.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_difference_sensitive_evidence.read",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_differences.approve",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_differences.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_differences.close",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_differences.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_differences.create_manual",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_differences.formalize_candidates",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_differences.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_differences.read_all",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_differences.read_claim_preparation",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_differences.read_history",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_differences.read_integrity",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.reception_differences.read_quality_preparation",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_differences.read_quarantine_recommendations",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reception_differences.request_changes",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_differences.review",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_differences.submit",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reception_differences.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.receptions.cancel",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.receptions.complete",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.receptions.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.receptions.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.reports.export",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.reports.export_sensitive",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.reports.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.returns.approve",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.returns.close",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.returns.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.returns.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.returns.receive",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.role_assignments.create",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.role_assignments.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.role_assignments.revoke",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.role_assignments.update",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.role_permissions.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.role_permissions.update",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.roles.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.routes.calculate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.routes.override",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.routes.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.routes.recalculate",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.ruc_datasets.activate",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.ruc_datasets.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.ruc_datasets.rollback",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.ruc_imports.execute",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.ruc_imports.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.ruc_integration.execute",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.ruc_integration.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.ruc_lookup.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.ruc_sources.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.ruc_verifications.approve",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.ruc_verifications.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.supplier_evaluation_templates.activate",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.supplier_evaluation_templates.manage",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.supplier_evaluation_templates.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.transport_documents.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.transport_documents.read_sensitive",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.trips.assign",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.trips.cancel",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.trips.close",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.trips.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.trips.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.trips.start",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.unit_conversions.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.unit_conversions.evaluate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.units.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.units.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.units.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.unloading_operations.abort",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.unloading_operations.approve_override",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.unloading_operations.cancel",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.unloading_operations.complete",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.unloading_operations.correct_times",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.unloading_operations.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.unloading_operations.manage_readiness",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.unloading_operations.manage_responsibles",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.unloading_operations.pause",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.unloading_operations.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.unloading_operations.record_seal_opening",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.unloading_operations.request_override",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.unloading_operations.resume",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.unloading_operations.start",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.vehicle_capacity.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.vehicle_carrier_assignments.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.vehicle_documents.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.vehicle_documents.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.vehicle_makes.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.vehicle_makes.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.vehicle_models.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.vehicle_models.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.vehicle_ownership.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.vehicle_plates.change",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.vehicles.activate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.vehicles.block",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.vehicles.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.vehicles.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.vehicles.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.vehicles.verify",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouse_docks.activate",
+      "is_sensitive": false,
+      "requires_step_up": true,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.warehouse_docks.block",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.warehouse_docks.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouse_docks.manage_blackouts",
+      "is_sensitive": true,
+      "requires_step_up": true,
+      "risk": "critical"
+    },
+    {
+      "code": "logistics.warehouse_docks.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.warehouse_gates.activate",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.warehouse_gates.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.warehouse_gates.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.warehouse_layouts.activate",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.warehouse_layouts.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouse_locations.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouse_locations.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouse_locations.move",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.warehouses.change_status",
+      "is_sensitive": true,
+      "requires_step_up": false,
+      "risk": "high"
+    },
+    {
+      "code": "logistics.warehouses.create",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouses.manage",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouses.read",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "low"
+    },
+    {
+      "code": "logistics.warehouses.set_default",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    },
+    {
+      "code": "logistics.warehouses.update",
+      "is_sensitive": false,
+      "requires_step_up": false,
+      "risk": "medium"
+    }
+  ],
+  "total_permissions": 555
+}
