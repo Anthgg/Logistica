@@ -289,6 +289,7 @@ jobs:
           PGPASSWORD=postgrespassword createdb \
             --host=localhost --port=5432 --username=postgres \
             warehouse_geo_test_ci
+          DATABASE_URL="$TEST_MIGRATION_DATABASE_URL" python -m alembic upgrade head
           set +e
           pytest tests/test_warehouse_geolocation.py --tb=short -v -p no:cacheprovider 2>&1 | tee /tmp/pytest_warehouse_geo.log
           PYTEST_EXIT=${PIPESTATUS[0]}
