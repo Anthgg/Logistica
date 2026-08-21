@@ -217,6 +217,9 @@ class LogisticsWarehouseService:
             organization_id=branch.organization_id,
             code=code, name=data.name,
             warehouse_type=data.warehouse_type, address=data.address,
+            uses_branch_location=data.uses_branch_location,
+            latitude=None if data.uses_branch_location else data.latitude,
+            longitude=None if data.uses_branch_location else data.longitude,
             district=district, province=province, department=department,
             capacity=data.capacity, is_default=data.is_default, is_active=True,
             status="ACTIVE",
@@ -272,8 +275,23 @@ class LogisticsWarehouseService:
     def update(self, db: Session, wh_id: UUID, data: LogisticsWarehouseUpdate, user_id: UUID) -> Warehouse:
         wh = self.get(db, wh_id)
         values = data.model_dump(exclude_unset=True)
+        if values.get("uses_branch_location") is True:
+            # No conservar coordenadas propias dormidas: podrían quedar obsoletas
+            # mientras la sede continúa moviéndose.
+            values["latitude"] = None
+            values["longitude"] = None
+        elif (
+            ("latitude" in values or "longitude" in values)
+            and values.get("uses_branch_location") is not False
+            and wh.uses_branch_location
+        ):
+            raise ApplicationError(
+                "WAREHOUSE_LOCATION_MODE_REQUIRED",
+                "Desactiva la ubicación heredada antes de guardar coordenadas propias.",
+                422,
+            )
         if values:
-            self.repo.update(db, wh, **values)
+            self.repo.update(db, wh, updated_by=user_id, **values)
         return wh
 
     def change_status(self, db: Session, wh_id: UUID, data: LogisticsWarehouseStatusUpdate, user_id: UUID) -> Warehouse:

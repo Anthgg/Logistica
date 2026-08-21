@@ -3,7 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.modules.logistics.organization.reference_catalogs import (
     COUNTRY_CODES,
@@ -150,6 +150,13 @@ class LogisticsWarehouseCreate(BaseModel):
     #: Dirección propia del almacén dentro de la sede («Nave B — Puerta 4»), no la
     #: de la sede. Es lo único geográfico que sigue escribiendo el usuario.
     address: str | None = Field(default=None, max_length=255)
+    uses_branch_location: bool = True
+    latitude: float | None = Field(
+        default=None, ge=-90, le=90, allow_inf_nan=False
+    )
+    longitude: float | None = Field(
+        default=None, ge=-180, le=180, allow_inf_nan=False
+    )
     #: Distrito, provincia y departamento pasan a derivarse del UBIGEO de la sede.
     #: Se siguen aceptando por compatibilidad, pero el backend los IGNORA cuando la
     #: sede tiene ubicación normalizada: así es imposible registrar un almacén en
@@ -177,6 +184,16 @@ class LogisticsWarehouseCreate(BaseModel):
             )
         return value
 
+    @model_validator(mode="after")
+    def validate_location_mode(self) -> "LogisticsWarehouseCreate":
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Latitud y longitud deben enviarse juntas.")
+        if self.uses_branch_location and self.latitude is not None:
+            raise ValueError("La ubicación heredada no acepta coordenadas propias.")
+        if not self.uses_branch_location and self.latitude is None:
+            raise ValueError("La ubicación propia requiere latitud y longitud confirmadas.")
+        return self
+
 
 class LogisticsWarehouseUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=150)
@@ -186,6 +203,23 @@ class LogisticsWarehouseUpdate(BaseModel):
     province: str | None = Field(default=None, min_length=2, max_length=100)
     department: str | None = Field(default=None, min_length=2, max_length=100)
     capacity: float | None = Field(default=None, gt=0)
+    uses_branch_location: bool | None = None
+    latitude: float | None = Field(
+        default=None, ge=-90, le=90, allow_inf_nan=False
+    )
+    longitude: float | None = Field(
+        default=None, ge=-180, le=180, allow_inf_nan=False
+    )
+
+    @model_validator(mode="after")
+    def validate_location_mode(self) -> "LogisticsWarehouseUpdate":
+        if (self.latitude is None) != (self.longitude is None):
+            raise ValueError("Latitud y longitud deben enviarse juntas.")
+        if self.uses_branch_location is True and self.latitude is not None:
+            raise ValueError("La ubicación heredada no acepta coordenadas propias.")
+        if self.uses_branch_location is False and self.latitude is None:
+            raise ValueError("La ubicación propia requiere latitud y longitud confirmadas.")
+        return self
 
 
 class LogisticsWarehouseStatusUpdate(BaseModel):
@@ -208,6 +242,12 @@ class LogisticsWarehouseResponse(BaseModel):
     name: str
     warehouse_type: str
     address: str | None
+    uses_branch_location: bool
+    latitude: float | None
+    longitude: float | None
+    effective_latitude: float | None
+    effective_longitude: float | None
+    location_source: str
     district: str | None
     province: str | None
     department: str | None

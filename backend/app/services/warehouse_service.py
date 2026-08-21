@@ -43,8 +43,12 @@ class WarehouseService:
         branch = database.get(Branch, data.branch_id)
         if not branch:
             raise ApplicationError("BRANCH_NOT_FOUND", "La sede no existe.", 404)
+        values = data.model_dump()
+        if data.uses_branch_location:
+            values["latitude"] = None
+            values["longitude"] = None
         warehouse = Warehouse(
-            **data.model_dump(),
+            **values,
             # Derivada de la sede persistida, igual que en la ruta estructural F004.
             organization_id=branch.organization_id,
         )
@@ -61,7 +65,21 @@ class WarehouseService:
         self, database: Session, warehouse_id: UUID, data: WarehouseUpdate
     ) -> Warehouse:
         warehouse = self.get(database, warehouse_id)
-        for field, value in data.model_dump(exclude_unset=True).items():
+        values = data.model_dump(exclude_unset=True)
+        if values.get("uses_branch_location") is True:
+            values["latitude"] = None
+            values["longitude"] = None
+        elif (
+            ("latitude" in values or "longitude" in values)
+            and values.get("uses_branch_location") is not False
+            and warehouse.uses_branch_location
+        ):
+            raise ApplicationError(
+                "WAREHOUSE_LOCATION_MODE_REQUIRED",
+                "Desactiva la ubicación heredada antes de guardar coordenadas propias.",
+                422,
+            )
+        for field, value in values.items():
             setattr(warehouse, field, value)
         try:
             database.commit()

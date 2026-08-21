@@ -1,19 +1,45 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint, text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    String,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, utc_now
 
+if TYPE_CHECKING:
+    from app.models.branch import Branch
+
 
 class Warehouse(Base):
     __tablename__ = "warehouses"
     __table_args__ = (
         UniqueConstraint("branch_id", "code", name="uq_warehouses_branch_code"),
+        CheckConstraint(
+            "latitude IS NULL OR (latitude >= -90.0 AND latitude <= 90.0)",
+            name="chk_warehouses_latitude",
+        ),
+        CheckConstraint(
+            "longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0)",
+            name="chk_warehouses_longitude",
+        ),
+        CheckConstraint(
+            "(uses_branch_location AND latitude IS NULL AND longitude IS NULL) "
+            "OR (NOT uses_branch_location AND latitude IS NOT NULL AND longitude IS NOT NULL)",
+            name="chk_warehouses_location_mode",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -36,6 +62,11 @@ class Warehouse(Base):
         String(30), default="general", server_default=text("'general'"), nullable=False
     )
     address: Mapped[str | None] = mapped_column(String(255))
+    uses_branch_location: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=text("true"), nullable=False
+    )
+    latitude: Mapped[Decimal | None] = mapped_column(Numeric(10, 7))
+    longitude: Mapped[Decimal | None] = mapped_column(Numeric(10, 7))
     address_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("organization_addresses.id", ondelete="SET NULL"),
@@ -84,3 +115,19 @@ class Warehouse(Base):
     )
 
     branch: Mapped["Branch | None"] = relationship(back_populates="warehouses")
+
+    @property
+    def effective_latitude(self) -> Decimal | None:
+        if self.uses_branch_location:
+            return self.branch.latitude if self.branch is not None else None
+        return self.latitude
+
+    @property
+    def effective_longitude(self) -> Decimal | None:
+        if self.uses_branch_location:
+            return self.branch.longitude if self.branch is not None else None
+        return self.longitude
+
+    @property
+    def location_source(self) -> str:
+        return "BRANCH" if self.uses_branch_location else "WAREHOUSE"

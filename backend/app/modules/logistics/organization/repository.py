@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.branch import Branch
 from app.models.organization import Organization
@@ -152,7 +152,11 @@ class BranchRepository:
 
 class LogisticsWarehouseRepository:
     def get_by_id(self, db: Session, wh_id: UUID) -> Warehouse | None:
-        return db.get(Warehouse, wh_id)
+        return db.scalar(
+            select(Warehouse)
+            .options(selectinload(Warehouse.branch))
+            .where(Warehouse.id == wh_id)
+        )
 
     def get_by_code_for_branch(self, db: Session, branch_id: UUID, code: str) -> Warehouse | None:
         return db.scalar(
@@ -214,6 +218,7 @@ class LogisticsWarehouseRepository:
         items = list(
             db.scalars(
                 select(Warehouse)
+                .options(selectinload(Warehouse.branch))
                 .where(*filters)
                 .order_by(Warehouse.created_at.desc())
                 .offset((page - 1) * page_size)
