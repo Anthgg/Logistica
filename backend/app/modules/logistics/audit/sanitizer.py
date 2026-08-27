@@ -1,6 +1,5 @@
 """Audit sanitizer — redacts sensitive fields before persistence."""
 
-import re
 from copy import deepcopy
 
 REDACTED_FIELDS = frozenset({
