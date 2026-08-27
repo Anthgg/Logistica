@@ -1,11 +1,11 @@
 {
   "catalog_version": "1.2.0",
   "classification": {
-    "ACTIVE_ASSIGNED": 211,
-    "ACTIVE_USED": 333,
+    "ACTIVE_ASSIGNED": 210,
+    "ACTIVE_USED": 334,
     "ORPHAN_CANDIDATE": 11
   },
-  "distinct_references": 333,
+  "distinct_references": 334,
   "domains": [
     "audit",
     "branches",
@@ -315,7 +315,7 @@
         "LOGISTICS_MANAGER"
       ],
       "is_sensitive": true,
-      "referenced_in_code": 0,
+      "referenced_in_code": 1,
       "requires_reason": false,
       "requires_step_up": true,
       "resource": "audit",
@@ -332,7 +332,7 @@
         "LOGISTICS_MANAGER"
       ],
       "is_sensitive": false,
-      "referenced_in_code": 1,
+      "referenced_in_code": 5,
       "requires_reason": false,
       "requires_step_up": false,
       "resource": "audit",
@@ -347,7 +347,7 @@
         "LOGISTICS_AUDITOR"
       ],
       "is_sensitive": true,
-      "referenced_in_code": 1,
+      "referenced_in_code": 3,
       "requires_reason": false,
       "requires_step_up": true,
       "resource": "audit",

@@ -1,25 +1,18 @@
 """Phase 007 — tests for unified audit events."""
 
 import inspect
+from datetime import UTC
 from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.dependencies.auth import get_current_user
-from app.models.user import User
-
 
 @pytest.fixture(scope="module")
 def app() -> FastAPI:
     from app.main import app as fastapi_app
     return fastapi_app
-
-
-@pytest.fixture(scope="module")
-def client(app: FastAPI) -> TestClient:
-    return TestClient(app)
 
 
 # --- Endpoints registered ---
@@ -137,7 +130,7 @@ def test_audit_service_singleton() -> None:
 
 # --- Regression ---
 def test_health_still_works(client: TestClient) -> None:
-    assert client.get("/api/health").status_code == 200
+    assert client.get("/health").status_code == 200
 
 
 def test_openapi_still_generates(app: FastAPI) -> None:
@@ -184,17 +177,34 @@ def test_audit_service_list_signature_compatibility() -> None:
     assert "warehouse_id" in params
 
 
-def test_audit_events_http_authenticated_success(app: FastAPI) -> None:
-    mock_user = User(
-        id=uuid4(),
+def test_audit_events_http_authenticated_success(client: TestClient) -> None:
+    from datetime import datetime
+
+    from app.main import app as fastapi_app
+    from app.modules.logistics.auth_dependencies import get_logistics_principal
+    from app.modules.logistics.principal import LogisticsPrincipal
+
+    user_id = uuid4()
+    mock_principal = LogisticsPrincipal(
+        user_id=user_id,
         email="test_audit_admin@example.com",
         full_name="Audit Administrator",
-        role="admin",
+        platform_role="admin",
         is_active=True,
+        session_id=uuid4(),
+        device_id=uuid4(),
+        authentication_level="password",
+        session_expires_at=datetime.now(UTC),
+        risk_score=0.1,
+        logistics_enabled=True,
+        permission_codes=[
+            "logistics.audit.read",
+            "logistics.audit.export",
+            "logistics.audit.read_sensitive",
+        ],
     )
-    app.dependency_overrides[get_current_user] = lambda: mock_user
+    fastapi_app.dependency_overrides[get_logistics_principal] = lambda: mock_principal
     try:
-        client = TestClient(app)
         # 1. Base list query
         response = client.get("/api/logistics/audit-events?page=1&page_size=20")
         assert response.status_code == 200
@@ -231,5 +241,11 @@ def test_audit_events_http_authenticated_success(app: FastAPI) -> None:
         data_all = res_all.json()
         assert data_all["items"] == []
         assert data_all["total"] == 0
+
+        # 5. Export endpoint
+        res_export = client.get("/api/logistics/audit-events/export")
+        assert res_export.status_code == 200
+        assert "text/csv" in res_export.headers.get("content-type", "")
+        assert "attachment" in res_export.headers.get("content-disposition", "")
     finally:
-        app.dependency_overrides.pop(get_current_user, None)
+        fastapi_app.dependency_overrides.pop(get_logistics_principal, None)
