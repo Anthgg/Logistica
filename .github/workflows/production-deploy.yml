@@ -126,7 +126,7 @@ jobs:
             --service-account="${{ env.RUNTIME_SERVICE_ACCOUNT }}" \
             --revision-suffix="sha-${{ steps.target.outputs.short }}" \
             --set-secrets="DATABASE_URL=DATABASE_URL_PRODUCTION:latest,SECRET_KEY=SECRET_KEY_PRODUCTION:latest" \
-            --set-env-vars="APP_ENV=production,COOKIE_SECURE=true,RUN_MIGRATIONS=false,FRONTEND_URL=${{ vars.PRODUCTION_FRONTEND_URL }}" \
+            --set-env-vars="APP_ENV=production,COOKIE_SECURE=true,SESSION_COOKIE_SAMESITE=none,RUN_MIGRATIONS=false,FRONTEND_URL=${{ vars.PRODUCTION_FRONTEND_URL }}" \
             --no-traffic \
             --quiet
 

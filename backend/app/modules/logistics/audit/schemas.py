@@ -50,7 +50,7 @@ class AuditEventDetailResponse(AuditEventSummaryResponse):
     previous_data: dict | None = None
     new_data: dict | None = None
     changed_fields: list[str] | None = None
-    metadata_: dict | None = Field(default=None, validation_alias=AliasChoices("metadata", "metadata_"))
+    metadata_: dict | None = Field(default=None, serialization_alias="metadata", validation_alias=AliasChoices("metadata_", "metadata"))
     source_module: str | None = None
     source_service: str | None = None
     event_hash: str | None = None

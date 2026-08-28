@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: Literal["HS256"] = "HS256"
     REMEMBER_SESSION_EXPIRE_DAYS: int = Field(default=30, ge=1, le=90)
     SESSION_IDLE_TIMEOUT_MINUTES: int = Field(default=60, ge=1)
-    SESSION_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
+    SESSION_COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "none"
     PASSWORD_MIN_LENGTH: int = Field(default=10, ge=10, le=128)
     MAX_LOGIN_ATTEMPTS: int = Field(default=5, ge=1)
     ACCOUNT_LOCK_MINUTES: int = Field(default=15, ge=1)
